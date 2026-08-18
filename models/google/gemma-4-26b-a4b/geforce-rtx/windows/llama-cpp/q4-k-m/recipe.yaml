@@ -1,0 +1,61 @@
+schema_version: 3
+title: "Gemma-4-26B-A4B · NVIDIA GeForce RTX GPUs · llama.cpp · Q4_K_M"
+model: google/gemma-4-26b-a4b
+hardware: geforce-rtx
+platform:
+  os: windows
+  execution: native
+backend: llama-cpp
+backend_version: "b10287"
+backend_min_version: "b10287"
+min_vidmem_gb: 24
+variant: mtp
+status: optimized
+prerequisites: null
+limitations:
+  - Performance was measured with a 40,960-token server context; the launch command uses a 65,536-token context.
+
+validation:
+  validated_at: 2026-08-14
+  validated_by: Perf-Sweep
+  tested_stack:
+    os_version: "Windows 10.0.26200"
+    driver: "610.88"
+    cuda: "13.3"
+precision:
+  label: Q4_K_M
+checkpoint:
+  target: https://huggingface.co/unsloth/gemma-4-26B-A4B-it-GGUF/blob/main/gemma-4-26B-A4B-it-UD-Q4_K_M.gguf
+  target_label: unsloth/gemma-4-26B-A4B-it-GGUF
+  draft: https://huggingface.co/unsloth/gemma-4-26B-A4B-it-GGUF/blob/main/mtp-gemma-4-26B-A4B-it.gguf
+  draft_label: unsloth/gemma-4-26B-A4B-it-GGUF/mtp-gemma-4-26B-A4B-it.gguf
+mtp: "ON=3"
+concurrency: 1
+topology: null
+sampling: "Target backend sampling: ON; speculative draft backend sampling: default"
+security: null
+runtime: null
+serve:
+  label: "Launch MTP · n=3"
+  target: single-node
+  instructions: "Run in PowerShell. llama-server downloads and caches the target and MTP draft GGUFs from Hugging Face."
+  command: |
+    llama-server.exe -hf "unsloth/gemma-4-26B-A4B-it-GGUF" `
+      -hff "gemma-4-26B-A4B-it-UD-Q4_K_M.gguf" `
+      --no-mmproj `
+      -hfrd "unsloth/gemma-4-26B-A4B-it-GGUF" `
+      --backend-sampling `
+      --batch-size 2048 `
+      --ubatch-size 2048 `
+      --ctx-size 65536 `
+      --parallel 1 `
+      --n-predict 256 `
+      -ngl 999 `
+      --jinja `
+      --chat-template-kwargs '{"preserve_thinking":true}' `
+      --spec-type draft-mtp `
+      --spec-draft-n-max 3 `
+      --spec-draft-model "mtp-gemma-4-26B-A4B-it.gguf"
+  port: null
+  api_model: null
+notes: "The public [target GGUF](https://huggingface.co/unsloth/gemma-4-26B-A4B-it-GGUF/blob/main/gemma-4-26B-A4B-it-UD-Q4_K_M.gguf) uses the public [MTP draft GGUF](https://huggingface.co/unsloth/gemma-4-26B-A4B-it-GGUF/blob/main/mtp-gemma-4-26B-A4B-it.gguf). Use MTP depth 3."

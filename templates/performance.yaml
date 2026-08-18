@@ -1,0 +1,57 @@
+# Create this file only for measured results.
+schema_version: 1
+status: optimized
+recipe_sha256: <sha256 of sibling recipe.yaml text normalized to LF line endings>
+launch_id: default             # or a launch.id / launch.alternatives[].id from recipe.yaml
+measured_at: <YYYY-MM-DD>
+# evidence: <optional for any status; if supplied it must be public; never shown on the site>
+
+harness:
+  name: <benchmark tool>
+  version: <exact version>
+
+system:
+  label: <exact measured system>
+  accelerator: <exact GPU or SoC>
+  accelerator_count: <integer>
+  operating_system: <linux | windows>
+  # os_version: <exact operating-system version/build, or exact recorded OS/architecture if the build was not emitted>
+  # driver_version: <exact accelerator driver version>
+  # cuda_version: <exact CUDA toolkit version>
+
+software:
+  model_revision: <40- or 64-character checkpoint commit>
+  # backend_version: <exact backend release or build matching recipe.yaml; required for llama.cpp, e.g. b10505>
+  runtime_revision: <container sha256 digest or 40-/64-character backend commit>
+
+profiles:
+  - id: interactive
+    workload:
+      input_tokens: <nominal configured input-token length>
+      # Record the context used by the measured run, especially when the
+      # current recipe advertises a different supported context.
+      # context_tokens: <measured context size>
+      # For mixed-length workloads, identify the source/profile and record the
+      # observed token distribution without replacing nominal input_tokens.
+      # Include all three observed token fields together or omit all three:
+      # dataset: <exact dataset identifier>
+      # profile: <exact dataset or harness profile>
+      # input_tokens_min: <minimum observed input tokens>
+      # input_tokens_max: <maximum observed input tokens>
+      # input_tokens_total: <total observed input tokens>
+      output_tokens: <integer>
+      concurrency: <integer>
+      requests: <integer>
+      warmup_requests: <integer>
+    results:
+      # Retain only metrics produced by the evidence. Never estimate values.
+      ttft_ms_p50: <number>
+      decode_tokens_per_second_p50: <number>
+      # Optional result fields; uncomment only when measured:
+      # ttft_ms_p95: <number>
+      # prefill_tokens_per_second_mean: <number>
+      # decode_tokens_per_second_mean: <number>
+      # aggregate_output_tokens_per_second: <number>
+      # e2e_latency_ms_mean: <number>
+      # e2e_latency_ms_p50: <number>
+      # peak_gpu_memory_gb_max: <number>

@@ -1,0 +1,9 @@
+schema_version: 1
+id: nvidia/nemotron-3.5-lightning-30b-a3b
+display_name: NVIDIA Nemotron 3.5 Lightning 30B A3B
+builder: nvidia
+family: Nemotron 3.5
+summary: NVIDIA Nemotron 3.5 Lightning 30B A3B inference configurations.
+modalities:
+  - text
+availability: available

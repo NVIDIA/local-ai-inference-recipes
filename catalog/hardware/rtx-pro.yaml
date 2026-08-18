@@ -1,0 +1,8 @@
+schema_version: 1
+id: rtx-pro
+display_name: RTX Pro GPUs
+vendor: nvidia
+kind: sku
+architecture: blackwell
+gpu_count: 1
+external_shareable: true

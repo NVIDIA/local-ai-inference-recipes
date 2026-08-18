@@ -1,0 +1,72 @@
+schema_version: 3
+title: Qwen3.6-27B · RTX PRO 6000 · vLLM
+model: qwen/qwen3.6-27b
+hardware: rtx-pro
+platform:
+  os: linux
+  execution: container
+backend: vllm
+min_vidmem_gb: 24
+status: experimental
+precision:
+  label: NVFP4-W4A16
+checkpoint:
+  target: https://huggingface.co/nvidia/Qwen3.6-27B-NVFP4
+  target_label: nvidia/Qwen3.6-27B-NVFP4
+  draft: null
+  draft_label: null
+mtp: MTP=3
+concurrency: 8
+topology:
+  summary: 1× RTX PRO 6000
+  gpu_count: 1
+  node_count: 1
+  tensor_parallel_size: null
+sampling: null
+security: Evaluation configuration only. Host networking exposes vLLM on host interfaces; use a firewall or reverse proxy, a scoped read-only HF token, and an isolated cache. For production, pin tested image, model, and code revisions.
+runtime:
+  kind: container
+  label: Container
+  image: vllm/vllm-openai:v0.24.0-ubuntu2404
+  image_url: https://hub.docker.com/r/vllm/vllm-openai/tags?name=v0.24.0-ubuntu2404
+  setup_label: Start container
+  setup_target: single-node
+  setup_instructions: Set `HF_TOKEN` in the host environment.
+  setup_command: |
+    docker run --rm -it \
+      --gpus all \
+      --ipc host \
+      --network host \
+      --shm-size=16g \
+      --ulimit memlock=-1 \
+      --ulimit stack=67108864 \
+      -e HF_TOKEN=$HF_TOKEN \
+      -v ~/.cache/huggingface:/root/.cache/huggingface \
+      --entrypoint /bin/bash \
+      vllm/vllm-openai:v0.24.0-ubuntu2404
+serve:
+  label: Launch
+  target: single-node
+  instructions: null
+  command: |
+    vllm serve nvidia/Qwen3.6-27B-NVFP4 \
+      --host 0.0.0.0 \
+      --port 8000 \
+      --trust-remote-code \
+      --kv-cache-dtype fp8 \
+      --attention-backend flashinfer \
+      --gpu-memory-utilization 0.9 \
+      --max-model-len 262144 \
+      --max-num-seqs 8 \
+      --max-num-batched-tokens 8192 \
+      --enable-chunked-prefill \
+      --async-scheduling \
+      --enable-prefix-caching \
+      --speculative-config '{"method":"mtp","num_speculative_tokens":3}' \
+      --load-format fastsafetensors \
+      --reasoning-parser qwen3 \
+      --tool-call-parser qwen3_xml \
+      --enable-auto-tool-choice
+  port: 8000
+  api_model: nvidia/Qwen3.6-27B-NVFP4
+notes: null

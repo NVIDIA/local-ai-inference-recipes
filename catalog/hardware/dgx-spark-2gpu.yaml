@@ -1,0 +1,9 @@
+schema_version: 1
+id: dgx-spark-2gpu
+display_name: 2× DGX Spark
+vendor: nvidia
+kind: configuration
+architecture: blackwell
+gpu_count: 2
+base_hardware: dgx-spark
+external_shareable: true

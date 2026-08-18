@@ -1,0 +1,51 @@
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap');
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+.cair{
+  --webpe-yellow-050:#feeeb2;--webpe-yellow-100:#fcde7b;--webpe-yellow-300:#ef9100;--webpe-yellow-700:#8d2600;--webpe-yellow-900:#441000;--webpe-red-500:#e52020;
+  --page:#fafaf8;--surface:#fff;--surface-subtle:#f4f4f2;--surface-well:#f7f7f7;
+  --text:#222;--text-muted:#636363;--text-faint:#898989;--border:#e4e4e0;--border-2:#d4d4cf;
+  --accent:#76b900;--accent-hover:#549a00;--accent-active:#3f8500;--accent-text:#265600;--accent-soft:#eef6dd;
+  --link:#0074df;--link-hover:#008af9;
+  --code-bg:#161a20;--code-fg:#e6e8ec;
+  --font-sans:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  --font-mono:"JetBrains Mono",ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  --shadow-card:0 1px 2px rgba(0,0,0,.04),0 1px 3px rgba(0,0,0,.04);
+  --shadow-pop:0 6px 16px rgba(0,0,0,.10),0 3px 6px -4px rgba(0,0,0,.12);
+  font-family:var(--font-sans);color:var(--text);background:var(--page);-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;min-height:100vh;display:flex;flex-direction:column
+}
+.cair.dark{
+  --page:#0c0e11;--surface:#15181c;--surface-subtle:#101317;--surface-well:#0a0c0f;
+  --text:#e8eaed;--text-muted:#9aa4af;--text-faint:#6f7883;--border:#272c33;--border-2:#333a43;
+  --accent:#76b900;--accent-hover:#8fce1f;--accent-active:#a5de15;--accent-text:#a5de15;--accent-soft:#1a2410;
+  --link:#10b1fb;--link-hover:#7cd7fe;--code-bg:#0b0d10;
+  --shadow-card:0 1px 2px rgba(0,0,0,.4);--shadow-pop:0 8px 24px rgba(0,0,0,.5)
+}
+.cair a{color:var(--link);text-decoration:none}
+.cair a:hover{color:var(--link-hover);text-decoration:underline}
+.cair main{flex:1}
+.aicon{display:inline-flex;align-items:center;justify-content:center;line-height:0}
+.aicon svg{width:1em;height:1em;display:block}
+.cair ::placeholder{color:var(--text-faint)}
+.cair *:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:2px}
+.cair select:focus-visible,.cair input:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.cair pre{margin:0}
+.cair-code::-webkit-scrollbar{height:9px;width:9px}
+.cair-code::-webkit-scrollbar-thumb{background:#3a4049;border-radius:9px}
+.cair-code::-webkit-scrollbar-track{background:transparent}
+.cair-sel{appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'><path d='M2 4l4 4 4-4' stroke='%23898989' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/></svg>");background-repeat:no-repeat;background-position:right 10px center;padding-right:30px!important}
+.pill{padding:6px 13px;font-size:13px;font-weight:500;border-radius:999px;cursor:pointer;font-family:var(--font-sans);border:1px solid var(--border-2);background:var(--surface);color:var(--text-muted)}
+.pill.active{border-color:var(--accent);background:var(--accent);color:#fff}
+.viewbtn{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;font-size:13px;font-weight:500;border:0;cursor:pointer;font-family:var(--font-sans);background:var(--surface);color:var(--text-muted)}
+.viewbtn+.viewbtn{border-left:1px solid var(--border-2)}
+.viewbtn.active{background:var(--accent);color:#fff}
+.finder-btn{display:inline-flex;align-items:center;gap:7px;height:42px;padding:0 18px;font-size:14px;font-weight:500;border:0;border-radius:8px;font-family:var(--font-sans);white-space:nowrap;background:var(--accent);color:#fff;cursor:pointer}
+.finder-btn:disabled{background:var(--surface-well);color:var(--text-faint);cursor:not-allowed}
+.card-btn{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;font-size:13.5px;font-weight:500;border:1px solid var(--border-2);border-radius:8px;background:var(--surface);color:var(--accent-text);text-decoration:none}
+.card-btn:hover{background:var(--accent-soft);border-color:rgba(118,185,0,.4);text-decoration:none}
+.card-btn.view{color:var(--accent-text)}
+.card-btn.view:hover{background:var(--accent-soft);border-color:rgba(118,185,0,.4)}
+@keyframes cair-fade{from{opacity:0;transform:translateY(3px)}to{opacity:1;transform:none}}
+.cair-fade{animation:cair-fade .18s ease-out}
+@media (max-width:900px){.ws-cols{grid-template-columns:1fr!important}.ws-panel{position:static!important}.finder-grid{grid-template-columns:1fr!important}}
+@media (prefers-reduced-motion:reduce){.cair *{animation:none!important;transition:none!important}}

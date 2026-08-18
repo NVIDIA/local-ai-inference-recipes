@@ -1,0 +1,9 @@
+schema_version: 1
+id: minimax/minimax-m2.7
+display_name: MiniMax-M2.7
+builder: minimax
+family: MiniMax-M2
+summary: MiniMax M2.7 text-generation model.
+modalities:
+  - text
+availability: available

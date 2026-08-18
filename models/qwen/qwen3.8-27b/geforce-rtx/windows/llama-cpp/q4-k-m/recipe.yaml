@@ -1,0 +1,62 @@
+schema_version: 3
+title: "Qwen3.8-27B · NVIDIA GeForce RTX GPUs · llama.cpp · Q4_K_M"
+model: qwen/qwen3.8-27b
+hardware: geforce-rtx
+platform:
+  os: windows
+  execution: native
+backend: llama-cpp
+backend_version: "b10287"
+backend_min_version: "b10287"
+min_vidmem_gb: 24
+variant: mtp
+status: optimized
+prerequisites:
+  - A Windows build of llama.cpp commit 7316c32d4f241820a5a4e12582f0f0b2b04938a7 providing llama-server.exe.
+limitations:
+  - Validated only with the 8K SPEED-Bench throughput workload, concurrency 1, 256 generated tokens, and 15 measured requests.
+  - Performance was measured with a 40,960-token server context; the launch command uses a 65,536-token context.
+
+validation:
+  validated_at: 2026-08-18
+  validated_by: Perf-Sweep
+  tested_stack:
+    os_version: "Windows 10.0.26200"
+    driver: "610.88"
+    cuda: "13.3"
+precision:
+  label: Q4_K_M
+checkpoint:
+  target: https://huggingface.co/unsloth/Qwen3.8-27B-GGUF/blob/f1bfb127c64f7072bdd2cad55f258b9c8b2910fe/Qwen3.8-27B-Q4_K_M.gguf
+  target_label: unsloth/Qwen3.8-27B-GGUF
+  draft: null
+  draft_label: null
+mtp: "ON=2"
+concurrency: 1
+topology: null
+sampling: "Target backend sampling: ON; speculative draft backend sampling: ON"
+security: null
+runtime: null
+serve:
+  label: "Launch MTP · n=2"
+  target: single-node
+  instructions: "Run in PowerShell. llama-server downloads and caches the target GGUF from Hugging Face."
+  command: |
+    llama-server.exe -hf "unsloth/Qwen3.8-27B-GGUF" `
+      -hff "Qwen3.8-27B-Q4_K_M.gguf" `
+      --no-mmproj `
+      --backend-sampling `
+      --batch-size 4096 `
+      --ubatch-size 2048 `
+      --ctx-size 65536 `
+      --parallel 1 `
+      --n-predict 256 `
+      -ngl 999 `
+      --jinja `
+      --chat-template-kwargs '{"preserve_thinking":true}' `
+      --spec-type draft-mtp `
+      --spec-draft-n-max 2 `
+      --spec-draft-backend-sampling
+  port: null
+  api_model: null
+notes: "The pinned [Q4_K_M target GGUF](https://huggingface.co/unsloth/Qwen3.8-27B-GGUF/blob/f1bfb127c64f7072bdd2cad55f258b9c8b2910fe/Qwen3.8-27B-Q4_K_M.gguf) contains integrated MTP layers, so no separate draft checkpoint is required. The MTP depth and batch settings are the Pareto-balanced RTX 5090 selection."

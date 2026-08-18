@@ -1,0 +1,26 @@
+schema_version: 1
+id: <builder>/<model>            # must match models/<builder>/<model>
+display_name: <Display Name>
+builder: <builder>
+family: <Family>
+summary: <one short neutral sentence>
+# upstream: https://huggingface.co/<org>/<model>   # omit rather than guess
+modalities:
+  - text
+availability: available          # available | pending | deprecated
+
+# Use for known but incomplete guidance; do not create a partial recipe.yaml.
+# planned_configurations:
+#   -
+#     hardware: <catalog id or null when count is unresolved>
+#     hardware_label: <human-readable target>
+#     gpu_count: <integer or null>
+#     platform:
+#       os: <linux or windows>
+#       execution: <container or native>
+#     backend: <backend id or null>
+#     variant: <full precision slug or null>
+#     precision: <precision or null>
+#     status: <what is missing or blocked>
+#     note: <optional operational context or null>
+#     source: <optional direct source URL or null>

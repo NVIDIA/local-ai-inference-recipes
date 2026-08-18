@@ -1,0 +1,71 @@
+schema_version: 3
+title: NVIDIA Nemotron 3.5 Lightning 30B A3B · DGX Spark · vLLM
+model: nvidia/nemotron-3.5-lightning-30b-a3b
+hardware: dgx-spark
+platform:
+  os: linux
+  execution: container
+backend: vllm
+status: experimental
+precision:
+  label: NVFP4
+checkpoint:
+  target: https://huggingface.co/nvidia/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-NVFP4
+  target_label: nvidia/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-NVFP4
+  draft: https://huggingface.co/nvidia/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-NVFP4-DSpark
+  draft_label: nvidia/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-NVFP4-DSpark
+mtp: null
+concurrency: null
+topology:
+  summary: 1× DGX Spark
+  gpu_count: 1
+  node_count: 1
+  tensor_parallel_size: null
+sampling: null
+security: Evaluation configuration only. Host networking exposes vLLM on host interfaces; use a firewall or reverse proxy, a scoped read-only HF token, and an isolated cache. For production, pin tested image, model, and code revisions.
+runtime:
+  kind: container
+  label: Container (mutable nightly)
+  image: vllm/vllm-openai:nightly
+  image_url: https://hub.docker.com/r/vllm/vllm-openai/tags?name=nightly
+  setup_label: Start container
+  setup_target: single-node
+  setup_instructions: Set `HF_TOKEN` in the host environment.
+  setup_command: |
+    docker run --rm -it \
+      --gpus all \
+      --ipc host \
+      --network host \
+      --shm-size=16g \
+      --ulimit memlock=-1 \
+      --ulimit stack=67108864 \
+      -e HF_TOKEN=$HF_TOKEN \
+      -v ~/.cache/huggingface:/root/.cache/huggingface \
+      --entrypoint /bin/bash \
+      vllm/vllm-openai:nightly
+serve:
+  label: Launch
+  target: single-node
+  instructions: null
+  command: |
+    vllm serve nvidia/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-NVFP4 \
+        --moe-backend marlin \
+        --kv-cache-dtype fp8 \
+        --max-num-batched-tokens 16384 \
+        --gpu-memory-utilization 0.7 \
+        --enable-prefix-caching \
+        --mamba-backend flashinfer \
+        --mamba-cache-mode align \
+        --mamba-ssm-cache-dtype float16 \
+        --enable-mamba-cache-stochastic-rounding \
+        --mamba-cache-philox-rounds 5 \
+        --reasoning-parser nemotron_v3 \
+        --enable-auto-tool-choice \
+        --tool-call-parser qwen3_xml \
+        --load-format fastsafetensors \
+        --speculative_config.method dspark \
+        --speculative_config.model nvidia/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-NVFP4-DSpark \
+        --speculative_config.num_speculative_tokens 7
+  port: null
+  api_model: nvidia/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-NVFP4
+notes: null

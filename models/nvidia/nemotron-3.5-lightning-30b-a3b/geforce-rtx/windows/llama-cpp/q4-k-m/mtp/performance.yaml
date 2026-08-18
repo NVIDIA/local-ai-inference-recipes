@@ -1,0 +1,35 @@
+schema_version: 1
+status: optimized
+recipe_sha256: aa91723c5099b1627e62e18c944d0f019a85151470477e8bc1aaaa7d7f4993c5
+launch_id: default
+measured_at: 2026-08-19
+harness:
+  name: llama.cpp SPEED-Bench
+  version: fe8156f789011f6ea0baf6917ea09f88b89d9554
+system:
+  label: "NVIDIA GeForce RTX 5090"
+  accelerator: "NVIDIA GeForce RTX 5090"
+  accelerator_count: 1
+  operating_system: windows
+  os_version: "Windows 10.0.26200"
+  driver_version: "610.88"
+  cuda_version: "13.3"
+software:
+  model_revision: f2d3fe3694501008786e81e5f20360cbf715496a
+  backend_version: "b10509"
+  runtime_revision: fe8156f789011f6ea0baf6917ea09f88b89d9554
+profiles:
+  - id: throughput-8k
+    workload:
+      input_tokens: 8192
+      context_tokens: 40960
+      dataset: nvidia/SPEED-Bench
+      profile: throughput_8k
+      output_tokens: 256
+      concurrency: 1
+      requests: 15
+      warmup_requests: 0
+    results:
+      prefill_tokens_per_second_mean: 7491.23
+      decode_tokens_per_second_mean: 374.78
+      e2e_latency_ms_mean: 1275.73

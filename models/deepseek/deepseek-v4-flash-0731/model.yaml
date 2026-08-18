@@ -1,0 +1,10 @@
+schema_version: 1
+id: deepseek/deepseek-v4-flash-0731
+display_name: DeepSeek-V4-Flash-0731
+builder: deepseek
+family: DeepSeek-V4
+summary: DeepSeek V4 Flash 0731 inference configurations.
+upstream: https://huggingface.co/deepseek-ai/DeepSeek-V4-Flash-0731
+modalities:
+  - text
+availability: available

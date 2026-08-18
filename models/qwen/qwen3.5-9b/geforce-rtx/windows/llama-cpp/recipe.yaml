@@ -1,0 +1,43 @@
+schema_version: 3
+title: Qwen3.5-9B · NVIDIA GeForce RTX GPUs · llama.cpp
+model: qwen/qwen3.5-9b
+hardware: geforce-rtx
+platform:
+  os: windows
+  execution: native
+backend: llama-cpp
+min_vidmem_gb: 24
+status: experimental
+precision:
+  label: Q4_K_M
+checkpoint:
+  target: https://huggingface.co/unsloth/Qwen3.5-9B-MTP-GGUF/blob/main/Qwen3.5-9B-Q4_K_M.gguf
+  target_label: unsloth/Qwen3.5-9B-MTP-GGUF
+  draft: null
+  draft_label: null
+mtp: ON=3
+concurrency: 1
+topology: null
+sampling: Temp=1.0; Top K=20; Top P=0.95; Min P=0; Repetition Penalty=1; Presence Penalty=0
+security: null
+runtime: null
+serve:
+  label: Launch
+  target: single-node
+  instructions: Run in PowerShell.
+  command: |
+    llama-server -m Qwen3.5-9B-Q4_K_M.gguf `
+      -b 4096 `
+      -ub 4096 `
+      --ctx-size 65536 `
+      --spec-type draft-mtp `
+      --temp 1.0 `
+      --top-k 20 `
+      --top-p 0.95 `
+      --min-p 0 `
+      --repeat-penalty 1 `
+      --presence-penalty 0 `
+      -np 1
+  port: null
+  api_model: null
+notes: Run from the directory containing the downloaded GGUF file.

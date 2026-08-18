@@ -1,0 +1,9 @@
+schema_version: 1
+id: google/gemma-4-31b
+display_name: Gemma-4-31B
+builder: google
+family: Gemma 4
+summary: Google Gemma 4 (31B) text-generation model.
+modalities:
+  - text
+availability: available

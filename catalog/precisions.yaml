@@ -1,0 +1,21 @@
+schema_version: 1
+precisions:
+  - id: nvfp4
+    label: NVFP4
+    description: NVIDIA FP4 quantization
+
+  - id: nvfp4-w4a16
+    label: NVFP4-W4A16
+    description: NVIDIA FP4 weights with FP16 activations
+
+  - id: fp4-fp8-mixed
+    label: FP4 + FP8 Mixed
+    description: Mixed FP4 weights and FP8 KV cache quantization
+
+  - id: q4-k-m
+    label: Q4_K_M
+    description: GGUF 4-bit mixed quantization (medium)
+
+  - id: int4-bf16-drafter
+    label: Int4, BF16 Drafter
+    description: Int4 main model with BF16 speculative drafter

@@ -1,0 +1,763 @@
+<!DOCTYPE html>
+<!--
+SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+SPDX-License-Identifier: CC-BY-4.0 AND Apache-2.0
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NVIDIA Nemotron 3.5 Lightning 30B A3B — recipes</title>
+<link rel="icon" href="../../../assets/favicon.ico" type="image/x-icon">
+<link rel="stylesheet" href="../../../assets/style.css">
+</head>
+<body>
+<div class="cair" id="cair-root">
+<script>(function(){try{var t=localStorage.getItem('cair-theme');if(t==='dark'){document.currentScript.parentNode.classList.add('dark');}}catch(e){}})();</script>
+<a href="#main" style="position:absolute;left:-9999px;top:0;background:var(--accent);color:#fff;padding:8px 14px;border-radius:4px;z-index:50">Skip to content</a>
+<header style="position:sticky;top:0;z-index:30;display:flex;align-items:center;gap:20px;padding:0 24px;height:60px;background:var(--surface);border-bottom:1px solid var(--border)">
+  <a href="../../../index.html" style="display:flex;align-items:center;gap:11px;text-decoration:none;color:var(--text)">
+    <img src="../../../assets/favicon.ico" alt="" style="height:22px;width:auto;display:block" />
+    <span style="font-weight:600;font-size:15px;letter-spacing:-.01em;white-space:nowrap">Local AI Inference Recipes</span>
+  </a>
+  <nav aria-label="Primary" style="display:flex;align-items:center;gap:4px;margin-left:auto">
+    <a href="../../../index.html" style="display:flex;align-items:center;gap:6px;padding:7px 11px;border-radius:6px;font-size:14px;font-weight:500;color:var(--text)">Models</a>
+    <a href="https://github.com/NVIDIA/local-ai-inference-recipes" target="_blank" rel="noopener noreferrer" style="display:flex;align-items:center;gap:6px;padding:7px 11px;border-radius:6px;font-size:14px;color:var(--text-muted)"><span class="aicon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 1024 1024" fill="currentColor" aria-hidden="true" focusable="false"><path fill="currentColor" d="M740 161c-61.8 0-112 50.2-112 112c0 50.1 33.1 92.6 78.5 106.9v95.9L320 602.4V318.1c44.2-15 76-56.9 76-106.1c0-61.8-50.2-112-112-112s-112 50.2-112 112c0 49.2 31.8 91 76 106.1V706c-44.2 15-76 56.9-76 106.1c0 61.8 50.2 112 112 112s112-50.2 112-112c0-49.2-31.8-91-76-106.1v-27.8l423.5-138.7a50.52 50.52 0 0 0 34.9-48.2V378.2c42.9-15.8 73.6-57 73.6-105.2c0-61.8-50.2-112-112-112m-504 51a48.01 48.01 0 0 1 96 0a48.01 48.01 0 0 1-96 0m96 600a48.01 48.01 0 0 1-96 0a48.01 48.01 0 0 1 96 0m408-491a48.01 48.01 0 0 1 0-96a48.01 48.01 0 0 1 0 96"/></svg></span>Repository</a>
+    
+    <button type="button" id="cair-theme-btn" aria-label="Switch theme" title="Switch theme" style="display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;margin-left:6px;border:1px solid var(--border);border-radius:8px;background:var(--surface);color:var(--text-muted);cursor:pointer;font-size:16px">☾</button>
+  </nav>
+</header>
+<main id="main">
+<div class="cair-fade" style="max-width:1280px;margin:0 auto;padding:28px 24px 72px"><a href="../../../index.html" style="display:inline-flex;align-items:center;gap:6px;font-size:13.5px;color:var(--text-muted);margin-bottom:18px"><span class="aicon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 1024 1024" fill="currentColor" aria-hidden="true" focusable="false"><path fill="currentColor" d="M724 218.3V141c0-6.7-7.7-10.4-12.9-6.3L260.3 486.8a31.86 31.86 0 0 0 0 50.3l450.8 352.1c5.3 4.1 12.9.4 12.9-6.3v-77.3c0-4.9-2.3-9.6-6.1-12.6l-360-281l360-281.1c3.8-3 6.1-7.7 6.1-12.6"/></svg></span>All models</a>
+  <header style="margin-bottom:26px">
+    <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:6px">
+      <h1 style="font-size:28px;font-weight:600;letter-spacing:-.01em;margin:0">NVIDIA Nemotron 3.5 Lightning 30B A3B</h1>
+      <span style="display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:500;padding:3px 9px;border-radius:999px;white-space:nowrap;background:var(--accent-soft);color:var(--accent-text);border:1px solid rgba(118,185,0,.35)"><span class="aicon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 1024 1024" fill="currentColor" aria-hidden="true" focusable="false"><path fill="currentColor" d="M512 64C264.6 64 64 264.6 64 512s200.6 448 448 448s448-200.6 448-448S759.4 64 512 64m193.5 301.7l-210.6 292a31.8 31.8 0 0 1-51.7 0L318.5 484.9c-3.8-5.3 0-12.7 6.5-12.7h46.9c10.2 0 19.9 4.9 25.9 13.3l71.2 98.8l157.2-218c6-8.3 15.6-13.3 25.9-13.3H699c6.5 0 10.3 7.4 6.5 12.7"/></svg></span>Optimized</span>
+    </div>
+    <p style="font-size:13.5px;color:var(--text-muted);margin:0 0 8px">nvidia · Nemotron 3.5 · Text</p>
+    <p style="font-size:15px;color:var(--text);margin:0 0 8px;max-width:70ch">NVIDIA Nemotron 3.5 Lightning 30B A3B inference configurations.</p>
+  </header><div id="ws-body"><div style="display:grid;grid-template-columns:38fr 62fr;gap:24px;align-items:start" class="ws-cols"><section aria-label="Choose configuration" style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:22px;box-shadow:var(--shadow-card)"><h2 style="font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted);font-weight:600;margin:0 0 18px">Choose configuration</h2><div style="display:flex;flex-direction:column;gap:16px"><label style="display:flex;flex-direction:column;gap:6px;font-size:12.5px;font-weight:500;color:var(--text-muted)"><span style="display:inline-flex;align-items:center;gap:8px"><span style="display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:5px;background:var(--accent-soft);color:var(--accent-text);font-size:11px;font-weight:600">1</span>Hardware</span><select class="cair-sel" data-sel="hardware" style="height:42px;padding:0 12px;font-size:14px;font-family:var(--font-sans);background:var(--surface);border:1px solid var(--border-2);border-radius:8px;color:var(--text)"><option value="dgx-spark">DGX Spark</option><option value="geforce-rtx" selected>GeForce RTX GPUs</option><option value="rtx-pro">RTX Pro GPUs</option></select></label><label style="display:flex;flex-direction:column;gap:6px;font-size:12.5px;font-weight:500;color:var(--text-muted)"><span style="display:inline-flex;align-items:center;gap:8px"><span style="display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:5px;background:var(--accent-soft);color:var(--accent-text);font-size:11px;font-weight:600">2</span>OS</span><select class="cair-sel" data-sel="os" style="height:42px;padding:0 12px;font-size:14px;font-family:var(--font-sans);background:var(--surface);border:1px solid var(--border-2);border-radius:8px;color:var(--text)"><option value="linux">Linux</option><option value="windows" selected>Windows</option></select></label><label style="display:flex;flex-direction:column;gap:6px;font-size:12.5px;font-weight:500;color:var(--text-muted)"><span style="display:inline-flex;align-items:center;gap:8px"><span style="display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:5px;background:var(--accent-soft);color:var(--accent-text);font-size:11px;font-weight:600">3</span>Backend</span><select class="cair-sel" data-sel="backend" style="height:42px;padding:0 12px;font-size:14px;font-family:var(--font-sans);background:var(--surface);border:1px solid var(--border-2);border-radius:8px;color:var(--text)"><option value="llama-cpp" selected>llama.cpp</option></select></label><label style="display:flex;flex-direction:column;gap:6px;font-size:12.5px;font-weight:500;color:var(--text-muted)"><span style="display:inline-flex;align-items:center;gap:8px"><span style="display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:5px;background:var(--accent-soft);color:var(--accent-text);font-size:11px;font-weight:600">4</span>Precision</span><select class="cair-sel" data-sel="precision" style="height:42px;padding:0 12px;font-size:14px;font-family:var(--font-sans);background:var(--surface);border:1px solid var(--border-2);border-radius:8px;color:var(--text)"><option value="q4-k-m" selected>Q4_K_M</option></select></label><label style="display:flex;flex-direction:column;gap:6px;font-size:12.5px;font-weight:500;color:var(--text-muted)"><span style="display:inline-flex;align-items:center;gap:8px"><span style="display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:5px;background:var(--accent-soft);color:var(--accent-text);font-size:11px;font-weight:600">5</span>Variant</span><select class="cair-sel" data-sel="variant" style="height:42px;padding:0 12px;font-size:14px;font-family:var(--font-sans);background:var(--surface);border:1px solid var(--border-2);border-radius:8px;color:var(--text)"><option value="dflash" selected>dflash</option><option value="mtp">mtp</option></select></label></div><div style="border-top:1px solid var(--border);margin:20px 0 0;padding-top:18px"><h3 style="font-size:12.5px;font-weight:600;margin:0 0 6px">Why this recipe</h3><p style="font-size:13.5px;color:var(--text-muted);margin:0 0 16px;line-height:1.5">Maintained starting point for this hardware, operating system, and backend. Alternatives remain available above.</p><dl style="margin:0;display:flex;flex-direction:column;gap:10px"><div style="display:flex;justify-content:space-between;gap:12px"><dt style="font-size:13px;color:var(--text-muted)">Precision</dt><dd style="margin:0;font-size:13px;font-weight:500;text-align:right">Q4_K_M</dd></div><div style="display:flex;justify-content:space-between;gap:12px"><dt style="font-size:13px;color:var(--text-muted)">Min GPU memory</dt><dd style="margin:0;font-size:13px;font-weight:500;text-align:right">24 GB</dd></div><div style="display:flex;justify-content:space-between;gap:12px"><dt style="font-size:13px;color:var(--text-muted)">Checkpoint</dt><dd style="margin:0;font-size:13px;text-align:right;word-break:break-all"><a href="https://huggingface.co/unsloth/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-GGUF/blob/f2d3fe3694501008786e81e5f20360cbf715496a/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-UD-Q4_K_M.gguf" target="_blank" rel="noopener noreferrer">hf: unsloth/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-GGUF/blob/f2d3fe3694501008786e81e5f20360cbf715496a/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-UD-Q4_K_M.gguf</a></dd></div></dl></div></section><section aria-label="Recipe commands" class="ws-panel" style="position:sticky;top:76px;display:flex;flex-direction:column;background:var(--surface);border:1px solid var(--border);border-radius:12px;box-shadow:var(--shadow-card);overflow:hidden"><div style="padding:20px 22px 18px;border-bottom:1px solid var(--border)"><div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px"><h2 style="font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted);font-weight:600;margin:0">Selected recipe</h2><span style="display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:500;padding:3px 9px;border-radius:999px;white-space:nowrap;background:var(--accent-soft);color:var(--accent-text);border:1px solid rgba(118,185,0,.35)"><span class="aicon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 1024 1024" fill="currentColor" aria-hidden="true" focusable="false"><path fill="currentColor" d="M512 64C264.6 64 64 264.6 64 512s200.6 448 448 448s448-200.6 448-448S759.4 64 512 64m193.5 301.7l-210.6 292a31.8 31.8 0 0 1-51.7 0L318.5 484.9c-3.8-5.3 0-12.7 6.5-12.7h46.9c10.2 0 19.9 4.9 25.9 13.3l71.2 98.8l157.2-218c6-8.3 15.6-13.3 25.9-13.3H699c6.5 0 10.3 7.4 6.5 12.7"/></svg></span>Recommended</span></div><p style="font-size:17px;font-weight:600;margin:0;letter-spacing:-.01em">GeForce RTX GPUs · Windows · llama.cpp · Q4_K_M · dflash</p></div><div style="padding:20px 22px 22px;display:flex;flex-direction:column;gap:22px"><div><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px"><h3 style="font-size:13px;font-weight:600;margin:0;display:flex;align-items:center;gap:7px"><span style="color:var(--text-faint)"><span class="aicon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 1024 1024" fill="currentColor" aria-hidden="true" focusable="false"><path fill="currentColor" d="M512 64C264.6 64 64 264.6 64 512s200.6 448 448 448s448-200.6 448-448S759.4 64 512 64m0 820c-205.4 0-372-166.6-372-372s166.6-372 372-372s372 166.6 372 372s-166.6 372-372 372"/><path fill="currentColor" d="m719.4 499.1l-296.1-215A15.9 15.9 0 0 0 398 297v430c0 13.1 14.8 20.5 25.3 12.9l296.1-215a15.9 15.9 0 0 0 0-25.8m-257.6 134V390.9L628.5 512z"/></svg></span></span>Launch DFlash · n=7</h3><button type="button" data-copy="default:serve" aria-label="Copy launch dflash · n=7 command" style="display:inline-flex;align-items:center;gap:6px;padding:5px 11px;font-size:12px;font-weight:500;border-radius:7px;cursor:pointer;font-family:var(--font-sans);border:1px solid var(--border-2);background:var(--surface);color:var(--text-muted)"><span class="aicon" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 16 16"></svg></span>Copy</button></div><p style="font-size:12px;color:var(--text-muted);margin:0 0 8px">Run in PowerShell. llama-server downloads and caches the target and DFlash GGUF files from Hugging Face. Sampling — Target backend sampling: ON; speculative draft backend sampling: ON</p><pre class="cair-code" style="background:var(--code-bg);color:var(--code-fg);border-radius:9px;padding:14px 16px;overflow-x:auto;font-family:var(--font-mono);font-size:12.5px;line-height:1.6;white-space:pre"><code>llama-server.exe -hf &quot;unsloth/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-GGUF&quot; `
+  -hff &quot;NVIDIA-Nemotron-3.5-Lightning-30B-A3B-UD-Q4_K_M.gguf&quot; `
+  -hfrd &quot;apolo13x/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-DFlash-GGUF&quot; `
+  --spec-draft-model &quot;dflash-NVIDIA-Nemotron-3.5-Lightning-30B-A3B-NVFP4.gguf&quot; `
+  --no-mmproj `
+  --backend-sampling `
+  --batch-size 2048 `
+  --ubatch-size 2048 `
+  --ctx-size 65536 `
+  --parallel 1 `
+  --n-predict 256 `
+  -ngl 999 `
+  --jinja `
+  --chat-template-kwargs &#39;{&quot;enable_thinking&quot;:true}&#39; `
+  --spec-type draft-dflash `
+  --spec-draft-n-max 7 `
+  --spec-draft-backend-sampling</code></pre></div></div></section></div><section aria-label="Measured performance" style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px 22px;margin-top:24px"><h2 style="font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted);font-weight:600;margin:0 0 7px">Measured performance</h2><p style="font-size:13.5px;color:var(--text-faint);margin:0">Not measured for this exact recipe.</p></section><div style="display:grid;grid-template-columns:38fr 62fr;gap:24px;align-items:start;margin-top:24px" class="ws-cols"><section style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:22px"><h2 style="font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted);font-weight:600;margin:0 0 16px">Recipe details</h2><dl style="margin:0;display:flex;flex-direction:column;gap:0"><div style="display:flex;justify-content:space-between;gap:16px;padding:9px 0;border-bottom:1px solid var(--border)"><dt style="font-size:13px;color:var(--text-muted);white-space:nowrap">Operating system</dt><dd style="margin:0;font-size:13px;text-align:right;word-break:break-word"><span style="font-weight:500">Windows</span></dd></div><div style="display:flex;justify-content:space-between;gap:16px;padding:9px 0;border-bottom:1px solid var(--border)"><dt style="font-size:13px;color:var(--text-muted);white-space:nowrap">Execution</dt><dd style="margin:0;font-size:13px;text-align:right;word-break:break-word"><span style="font-weight:500">Native</span></dd></div><div style="display:flex;justify-content:space-between;gap:16px;padding:9px 0;border-bottom:1px solid var(--border)"><dt style="font-size:13px;color:var(--text-muted);white-space:nowrap">Backend version</dt><dd style="margin:0;font-size:13px;text-align:right;word-break:break-word"><span style="font-weight:500">b10509</span></dd></div><div style="display:flex;justify-content:space-between;gap:16px;padding:9px 0;border-bottom:1px solid var(--border)"><dt style="font-size:13px;color:var(--text-muted);white-space:nowrap">Backend min version</dt><dd style="margin:0;font-size:13px;text-align:right;word-break:break-word"><span style="font-weight:500">b10509</span></dd></div><div style="display:flex;justify-content:space-between;gap:16px;padding:9px 0;border-bottom:1px solid var(--border)"><dt style="font-size:13px;color:var(--text-muted);white-space:nowrap">Precision</dt><dd style="margin:0;font-size:13px;text-align:right;word-break:break-word"><span style="font-weight:500">q4-k-m</span></dd></div><div style="display:flex;justify-content:space-between;gap:16px;padding:9px 0;border-bottom:1px solid var(--border)"><dt style="font-size:13px;color:var(--text-muted);white-space:nowrap">Min GPU memory</dt><dd style="margin:0;font-size:13px;text-align:right;word-break:break-word"><span style="font-weight:500">24 GB</span></dd></div><div style="display:flex;justify-content:space-between;gap:16px;padding:9px 0;border-bottom:1px solid var(--border)"><dt style="font-size:13px;color:var(--text-muted);white-space:nowrap">Checkpoint</dt><dd style="margin:0;font-size:13px;text-align:right;word-break:break-word"><a href="https://huggingface.co/unsloth/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-GGUF/blob/f2d3fe3694501008786e81e5f20360cbf715496a/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-UD-Q4_K_M.gguf" target="_blank" rel="noopener noreferrer">hf: unsloth/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-GGUF/blob/f2d3fe3694501008786e81e5f20360cbf715496a/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-UD-Q4_K_M.gguf</a></dd></div><div style="display:flex;justify-content:space-between;gap:16px;padding:9px 0;border-bottom:1px solid var(--border)"><dt style="font-size:13px;color:var(--text-muted);white-space:nowrap">Draft model</dt><dd style="margin:0;font-size:13px;text-align:right;word-break:break-word"><a href="https://huggingface.co/apolo13x/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-DFlash-GGUF/blob/3051796f1bcf60ac44a27c2f79c52a2a2b3e2b37/dflash-NVIDIA-Nemotron-3.5-Lightning-30B-A3B-NVFP4.gguf" target="_blank" rel="noopener noreferrer">hf: apolo13x/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-DFlash-GGUF/blob/3051796f1bcf60ac44a27c2f79c52a2a2b3e2b37/dflash-NVIDIA-Nemotron-3.5-Lightning-30B-A3B-NVFP4.gguf</a></dd></div><div style="display:flex;justify-content:space-between;gap:16px;padding:9px 0;border-bottom:1px solid var(--border)"><dt style="font-size:13px;color:var(--text-muted);white-space:nowrap">Concurrency</dt><dd style="margin:0;font-size:13px;text-align:right;word-break:break-word"><span style="font-weight:500">1</span></dd></div><div style="display:flex;justify-content:space-between;gap:16px;padding:9px 0;border-bottom:1px solid var(--border)"><dt style="font-size:13px;color:var(--text-muted);white-space:nowrap">Notes</dt><dd style="margin:0;font-size:13px;text-align:right;word-break:break-word"><span style="font-weight:500">The pinned <a href="https://huggingface.co/unsloth/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-GGUF/blob/f2d3fe3694501008786e81e5f20360cbf715496a/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-UD-Q4_K_M.gguf" target="_blank" rel="noopener noreferrer">Q4_K_M target</a> and <a href="https://huggingface.co/apolo13x/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-DFlash-GGUF/blob/3051796f1bcf60ac44a27c2f79c52a2a2b3e2b37/dflash-NVIDIA-Nemotron-3.5-Lightning-30B-A3B-NVFP4.gguf" target="_blank" rel="noopener noreferrer">DFlash draft</a> are the checkpoints used for selection. DFlash depth 7, both sampling modes, and the batch settings are the Pareto-balanced RTX 5090 choice.</span></dd></div><div style="display:flex;justify-content:space-between;gap:16px;padding:9px 0;border-bottom:1px solid var(--border)"><dt style="font-size:13px;color:var(--text-muted);white-space:nowrap">Recipe ID</dt><dd style="margin:0;font-size:13px;text-align:right;word-break:break-word"><code style="font-family:var(--font-mono);font-size:12px;background:var(--surface-well);padding:1px 6px;border-radius:4px">nvidia/nemotron-3.5-lightning-30b-a3b/geforce-rtx/windows/llama-cpp/q4-k-m/dflash</code></dd></div></dl></section><section style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:22px 24px"><h2 style="font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted);font-weight:600;margin:0 0 12px">About this model</h2><p style="font-size:15px;line-height:1.6;margin:0 0 14px;color:var(--text)">NVIDIA Nemotron 3.5 Lightning 30B A3B inference configurations.</p><p style="font-size:13.5px;color:var(--text-muted);line-height:1.6;margin:0">Builder: nvidia  ·  Family: Nemotron 3.5  ·  Model ID: nvidia/nemotron-3.5-lightning-30b-a3b</p></section></div></div></div>
+</main>
+<footer style="border-top:1px solid var(--border);background:var(--surface)">
+  <div style="max-width:1280px;margin:0 auto;padding:28px 24px;display:flex;gap:24px;flex-wrap:wrap;align-items:center;font-size:13px;color:var(--text-muted)">
+    <div style="display:flex;gap:18px;flex-wrap:wrap;margin-left:auto;align-items:center">
+      <a href="https://github.com/NVIDIA/local-ai-inference-recipes" target="_blank" rel="noopener noreferrer">Repository</a>
+      <a href="https://github.com/NVIDIA/local-ai-inference-recipes/blob/main/LICENSE" target="_blank" rel="noopener noreferrer">License</a>
+      <span style="display:inline-flex;align-items:center;gap:6px;color:var(--text-faint)"><span class="aicon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 1024 1024" fill="currentColor" aria-hidden="true" focusable="false"><path fill="currentColor" d="M512 64C264.6 64 64 264.6 64 512s200.6 448 448 448s448-200.6 448-448S759.4 64 512 64m0 820c-205.4 0-372-166.6-372-372s166.6-372 372-372s372 166.6 372 372s-166.6 372-372 372"/><path fill="currentColor" d="M686.7 638.6L544.1 535.5V288c0-4.4-3.6-8-8-8H488c-4.4 0-8 3.6-8 8v275.4c0 2.6 1.2 5 3.3 6.5l165.4 120.6c3.6 2.6 8.6 1.8 11.2-1.7l28.6-39c2.6-3.7 1.8-8.7-1.8-11.2"/></svg></span>Catalog schema v2 · 16 models</span>
+    </div>
+  </div>
+</footer>
+<div id="cair-live" aria-live="polite" role="status" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap"></div>
+</div>
+<script>var ICONS = {"search-outlined":"\u003csvg xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" height=\"16\" viewBox=\"0 0 1024 1024\" fill=\"currentColor\" aria-hidden=\"true\" focusable=\"false\">\u003cpath fill=\"currentColor\" d=\"M909.6 854.5L649.9 594.8C690.2 542.7 712 479 712 412c0-80.2-31.3-155.4-87.9-212.1S492.1 112 412 112s-155.5 31.3-212.1 87.9C143.2 256.5 112 331.8 112 412c0 80.1 31.3 155.5 87.9 212.1C256.5 680.8 331.8 712 412 712c67 0 130.6-21.8 182.7-62l259.7 259.6a8.2 8.2 0 0 0 11.6 0l43.6-43.5a8.2 8.2 0 0 0 0-11.6M570.4 570.4C528 612.7 471.8 636 412 636s-116-23.3-158.4-65.6C211.3 528 188 471.8 188 412s23.3-116.1 65.6-158.4C296 211.3 352.2 188 412 188s116.1 23.2 158.4 65.6S636 352.2 636 412s-23.3 116.1-65.6 158.4\"/>\u003c/svg>","thunderbolt-filled":"\u003csvg xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" height=\"16\" viewBox=\"0 0 1024 1024\" fill=\"currentColor\" aria-hidden=\"true\" focusable=\"false\">\u003cpath fill=\"currentColor\" d=\"M848 359.3H627.7L825.8 109c4.1-5.3.4-13-6.3-13H436c-2.8 0-5.5 1.5-6.9 4L170 547.5c-3.1 5.3.7 12 6.9 12h174.4l-89.4 357.6c-1.9 7.8 7.5 13.3 13.3 7.7L853.5 373c5.2-4.9 1.7-13.7-5.5-13.7\"/>\u003c/svg>","right-outlined":"\u003csvg xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" height=\"16\" viewBox=\"0 0 1024 1024\" fill=\"currentColor\" aria-hidden=\"true\" focusable=\"false\">\u003cpath fill=\"currentColor\" d=\"M765.7 486.8L314.9 134.7A7.97 7.97 0 0 0 302 141v77.3c0 4.9 2.3 9.6 6.1 12.6l360 281.1l-360 281.1c-3.9 3-6.1 7.7-6.1 12.6V883c0 6.7 7.7 10.4 12.9 6.3l450.8-352.1a31.96 31.96 0 0 0 0-50.4\"/>\u003c/svg>","left-outlined":"\u003csvg xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" height=\"16\" viewBox=\"0 0 1024 1024\" fill=\"currentColor\" aria-hidden=\"true\" focusable=\"false\">\u003cpath fill=\"currentColor\" d=\"M724 218.3V141c0-6.7-7.7-10.4-12.9-6.3L260.3 486.8a31.86 31.86 0 0 0 0 50.3l450.8 352.1c5.3 4.1 12.9.4 12.9-6.3v-77.3c0-4.9-2.3-9.6-6.1-12.6l-360-281l360-281.1c3.8-3 6.1-7.7 6.1-12.6\"/>\u003c/svg>","appstore-outlined":"\u003csvg xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" height=\"16\" viewBox=\"0 0 1024 1024\" fill=\"currentColor\" aria-hidden=\"true\" focusable=\"false\">\u003cpath fill=\"currentColor\" d=\"M464 144H160c-8.8 0-16 7.2-16 16v304c0 8.8 7.2 16 16 16h304c8.8 0 16-7.2 16-16V160c0-8.8-7.2-16-16-16m-52 268H212V212h200zm452-268H560c-8.8 0-16 7.2-16 16v304c0 8.8 7.2 16 16 16h304c8.8 0 16-7.2 16-16V160c0-8.8-7.2-16-16-16m-52 268H612V212h200zM464 544H160c-8.8 0-16 7.2-16 16v304c0 8.8 7.2 16 16 16h304c8.8 0 16-7.2 16-16V560c0-8.8-7.2-16-16-16m-52 268H212V612h200zm452-268H560c-8.8 0-16 7.2-16 16v304c0 8.8 7.2 16 16 16h304c8.8 0 16-7.2 16-16V560c0-8.8-7.2-16-16-16m-52 268H612V612h200z\"/>\u003c/svg>","menu-outlined":"\u003csvg xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" height=\"16\" viewBox=\"0 0 1024 1024\" fill=\"currentColor\" aria-hidden=\"true\" focusable=\"false\">\u003cpath fill=\"currentColor\" d=\"M904 160H120c-4.4 0-8 3.6-8 8v64c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-64c0-4.4-3.6-8-8-8m0 624H120c-4.4 0-8 3.6-8 8v64c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-64c0-4.4-3.6-8-8-8m0-312H120c-4.4 0-8 3.6-8 8v64c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-64c0-4.4-3.6-8-8-8\"/>\u003c/svg>","close-outlined":"\u003csvg xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" height=\"16\" viewBox=\"0 0 1024 1024\" fill=\"currentColor\" aria-hidden=\"true\" focusable=\"false\">\u003cpath fill=\"currentColor\" fill-rule=\"evenodd\" d=\"M799.855 166.312c.023.007.043.018.084.059l57.69 57.69c.041.041.052.06.059.084a.1.1 0 0 1 0 .069c-.007.023-.018.042-.059.083L569.926 512l287.703 287.703c.041.04.052.06.059.083a.12.12 0 0 1 0 .07c-.007.022-.018.042-.059.083l-57.69 57.69c-.041.041-.06.052-.084.059a.1.1 0 0 1-.069 0c-.023-.007-.042-.018-.083-.059L512 569.926L224.297 857.629c-.04.041-.06.052-.083.059a.12.12 0 0 1-.07 0c-.022-.007-.042-.018-.083-.059l-57.69-57.69c-.041-.041-.052-.06-.059-.084a.1.1 0 0 1 0-.069c.007-.023.018-.042.059-.083L454.073 512L166.371 224.297c-.041-.04-.052-.06-.059-.083a.12.12 0 0 1 0-.07c.007-.022.018-.042.059-.083l57.69-57.69c.041-.041.06-.052.084-.059a.1.1 0 0 1 .069 0c.023.007.042.018.083.059L512 454.073l287.703-287.702c.04-.041.06-.052.083-.059a.12.12 0 0 1 .07 0Z\"/>\u003c/svg>","experiment-outlined":"\u003csvg xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" height=\"16\" viewBox=\"0 0 1024 1024\" fill=\"currentColor\" aria-hidden=\"true\" focusable=\"false\">\u003cpath fill=\"currentColor\" d=\"M512 472a40 40 0 1 0 80 0a40 40 0 1 0-80 0m367 352.9L696.3 352V178H768v-68H256v68h71.7v174L145 824.9c-2.8 7.4-4.3 15.2-4.3 23.1c0 35.3 28.7 64 64 64h614.6c7.9 0 15.7-1.5 23.1-4.3c33-12.7 49.4-49.8 36.6-82.8M395.7 364.7V180h232.6v184.7L719.2 600c-20.7-5.3-42.1-8-63.9-8c-61.2 0-119.2 21.5-165.3 60a188.78 188.78 0 0 1-121.3 43.9c-32.7 0-64.1-8.3-91.8-23.7zM210.5 844l41.7-107.8c35.7 18.1 75.4 27.8 116.6 27.8c61.2 0 119.2-21.5 165.3-60c33.9-28.2 76.3-43.9 121.3-43.9c35 0 68.4 9.5 97.6 27.1L813.5 844z\"/>\u003c/svg>","check-circle-filled":"\u003csvg xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" height=\"16\" viewBox=\"0 0 1024 1024\" fill=\"currentColor\" aria-hidden=\"true\" focusable=\"false\">\u003cpath fill=\"currentColor\" d=\"M512 64C264.6 64 64 264.6 64 512s200.6 448 448 448s448-200.6 448-448S759.4 64 512 64m193.5 301.7l-210.6 292a31.8 31.8 0 0 1-51.7 0L318.5 484.9c-3.8-5.3 0-12.7 6.5-12.7h46.9c10.2 0 19.9 4.9 25.9 13.3l71.2 98.8l157.2-218c6-8.3 15.6-13.3 25.9-13.3H699c6.5 0 10.3 7.4 6.5 12.7\"/>\u003c/svg>","clock-circle-outlined":"\u003csvg xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" height=\"16\" viewBox=\"0 0 1024 1024\" fill=\"currentColor\" aria-hidden=\"true\" focusable=\"false\">\u003cpath fill=\"currentColor\" d=\"M512 64C264.6 64 64 264.6 64 512s200.6 448 448 448s448-200.6 448-448S759.4 64 512 64m0 820c-205.4 0-372-166.6-372-372s166.6-372 372-372s372 166.6 372 372s-166.6 372-372 372\"/>\u003cpath fill=\"currentColor\" d=\"M686.7 638.6L544.1 535.5V288c0-4.4-3.6-8-8-8H488c-4.4 0-8 3.6-8 8v275.4c0 2.6 1.2 5 3.3 6.5l165.4 120.6c3.6 2.6 8.6 1.8 11.2-1.7l28.6-39c2.6-3.7 1.8-8.7-1.8-11.2\"/>\u003c/svg>","warning-filled":"\u003csvg xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" height=\"16\" viewBox=\"0 0 1024 1024\" fill=\"currentColor\" aria-hidden=\"true\" focusable=\"false\">\u003cpath fill=\"currentColor\" d=\"m955.7 856l-416-720c-6.2-10.7-16.9-16-27.7-16s-21.6 5.3-27.7 16l-416 720C56 877.4 71.4 904 96 904h832c24.6 0 40-26.6 27.7-48M480 416c0-4.4 3.6-8 8-8h48c4.4 0 8 3.6 8 8v184c0 4.4-3.6 8-8 8h-48c-4.4 0-8-3.6-8-8zm32 352a48.01 48.01 0 0 1 0-96a48.01 48.01 0 0 1 0 96\"/>\u003c/svg>","info-circle-outlined":"\u003csvg xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" height=\"16\" viewBox=\"0 0 1024 1024\" fill=\"currentColor\" aria-hidden=\"true\" focusable=\"false\">\u003cpath fill=\"currentColor\" d=\"M512 64C264.6 64 64 264.6 64 512s200.6 448 448 448s448-200.6 448-448S759.4 64 512 64m0 820c-205.4 0-372-166.6-372-372s166.6-372 372-372s372 166.6 372 372s-166.6 372-372 372\"/>\u003cpath fill=\"currentColor\" d=\"M464 336a48 48 0 1 0 96 0a48 48 0 1 0-96 0m72 112h-48c-4.4 0-8 3.6-8 8v272c0 4.4 3.6 8 8 8h48c4.4 0 8-3.6 8-8V456c0-4.4-3.6-8-8-8\"/>\u003c/svg>","container-outlined":"\u003csvg xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" height=\"16\" viewBox=\"0 0 1024 1024\" fill=\"currentColor\" aria-hidden=\"true\" focusable=\"false\">\u003cpath fill=\"currentColor\" d=\"M832 64H192c-17.7 0-32 14.3-32 32v832c0 17.7 14.3 32 32 32h640c17.7 0 32-14.3 32-32V96c0-17.7-14.3-32-32-32m-40 824H232V687h97.9c11.6 32.8 32 62.3 59.1 84.7c34.5 28.5 78.2 44.3 123 44.3s88.5-15.7 123-44.3c27.1-22.4 47.5-51.9 59.1-84.7H792v-63H643.6l-5.2 24.7C626.4 708.5 573.2 752 512 752s-114.4-43.5-126.5-103.3l-5.2-24.7H232V136h560zM320 341h384c4.4 0 8-3.6 8-8v-48c0-4.4-3.6-8-8-8H320c-4.4 0-8 3.6-8 8v48c0 4.4 3.6 8 8 8m0 160h384c4.4 0 8-3.6 8-8v-48c0-4.4-3.6-8-8-8H320c-4.4 0-8 3.6-8 8v48c0 4.4 3.6 8 8 8\"/>\u003c/svg>","play-circle-outlined":"\u003csvg xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" height=\"16\" viewBox=\"0 0 1024 1024\" fill=\"currentColor\" aria-hidden=\"true\" focusable=\"false\">\u003cpath fill=\"currentColor\" d=\"M512 64C264.6 64 64 264.6 64 512s200.6 448 448 448s448-200.6 448-448S759.4 64 512 64m0 820c-205.4 0-372-166.6-372-372s166.6-372 372-372s372 166.6 372 372s-166.6 372-372 372\"/>\u003cpath fill=\"currentColor\" d=\"m719.4 499.1l-296.1-215A15.9 15.9 0 0 0 398 297v430c0 13.1 14.8 20.5 25.3 12.9l296.1-215a15.9 15.9 0 0 0 0-25.8m-257.6 134V390.9L628.5 512z\"/>\u003c/svg>","api-outlined":"\u003csvg xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" height=\"16\" viewBox=\"0 0 1024 1024\" fill=\"currentColor\" aria-hidden=\"true\" focusable=\"false\">\u003cpath fill=\"currentColor\" d=\"m917.7 148.8l-42.4-42.4c-1.6-1.6-3.6-2.3-5.7-2.3s-4.1.8-5.7 2.3l-76.1 76.1a199.27 199.27 0 0 0-112.1-34.3c-51.2 0-102.4 19.5-141.5 58.6L432.3 308.7a8.03 8.03 0 0 0 0 11.3L704 591.7c1.6 1.6 3.6 2.3 5.7 2.3c2 0 4.1-.8 5.7-2.3l101.9-101.9c68.9-69 77-175.7 24.3-253.5l76.1-76.1c3.1-3.2 3.1-8.3 0-11.4M769.1 441.7l-59.4 59.4l-186.8-186.8l59.4-59.4c24.9-24.9 58.1-38.7 93.4-38.7s68.4 13.7 93.4 38.7c24.9 24.9 38.7 58.1 38.7 93.4s-13.8 68.4-38.7 93.4m-190.2 105a8.03 8.03 0 0 0-11.3 0L501 613.3L410.7 523l66.7-66.7c3.1-3.1 3.1-8.2 0-11.3L441 408.6a8.03 8.03 0 0 0-11.3 0L363 475.3l-43-43a7.85 7.85 0 0 0-5.7-2.3c-2 0-4.1.8-5.7 2.3L206.8 534.2c-68.9 69-77 175.7-24.3 253.5l-76.1 76.1a8.03 8.03 0 0 0 0 11.3l42.4 42.4c1.6 1.6 3.6 2.3 5.7 2.3s4.1-.8 5.7-2.3l76.1-76.1c33.7 22.9 72.9 34.3 112.1 34.3c51.2 0 102.4-19.5 141.5-58.6l101.9-101.9c3.1-3.1 3.1-8.2 0-11.3l-43-43l66.7-66.7c3.1-3.1 3.1-8.2 0-11.3zM441.7 769.1a131.32 131.32 0 0 1-93.4 38.7c-35.3 0-68.4-13.7-93.4-38.7a131.32 131.32 0 0 1-38.7-93.4c0-35.3 13.7-68.4 38.7-93.4l59.4-59.4l186.8 186.8z\"/>\u003c/svg>","branches-outlined":"\u003csvg xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" height=\"16\" viewBox=\"0 0 1024 1024\" fill=\"currentColor\" aria-hidden=\"true\" focusable=\"false\">\u003cpath fill=\"currentColor\" d=\"M740 161c-61.8 0-112 50.2-112 112c0 50.1 33.1 92.6 78.5 106.9v95.9L320 602.4V318.1c44.2-15 76-56.9 76-106.1c0-61.8-50.2-112-112-112s-112 50.2-112 112c0 49.2 31.8 91 76 106.1V706c-44.2 15-76 56.9-76 106.1c0 61.8 50.2 112 112 112s112-50.2 112-112c0-49.2-31.8-91-76-106.1v-27.8l423.5-138.7a50.52 50.52 0 0 0 34.9-48.2V378.2c42.9-15.8 73.6-57 73.6-105.2c0-61.8-50.2-112-112-112m-504 51a48.01 48.01 0 0 1 96 0a48.01 48.01 0 0 1-96 0m96 600a48.01 48.01 0 0 1-96 0a48.01 48.01 0 0 1 96 0m408-491a48.01 48.01 0 0 1 0-96a48.01 48.01 0 0 1 0 96\"/>\u003c/svg>","copy-outlined":"\u003csvg width=\"16\" height=\"16\" viewBox=\"0 0 16 16\">\u003c/svg>","check-outlined":"\u003csvg xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" height=\"16\" viewBox=\"0 0 1024 1024\" fill=\"currentColor\" aria-hidden=\"true\" focusable=\"false\">\u003cpath fill=\"currentColor\" d=\"M912 190h-69.9c-9.8 0-19.1 4.5-25.1 12.2L404.7 724.5L207 474a32 32 0 0 0-25.1-12.2H112c-6.7 0-10.4 7.7-6.3 12.9l273.9 347c12.8 16.2 37.4 16.2 50.3 0l488.4-618.9c4.1-5.1.4-12.8-6.3-12.8\"/>\u003c/svg>","safety-certificate-outlined":"\u003csvg xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" height=\"16\" viewBox=\"0 0 1024 1024\" fill=\"currentColor\" aria-hidden=\"true\" focusable=\"false\">\u003cpath fill=\"currentColor\" d=\"M866.9 169.9L527.1 54.1C523 52.7 517.5 52 512 52s-11 .7-15.1 2.1L157.1 169.9c-8.3 2.8-15.1 12.4-15.1 21.2v482.4c0 8.8 5.7 20.4 12.6 25.9L499.3 968c3.5 2.7 8 4.1 12.6 4.1s9.2-1.4 12.6-4.1l344.7-268.6c6.9-5.4 12.6-17 12.6-25.9V191.1c.2-8.8-6.6-18.3-14.9-21.2M810 654.3L512 886.5L214 654.3V226.7l298-101.6l298 101.6zm-405.8-201c-3-4.1-7.8-6.6-13-6.6H336c-6.5 0-10.3 7.4-6.5 12.7l126.4 174a16.1 16.1 0 0 0 26 0l212.6-292.7c3.8-5.3 0-12.7-6.5-12.7h-55.2c-5.1 0-10 2.5-13 6.6L468.9 542.4z\"/>\u003c/svg>"};</script>
+<script>(function(){
+var root=document.getElementById('cair-root'),btn=document.getElementById('cair-theme-btn');
+function g(){return root.classList.contains('dark')?'\u2600':'\u263e';}
+function l(){return root.classList.contains('dark')?'Switch to light theme':'Switch to dark theme';}
+if(btn){btn.textContent=g();btn.setAttribute('aria-label',l());btn.title=l();
+btn.addEventListener('click',function(){var d=!root.classList.contains('dark');root.classList.toggle('dark',d);try{localStorage.setItem('cair-theme',d?'dark':'light');}catch(e){}btn.textContent=g();btn.setAttribute('aria-label',l());btn.title=l();});}
+})();</script>
+<script>window.__MODEL__ = {"id":"nvidia/nemotron-3.5-lightning-30b-a3b","display_name":"NVIDIA Nemotron 3.5 Lightning 30B A3B","builder":"nvidia","family":"Nemotron 3.5","summary":"NVIDIA Nemotron 3.5 Lightning 30B A3B inference configurations.","upstream":null,"modalities":["text"],"availability":"available","recipes":[{"id":"nvidia/nemotron-3.5-lightning-30b-a3b/dgx-spark/linux/vllm/nvfp4","hardware":"dgx-spark","hardware_display":"DGX Spark","platform":{"os":"linux","execution":"container"},"backend":"vllm","backend_display":"vLLM","backend_version":null,"backend_min_version":null,"min_vidmem_gb":null,"precision":"nvfp4","variant":null,"status":"experimental","default":false,"runnable":false,"validation":null,"prerequisites":[],"limitations":[],"precision_label":"NVFP4","checkpoint":{"target":"https://huggingface.co/nvidia/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-NVFP4","target_label":"nvidia/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-NVFP4","draft":"https://huggingface.co/nvidia/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-NVFP4-DSpark","draft_label":"nvidia/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-NVFP4-DSpark"},"mtp":null,"security":"Evaluation configuration only. Host networking exposes vLLM on host interfaces; use a firewall or reverse proxy, a scoped read-only HF token, and an isolated cache. For production, pin tested image, model, and code revisions.","topology":{"summary":"1× DGX Spark","gpu_count":1,"node_count":1,"tensor_parallel_size":null},"runtime":{"kind":"container","label":"Container (mutable nightly)","image":"vllm/vllm-openai:nightly","image_url":"https://hub.docker.com/r/vllm/vllm-openai/tags?name=nightly","setup_label":"Start container","setup_target":"single-node","setup_instructions":"Set `HF_TOKEN` in the host environment.","setup_command":"docker run --rm -it \\\n  --gpus all \\\n  --ipc host \\\n  --network host \\\n  --shm-size=16g \\\n  --ulimit memlock=-1 \\\n  --ulimit stack=67108864 \\\n  -e HF_TOKEN=$HF_TOKEN \\\n  -v ~/.cache/huggingface:/root/.cache/huggingface \\\n  --entrypoint /bin/bash \\\n  vllm/vllm-openai:nightly"},"serve":{"label":"Launch","target":"single-node","instructions":null,"command":"vllm serve nvidia/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-NVFP4 \\\n    --moe-backend marlin \\\n    --kv-cache-dtype fp8 \\\n    --max-num-batched-tokens 16384 \\\n    --gpu-memory-utilization 0.7 \\\n    --enable-prefix-caching \\\n    --mamba-backend flashinfer \\\n    --mamba-cache-mode align \\\n    --mamba-ssm-cache-dtype float16 \\\n    --enable-mamba-cache-stochastic-rounding \\\n    --mamba-cache-philox-rounds 5 \\\n    --reasoning-parser nemotron_v3 \\\n    --enable-auto-tool-choice \\\n    --tool-call-parser qwen3_xml \\\n    --load-format fastsafetensors \\\n    --speculative_config.method dspark \\\n    --speculative_config.model nvidia/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-NVFP4-DSpark \\\n    --speculative_config.num_speculative_tokens 7","port":null,"api_model":"nvidia/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-NVFP4"},"launch":null,"concurrency":null,"sampling":null,"notes":null,"clients":null,"performance":null},{"id":"nvidia/nemotron-3.5-lightning-30b-a3b/geforce-rtx/linux/llama-cpp/q4-k-m/dflash","hardware":"geforce-rtx","hardware_display":"GeForce RTX GPUs","platform":{"os":"linux","execution":"native"},"backend":"llama-cpp","backend_display":"llama.cpp","backend_version":null,"backend_min_version":null,"min_vidmem_gb":24,"precision":"q4-k-m","variant":"dflash","status":"experimental","default":false,"runnable":false,"validation":null,"prerequisites":["A Linux build of llama.cpp commit fe8156f789011f6ea0baf6917ea09f88b89d9554 providing llama-server."],"limitations":["These settings are ported from the Windows selection and have not been performance-validated on Linux.","The source sweep used a 40,960-token server context; the launch command uses a 65,536-token context."],"precision_label":"Q4_K_M","checkpoint":{"target":"https://huggingface.co/unsloth/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-GGUF/blob/f2d3fe3694501008786e81e5f20360cbf715496a/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-UD-Q4_K_M.gguf","target_label":"unsloth/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-GGUF","draft":"https://huggingface.co/apolo13x/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-DFlash-GGUF/blob/3051796f1bcf60ac44a27c2f79c52a2a2b3e2b37/dflash-NVIDIA-Nemotron-3.5-Lightning-30B-A3B-NVFP4.gguf","draft_label":"apolo13x/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-DFlash-GGUF/dflash-NVIDIA-Nemotron-3.5-Lightning-30B-A3B-NVFP4.gguf"},"mtp":null,"security":null,"topology":null,"runtime":null,"serve":{"label":"Launch DFlash · n=7","target":"single-node","instructions":"Run in a Linux shell. llama-server downloads and caches the target and DFlash GGUF files from Hugging Face.","command":"llama-server -hf \"unsloth/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-GGUF\" \\\n  -hff \"NVIDIA-Nemotron-3.5-Lightning-30B-A3B-UD-Q4_K_M.gguf\" \\\n  -hfrd \"apolo13x/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-DFlash-GGUF\" \\\n  --spec-draft-model \"dflash-NVIDIA-Nemotron-3.5-Lightning-30B-A3B-NVFP4.gguf\" \\\n  --no-mmproj \\\n  --backend-sampling \\\n  --batch-size 2048 \\\n  --ubatch-size 2048 \\\n  --ctx-size 65536 \\\n  --parallel 1 \\\n  --n-predict 256 \\\n  -ngl 999 \\\n  --jinja \\\n  --chat-template-kwargs '{\"enable_thinking\":true}' \\\n  --spec-type draft-dflash \\\n  --spec-draft-n-max 7 \\\n  --spec-draft-backend-sampling","port":null,"api_model":null},"launch":null,"concurrency":1,"sampling":"Target backend sampling: ON; speculative draft backend sampling: ON","notes":"The pinned [Q4_K_M target](https://huggingface.co/unsloth/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-GGUF/blob/f2d3fe3694501008786e81e5f20360cbf715496a/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-UD-Q4_K_M.gguf) and [DFlash draft](https://huggingface.co/apolo13x/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-DFlash-GGUF/blob/3051796f1bcf60ac44a27c2f79c52a2a2b3e2b37/dflash-NVIDIA-Nemotron-3.5-Lightning-30B-A3B-NVFP4.gguf) are the selected checkpoints.","clients":null,"performance":null},{"id":"nvidia/nemotron-3.5-lightning-30b-a3b/geforce-rtx/linux/llama-cpp/q4-k-m/mtp","hardware":"geforce-rtx","hardware_display":"GeForce RTX GPUs","platform":{"os":"linux","execution":"native"},"backend":"llama-cpp","backend_display":"llama.cpp","backend_version":null,"backend_min_version":null,"min_vidmem_gb":24,"precision":"q4-k-m","variant":"mtp","status":"experimental","default":false,"runnable":false,"validation":null,"prerequisites":["A Linux build of llama.cpp commit fe8156f789011f6ea0baf6917ea09f88b89d9554 providing llama-server."],"limitations":["These settings are ported from the Windows selection and have not been performance-validated on Linux.","The source sweep used a 40,960-token server context; the launch command uses a 65,536-token context."],"precision_label":"Q4_K_M","checkpoint":{"target":"https://huggingface.co/unsloth/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-GGUF/blob/f2d3fe3694501008786e81e5f20360cbf715496a/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-UD-Q4_K_M.gguf","target_label":"unsloth/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-GGUF","draft":null,"draft_label":null},"mtp":"ON=3","security":null,"topology":null,"runtime":null,"serve":{"label":"Launch MTP · n=3","target":"single-node","instructions":"Run in a Linux shell. llama-server downloads and caches the integrated-MTP target GGUF from Hugging Face.","command":"llama-server -hf \"unsloth/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-GGUF\" \\\n  -hff \"NVIDIA-Nemotron-3.5-Lightning-30B-A3B-UD-Q4_K_M.gguf\" \\\n  --no-mmproj \\\n  --backend-sampling \\\n  --batch-size 2048 \\\n  --ubatch-size 2048 \\\n  --ctx-size 65536 \\\n  --parallel 1 \\\n  --n-predict 256 \\\n  -ngl 999 \\\n  --jinja \\\n  --chat-template-kwargs '{\"enable_thinking\":true}' \\\n  --spec-type draft-mtp \\\n  --spec-draft-n-max 3 \\\n  --spec-draft-backend-sampling","port":null,"api_model":null},"launch":null,"concurrency":1,"sampling":"Target backend sampling: ON; speculative draft backend sampling: ON","notes":"The pinned [Q4_K_M target GGUF](https://huggingface.co/unsloth/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-GGUF/blob/f2d3fe3694501008786e81e5f20360cbf715496a/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-UD-Q4_K_M.gguf) contains integrated MTP layers.","clients":null,"performance":null},{"id":"nvidia/nemotron-3.5-lightning-30b-a3b/geforce-rtx/windows/llama-cpp/q4-k-m/dflash","hardware":"geforce-rtx","hardware_display":"GeForce RTX GPUs","platform":{"os":"windows","execution":"native"},"backend":"llama-cpp","backend_display":"llama.cpp","backend_version":"b10509","backend_min_version":"b10509","min_vidmem_gb":24,"precision":"q4-k-m","variant":"dflash","status":"optimized","default":false,"runnable":true,"validation":{"validated_at":"2026-08-19","validated_by":"Perf-Sweep","tested_stack":{"os_version":"Windows 10.0.26200","driver":"610.88","cuda":"13.3"}},"prerequisites":["A Windows build of llama.cpp commit fe8156f789011f6ea0baf6917ea09f88b89d9554 providing llama-server.exe."],"limitations":["Performance was measured with a 40,960-token server context; the launch command uses a 65,536-token context.","Validated with SPEED-Bench-Coding-8K, concurrency 1, 256 generated tokens, and 15 measured requests."],"precision_label":"Q4_K_M","checkpoint":{"target":"https://huggingface.co/unsloth/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-GGUF/blob/f2d3fe3694501008786e81e5f20360cbf715496a/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-UD-Q4_K_M.gguf","target_label":"unsloth/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-GGUF","draft":"https://huggingface.co/apolo13x/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-DFlash-GGUF/blob/3051796f1bcf60ac44a27c2f79c52a2a2b3e2b37/dflash-NVIDIA-Nemotron-3.5-Lightning-30B-A3B-NVFP4.gguf","draft_label":"apolo13x/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-DFlash-GGUF/dflash-NVIDIA-Nemotron-3.5-Lightning-30B-A3B-NVFP4.gguf"},"mtp":null,"security":null,"topology":null,"runtime":null,"serve":{"label":"Launch DFlash · n=7","target":"single-node","instructions":"Run in PowerShell. llama-server downloads and caches the target and DFlash GGUF files from Hugging Face.","command":"llama-server.exe -hf \"unsloth/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-GGUF\" `\n  -hff \"NVIDIA-Nemotron-3.5-Lightning-30B-A3B-UD-Q4_K_M.gguf\" `\n  -hfrd \"apolo13x/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-DFlash-GGUF\" `\n  --spec-draft-model \"dflash-NVIDIA-Nemotron-3.5-Lightning-30B-A3B-NVFP4.gguf\" `\n  --no-mmproj `\n  --backend-sampling `\n  --batch-size 2048 `\n  --ubatch-size 2048 `\n  --ctx-size 65536 `\n  --parallel 1 `\n  --n-predict 256 `\n  -ngl 999 `\n  --jinja `\n  --chat-template-kwargs '{\"enable_thinking\":true}' `\n  --spec-type draft-dflash `\n  --spec-draft-n-max 7 `\n  --spec-draft-backend-sampling","port":null,"api_model":null},"launch":null,"concurrency":1,"sampling":"Target backend sampling: ON; speculative draft backend sampling: ON","notes":"The pinned [Q4_K_M target](https://huggingface.co/unsloth/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-GGUF/blob/f2d3fe3694501008786e81e5f20360cbf715496a/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-UD-Q4_K_M.gguf) and [DFlash draft](https://huggingface.co/apolo13x/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-DFlash-GGUF/blob/3051796f1bcf60ac44a27c2f79c52a2a2b3e2b37/dflash-NVIDIA-Nemotron-3.5-Lightning-30B-A3B-NVFP4.gguf) are the checkpoints used for selection. DFlash depth 7, both sampling modes, and the batch settings are the Pareto-balanced RTX 5090 choice.","clients":null,"performance":null},{"id":"nvidia/nemotron-3.5-lightning-30b-a3b/geforce-rtx/windows/llama-cpp/q4-k-m/mtp","hardware":"geforce-rtx","hardware_display":"GeForce RTX GPUs","platform":{"os":"windows","execution":"native"},"backend":"llama-cpp","backend_display":"llama.cpp","backend_version":"b10509","backend_min_version":"b10509","min_vidmem_gb":24,"precision":"q4-k-m","variant":"mtp","status":"optimized","default":false,"runnable":true,"validation":{"validated_at":"2026-08-19","validated_by":"Perf-Sweep","tested_stack":{"os_version":"Windows 10.0.26200","driver":"610.88","cuda":"13.3"}},"prerequisites":["A Windows build of llama.cpp commit fe8156f789011f6ea0baf6917ea09f88b89d9554 providing llama-server.exe."],"limitations":["Performance was measured with a 40,960-token server context; the launch command uses a 65,536-token context.","Validated with SPEED-Bench-Coding-8K, concurrency 1, 256 generated tokens, and 15 measured requests."],"precision_label":"Q4_K_M","checkpoint":{"target":"https://huggingface.co/unsloth/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-GGUF/blob/f2d3fe3694501008786e81e5f20360cbf715496a/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-UD-Q4_K_M.gguf","target_label":"unsloth/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-GGUF","draft":null,"draft_label":null},"mtp":"ON=3","security":null,"topology":null,"runtime":null,"serve":{"label":"Launch MTP · n=3","target":"single-node","instructions":"Run in PowerShell. llama-server downloads and caches the integrated-MTP target GGUF from Hugging Face.","command":"llama-server.exe -hf \"unsloth/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-GGUF\" `\n  -hff \"NVIDIA-Nemotron-3.5-Lightning-30B-A3B-UD-Q4_K_M.gguf\" `\n  --no-mmproj `\n  --backend-sampling `\n  --batch-size 2048 `\n  --ubatch-size 2048 `\n  --ctx-size 65536 `\n  --parallel 1 `\n  --n-predict 256 `\n  -ngl 999 `\n  --jinja `\n  --chat-template-kwargs '{\"enable_thinking\":true}' `\n  --spec-type draft-mtp `\n  --spec-draft-n-max 3 `\n  --spec-draft-backend-sampling","port":null,"api_model":null},"launch":null,"concurrency":1,"sampling":"Target backend sampling: ON; speculative draft backend sampling: ON","notes":"The pinned [Q4_K_M target GGUF](https://huggingface.co/unsloth/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-GGUF/blob/f2d3fe3694501008786e81e5f20360cbf715496a/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-UD-Q4_K_M.gguf) contains integrated MTP layers. MTP depth 3, both sampling modes, and the batch settings are the Pareto-balanced RTX 5090 choice.","clients":null,"performance":null},{"id":"nvidia/nemotron-3.5-lightning-30b-a3b/rtx-pro/linux/llama-cpp/q4-k-m/dflash","hardware":"rtx-pro","hardware_display":"RTX Pro GPUs","platform":{"os":"linux","execution":"native"},"backend":"llama-cpp","backend_display":"llama.cpp","backend_version":null,"backend_min_version":null,"min_vidmem_gb":24,"precision":"q4-k-m","variant":"dflash","status":"experimental","default":false,"runnable":false,"validation":null,"prerequisites":["A Linux build of llama.cpp commit fe8156f789011f6ea0baf6917ea09f88b89d9554 providing llama-server."],"limitations":["These settings are ported from the Windows selection and have not been performance-validated on Linux.","The source sweep used a 40,960-token server context; the launch command uses a 65,536-token context."],"precision_label":"Q4_K_M","checkpoint":{"target":"https://huggingface.co/unsloth/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-GGUF/blob/f2d3fe3694501008786e81e5f20360cbf715496a/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-UD-Q4_K_M.gguf","target_label":"unsloth/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-GGUF","draft":"https://huggingface.co/apolo13x/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-DFlash-GGUF/blob/3051796f1bcf60ac44a27c2f79c52a2a2b3e2b37/dflash-NVIDIA-Nemotron-3.5-Lightning-30B-A3B-NVFP4.gguf","draft_label":"apolo13x/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-DFlash-GGUF/dflash-NVIDIA-Nemotron-3.5-Lightning-30B-A3B-NVFP4.gguf"},"mtp":null,"security":null,"topology":null,"runtime":null,"serve":{"label":"Launch DFlash · n=6","target":"single-node","instructions":"Run in a Linux shell. llama-server downloads and caches the target and DFlash GGUF files from Hugging Face.","command":"llama-server -hf \"unsloth/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-GGUF\" \\\n  -hff \"NVIDIA-Nemotron-3.5-Lightning-30B-A3B-UD-Q4_K_M.gguf\" \\\n  -hfrd \"apolo13x/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-DFlash-GGUF\" \\\n  --spec-draft-model \"dflash-NVIDIA-Nemotron-3.5-Lightning-30B-A3B-NVFP4.gguf\" \\\n  --no-mmproj \\\n  --batch-size 2048 \\\n  --ubatch-size 2048 \\\n  --ctx-size 65536 \\\n  --parallel 1 \\\n  --n-predict 256 \\\n  -ngl 999 \\\n  --jinja \\\n  --chat-template-kwargs '{\"enable_thinking\":true}' \\\n  --spec-type draft-dflash \\\n  --spec-draft-n-max 6 \\\n  --no-spec-draft-backend-sampling","port":null,"api_model":null},"launch":null,"concurrency":1,"sampling":"Target backend sampling: OFF; speculative draft backend sampling: OFF","notes":"The pinned [Q4_K_M target](https://huggingface.co/unsloth/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-GGUF/blob/f2d3fe3694501008786e81e5f20360cbf715496a/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-UD-Q4_K_M.gguf) and [DFlash draft](https://huggingface.co/apolo13x/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-DFlash-GGUF/blob/3051796f1bcf60ac44a27c2f79c52a2a2b3e2b37/dflash-NVIDIA-Nemotron-3.5-Lightning-30B-A3B-NVFP4.gguf) are the selected checkpoints.","clients":null,"performance":null},{"id":"nvidia/nemotron-3.5-lightning-30b-a3b/rtx-pro/linux/llama-cpp/q4-k-m/mtp","hardware":"rtx-pro","hardware_display":"RTX Pro GPUs","platform":{"os":"linux","execution":"native"},"backend":"llama-cpp","backend_display":"llama.cpp","backend_version":null,"backend_min_version":null,"min_vidmem_gb":24,"precision":"q4-k-m","variant":"mtp","status":"experimental","default":false,"runnable":false,"validation":null,"prerequisites":["A Linux build of llama.cpp commit fe8156f789011f6ea0baf6917ea09f88b89d9554 providing llama-server."],"limitations":["These settings are ported from the Windows selection and have not been performance-validated on Linux.","The source sweep used a 40,960-token server context; the launch command uses a 65,536-token context."],"precision_label":"Q4_K_M","checkpoint":{"target":"https://huggingface.co/unsloth/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-GGUF/blob/f2d3fe3694501008786e81e5f20360cbf715496a/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-UD-Q4_K_M.gguf","target_label":"unsloth/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-GGUF","draft":null,"draft_label":null},"mtp":"ON=3","security":null,"topology":null,"runtime":null,"serve":{"label":"Launch MTP · n=3","target":"single-node","instructions":"Run in a Linux shell. llama-server downloads and caches the integrated-MTP target GGUF from Hugging Face.","command":"llama-server -hf \"unsloth/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-GGUF\" \\\n  -hff \"NVIDIA-Nemotron-3.5-Lightning-30B-A3B-UD-Q4_K_M.gguf\" \\\n  --no-mmproj \\\n  --batch-size 2048 \\\n  --ubatch-size 2048 \\\n  --ctx-size 65536 \\\n  --parallel 1 \\\n  --n-predict 256 \\\n  -ngl 999 \\\n  --jinja \\\n  --chat-template-kwargs '{\"enable_thinking\":true}' \\\n  --spec-type draft-mtp \\\n  --spec-draft-n-max 3 \\\n  --spec-draft-backend-sampling","port":null,"api_model":null},"launch":null,"concurrency":1,"sampling":"Target backend sampling: OFF; speculative draft backend sampling: ON","notes":"The pinned [Q4_K_M target GGUF](https://huggingface.co/unsloth/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-GGUF/blob/f2d3fe3694501008786e81e5f20360cbf715496a/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-UD-Q4_K_M.gguf) contains integrated MTP layers.","clients":null,"performance":null},{"id":"nvidia/nemotron-3.5-lightning-30b-a3b/rtx-pro/windows/llama-cpp/q4-k-m/dflash","hardware":"rtx-pro","hardware_display":"RTX Pro GPUs","platform":{"os":"windows","execution":"native"},"backend":"llama-cpp","backend_display":"llama.cpp","backend_version":"b10509","backend_min_version":"b10509","min_vidmem_gb":24,"precision":"q4-k-m","variant":"dflash","status":"optimized","default":false,"runnable":true,"validation":{"validated_at":"2026-08-19","validated_by":"Perf-Sweep","tested_stack":{"os_version":"Windows 10.0.26200","driver":"596.86","cuda":"13.3"}},"prerequisites":["A Windows build of llama.cpp commit fe8156f789011f6ea0baf6917ea09f88b89d9554 providing llama-server.exe."],"limitations":["Performance was measured with a 40,960-token server context; the launch command uses a 65,536-token context.","Validated with SPEED-Bench-Coding-8K, concurrency 1, 256 generated tokens, and 15 measured requests."],"precision_label":"Q4_K_M","checkpoint":{"target":"https://huggingface.co/unsloth/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-GGUF/blob/f2d3fe3694501008786e81e5f20360cbf715496a/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-UD-Q4_K_M.gguf","target_label":"unsloth/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-GGUF","draft":"https://huggingface.co/apolo13x/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-DFlash-GGUF/blob/3051796f1bcf60ac44a27c2f79c52a2a2b3e2b37/dflash-NVIDIA-Nemotron-3.5-Lightning-30B-A3B-NVFP4.gguf","draft_label":"apolo13x/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-DFlash-GGUF/dflash-NVIDIA-Nemotron-3.5-Lightning-30B-A3B-NVFP4.gguf"},"mtp":null,"security":null,"topology":null,"runtime":null,"serve":{"label":"Launch DFlash · n=6","target":"single-node","instructions":"Run in PowerShell. llama-server downloads and caches the target and DFlash GGUF files from Hugging Face.","command":"llama-server.exe -hf \"unsloth/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-GGUF\" `\n  -hff \"NVIDIA-Nemotron-3.5-Lightning-30B-A3B-UD-Q4_K_M.gguf\" `\n  -hfrd \"apolo13x/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-DFlash-GGUF\" `\n  --spec-draft-model \"dflash-NVIDIA-Nemotron-3.5-Lightning-30B-A3B-NVFP4.gguf\" `\n  --no-mmproj `\n  --batch-size 2048 `\n  --ubatch-size 2048 `\n  --ctx-size 65536 `\n  --parallel 1 `\n  --n-predict 256 `\n  -ngl 999 `\n  --jinja `\n  --chat-template-kwargs '{\"enable_thinking\":true}' `\n  --spec-type draft-dflash `\n  --spec-draft-n-max 6 `\n  --no-spec-draft-backend-sampling","port":null,"api_model":null},"launch":null,"concurrency":1,"sampling":"Target backend sampling: OFF; speculative draft backend sampling: OFF","notes":"The pinned [Q4_K_M target](https://huggingface.co/unsloth/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-GGUF/blob/f2d3fe3694501008786e81e5f20360cbf715496a/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-UD-Q4_K_M.gguf) and [DFlash draft](https://huggingface.co/apolo13x/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-DFlash-GGUF/blob/3051796f1bcf60ac44a27c2f79c52a2a2b3e2b37/dflash-NVIDIA-Nemotron-3.5-Lightning-30B-A3B-NVFP4.gguf) are the checkpoints used for selection. DFlash depth 6 and the batch/sampling settings are the Pareto-balanced RTX PRO 6000 choice.","clients":null,"performance":null},{"id":"nvidia/nemotron-3.5-lightning-30b-a3b/rtx-pro/windows/llama-cpp/q4-k-m/mtp","hardware":"rtx-pro","hardware_display":"RTX Pro GPUs","platform":{"os":"windows","execution":"native"},"backend":"llama-cpp","backend_display":"llama.cpp","backend_version":"b10509","backend_min_version":"b10509","min_vidmem_gb":24,"precision":"q4-k-m","variant":"mtp","status":"optimized","default":false,"runnable":true,"validation":{"validated_at":"2026-08-19","validated_by":"Perf-Sweep","tested_stack":{"os_version":"Windows 10.0.26200","driver":"596.86","cuda":"13.3"}},"prerequisites":["A Windows build of llama.cpp commit fe8156f789011f6ea0baf6917ea09f88b89d9554 providing llama-server.exe."],"limitations":["Performance was measured with a 40,960-token server context; the launch command uses a 65,536-token context.","Validated with SPEED-Bench-Coding-8K, concurrency 1, 256 generated tokens, and 15 measured requests."],"precision_label":"Q4_K_M","checkpoint":{"target":"https://huggingface.co/unsloth/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-GGUF/blob/f2d3fe3694501008786e81e5f20360cbf715496a/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-UD-Q4_K_M.gguf","target_label":"unsloth/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-GGUF","draft":null,"draft_label":null},"mtp":"ON=3","security":null,"topology":null,"runtime":null,"serve":{"label":"Launch MTP · n=3","target":"single-node","instructions":"Run in PowerShell. llama-server downloads and caches the integrated-MTP target GGUF from Hugging Face.","command":"llama-server.exe -hf \"unsloth/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-GGUF\" `\n  -hff \"NVIDIA-Nemotron-3.5-Lightning-30B-A3B-UD-Q4_K_M.gguf\" `\n  --no-mmproj `\n  --batch-size 2048 `\n  --ubatch-size 2048 `\n  --ctx-size 65536 `\n  --parallel 1 `\n  --n-predict 256 `\n  -ngl 999 `\n  --jinja `\n  --chat-template-kwargs '{\"enable_thinking\":true}' `\n  --spec-type draft-mtp `\n  --spec-draft-n-max 3 `\n  --spec-draft-backend-sampling","port":null,"api_model":null},"launch":null,"concurrency":1,"sampling":"Target backend sampling: OFF; speculative draft backend sampling: ON","notes":"The pinned [Q4_K_M target GGUF](https://huggingface.co/unsloth/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-GGUF/blob/f2d3fe3694501008786e81e5f20360cbf715496a/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-UD-Q4_K_M.gguf) contains integrated MTP layers. MTP depth 3 and the batch/sampling settings are the Pareto-balanced RTX PRO 6000 choice.","clients":null,"performance":null}],"planned_configurations":[],"available_hardware":["dgx-spark","geforce-rtx","rtx-pro"],"available_operating_systems":["linux","windows"],"available_backends":["llama-cpp","vllm"]};</script>
+<script>// SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+// SPDX-License-Identifier: Apache-2.0
+// Pure rendering helpers for the Local AI Inference Recipes site.
+//
+// Pure = string in, string out. No Node APIs and no DOM APIs, so the SAME code
+// pre-renders pages in Node (internal/site/build.mjs) and re-renders on interaction in the
+// browser (this file's source is inlined into model pages). Icons resolve from a
+// global `ICONS` map (built once from ant-icons at build time).
+
+function esc(s) {
+  return String(s == null ? '' : s)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function icon(name) {
+  const map = (typeof globalThis !== 'undefined' && globalThis.ICONS) || {};
+  return '<span class="aicon" aria-hidden="true">' + (map[name] || '') + '</span>';
+}
+
+function shortUrl(u) {
+  if (!u) return '';
+  return u.replace(/^https?:\/\//, '').replace(/^huggingface\.co\//, 'hf: ');
+}
+
+function inlineMarkdown(s) {
+  const text = String(s == null ? '' : s);
+  const re = /\[([^\]]+)\]\((https?:\/\/[^)]+)\)/g;
+  let out = '';
+  let start = 0;
+  let match;
+  while ((match = re.exec(text))) {
+    out += esc(text.slice(start, match.index));
+    out += '<a href="' + esc(match[2]) + '" target="_blank" rel="noopener noreferrer">' + esc(match[1]) + '</a>';
+    start = match.index + match[0].length;
+  }
+  return out + esc(text.slice(start));
+}
+
+function badgeStyle(kind) {
+  const base = 'display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:500;padding:3px 9px;border-radius:999px;white-space:nowrap;';
+  if (kind === 'optimized') return base + 'background:var(--accent-soft);color:var(--accent-text);border:1px solid rgba(118,185,0,.35)';
+  if (kind === 'experimental') return base + 'background:var(--webpe-yellow-050);color:var(--webpe-yellow-700);border:1px solid var(--webpe-yellow-100)';
+  if (kind === 'pending') return base + 'background:var(--surface-well);color:var(--text-muted);border:1px solid var(--border-2)';
+  if (kind === 'deprecated') return base + 'background:var(--surface-well);color:var(--text-faint);border:1px solid var(--border)';
+  return base + 'background:var(--surface-well);color:var(--text-muted);border:1px solid var(--border)';
+}
+
+function modelBadge(m) {
+  if (m.availability !== 'available') return { label: 'Configuration pending', kind: 'pending', icon: 'clock-circle-outlined' };
+  if ((m.recipes || []).some((r) => r.status === 'optimized')) return { label: 'Optimized', kind: 'optimized', icon: 'check-circle-filled' };
+  return { label: 'Experimental', kind: 'experimental', icon: 'experiment-outlined' };
+}
+
+function recipeBadge(status) {
+  if (status === 'optimized') return { label: 'Recommended', kind: 'optimized', icon: 'check-circle-filled' };
+  if (status === 'experimental') return { label: 'Experimental', kind: 'experimental', icon: 'experiment-outlined' };
+  return { label: status, kind: 'deprecated', icon: 'info-circle-outlined' };
+}
+
+function badgeHtml(kind, label, iconName) {
+  return '<span style="' + badgeStyle(kind) + '">' + icon(iconName) + esc(label) + '</span>';
+}
+
+function chip(label) {
+  return '<span style="display:inline-flex;align-items:center;font-size:11.5px;font-weight:500;padding:2px 9px;border-radius:6px;background:var(--surface-well);color:var(--text-muted);border:1px solid var(--border)">' + esc(label) + '</span>';
+}
+
+function modalityText(m) {
+  const mo = m.modalities || [];
+  return mo.length ? mo.map((x) => x[0].toUpperCase() + x.slice(1)).join(', ') : '—';
+}
+
+function isMulti(m) {
+  const mo = m.modalities || [];
+  return mo.length > 1 || mo.some((x) => x !== 'text');
+}
+
+function uniq(a) { return [...new Set(a)]; }
+function nonDeprecated(m) { return (m.recipes || []).filter((r) => r.status !== 'deprecated'); }
+
+function executionOptions(r) {
+  const primary = {
+    id: (r.launch && r.launch.id) || 'default',
+    label: (r.launch && r.launch.label) || null,
+    runtime: r.runtime || null,
+    serve: r.serve,
+    clients: r.clients || null,
+  };
+  return [primary, ...((r.launch && r.launch.alternatives) || [])];
+}
+
+// Single-GPU hardware ids (no trailing -<N>gpu) sort before their multi-GPU
+// siblings, so e.g. "dgx-spark" lists ahead of "dgx-spark-2gpu" regardless of
+// each recipe's position in the model's own recipes array.
+const isMultiGpuHardwareId = (id) => /-\d+gpu$/.test(id);
+
+function hwOptions(recs) {
+  return uniq(recs.map((r) => r.hardware))
+    .map((id) => ({ value: id, label: recs.find((r) => r.hardware === id).hardware_display }))
+    .sort((a, b) => (isMultiGpuHardwareId(a.value) - isMultiGpuHardwareId(b.value)) || a.value.localeCompare(b.value));
+}
+function osName(os) {
+  if (os === 'windows') return 'Windows';
+  if (os === 'linux') return 'Linux';
+  return os || 'OS pending';
+}
+function executionName(execution) {
+  if (execution === 'container') return 'Container';
+  if (execution === 'native') return 'Native';
+  return execution || 'Execution pending';
+}
+function osOptions(recs, hw) {
+  const f = recs.filter((r) => r.hardware === hw);
+  return uniq(f.map((r) => r.platform?.os).filter(Boolean))
+    .map((os) => ({ value: os, label: osName(os) }));
+}
+function beOptions(recs, hw, os) {
+  const f = recs.filter((r) => r.hardware === hw && r.platform?.os === os);
+  return uniq(f.map((r) => r.backend)).map((id) => ({ value: id, label: f.find((r) => r.backend === id).backend_display }));
+}
+// Precision options for a given hw/os/backend combination.
+// value = precision slug, label = human-readable precision.
+function precisionOptions(recs, hw, os, be) {
+  const filtered = recs.filter((r) => r.hardware === hw && r.platform?.os === os && r.backend === be);
+  return uniq(filtered.map((r) => r.precision).filter(Boolean))
+    .map((slug) => {
+      const r = filtered.find((x) => x.precision === slug);
+      return { value: slug, label: r.precision_label || slug };
+    });
+}
+
+// Sub-variant options for a given hw/os/backend/precision combination.
+// Returns entries only when actual sub-variants exist (i.e., multiple recipes share a precision).
+function variantOptions(recs, hw, os, be, precisionSlug) {
+  return recs.filter((r) => r.hardware === hw && r.platform?.os === os
+      && r.backend === be && r.precision === precisionSlug && r.variant != null)
+    .map((r) => ({ value: r.variant, label: r.variant }));
+}
+
+// Legacy alias — callers that used varOptions for the precision selector still work.
+function varOptions(recs, hw, os, be) {
+  return precisionOptions(recs, hw, os, be);
+}
+
+// Resolve a recipe from URL params. Returns { recipe, invalid }.
+// params: { hardware, os, backend, precision, variant }
+function pickRecipe(m, params) {
+  const recs = nonDeprecated(m);
+  if (!recs.length) return { recipe: null, invalid: false };
+  let invalid = false;
+  if (params && (params.hardware || params.os || params.backend || params.precision || params.variant)) {
+    let matches = recs;
+    if (params.hardware) matches = matches.filter((r) => r.hardware === params.hardware);
+    if (params.os) matches = matches.filter((r) => r.platform?.os === params.os);
+    if (params.backend) matches = matches.filter((r) => r.backend === params.backend);
+    if (params.precision) matches = matches.filter((r) => r.precision === params.precision);
+    if (params.variant) matches = matches.filter((r) => r.variant === params.variant);
+    if (matches.length === 1) return { recipe: matches[0], invalid: false };
+    // Partial match: stay within the filtered set rather than jumping to recs[0].
+    if (matches.length > 0) {
+      const best = matches.find((r) => r.default && r.status === 'optimized') || matches.find((r) => r.status === 'optimized') || matches[0];
+      return { recipe: best, invalid: true };
+    }
+    invalid = true;
+  }
+  const def = recs.find((r) => r.default && r.status === 'optimized') || recs.find((r) => r.status === 'optimized') || recs[0];
+  return { recipe: def, invalid };
+}
+
+// Hugging Face target of a model's primary (default) recipe, if any.
+function primaryCheckpoint(m) {
+  const pk = pickRecipe(m, {});
+  return (pk.recipe && pk.recipe.checkpoint && pk.recipe.checkpoint.target) || '';
+}
+
+// Repair a partial selection to a valid recipe (used on selector change).
+// sel: { hardware, os, backend, precision, variant }
+function repairSelection(m, sel) {
+  const recs = nonDeprecated(m);
+  const cur = { ...sel };
+  if (!recs.length) return cur;
+  if (!recs.some((r) => r.hardware === cur.hardware)) cur.hardware = recs[0].hardware;
+  const hwRecs = recs.filter((r) => r.hardware === cur.hardware);
+  if (!hwRecs.some((r) => r.platform?.os === cur.os)) cur.os = hwRecs[0].platform?.os;
+  const osRecs = hwRecs.filter((r) => r.platform?.os === cur.os);
+  if (!osRecs.some((r) => r.backend === cur.backend)) cur.backend = osRecs[0].backend;
+  const beRecs = osRecs.filter((r) => r.backend === cur.backend);
+  if (!beRecs.some((r) => r.precision === cur.precision)) {
+    cur.precision = beRecs[0].precision;
+  }
+  const prRecs = beRecs.filter((r) => r.precision === cur.precision);
+  const variantsExist = prRecs.some((r) => r.variant != null);
+  if (variantsExist) {
+    if (!prRecs.some((r) => r.variant === cur.variant)) cur.variant = prRecs[0].variant;
+  } else {
+    cur.variant = null;
+  }
+  return cur;
+}
+
+function selectHtml(id, opts, value) {
+  const options = opts.map((o) =>
+    '<option value="' + esc(o.value) + '"' + (o.value === value ? ' selected' : '') + '>' + esc(o.label) + '</option>').join('');
+  return '<select class="cair-sel" data-sel="' + id + '" style="height:42px;padding:0 12px;font-size:14px;font-family:var(--font-sans);background:var(--surface);border:1px solid var(--border-2);border-radius:8px;color:var(--text)">' + options + '</select>';
+}
+
+const stepBadge = 'display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:5px;background:var(--accent-soft);color:var(--accent-text);font-size:11px;font-weight:600';
+const codePre = 'background:var(--code-bg);color:var(--code-fg);border-radius:9px;padding:14px 16px;overflow-x:auto;font-family:var(--font-mono);font-size:12.5px;line-height:1.6;white-space:pre';
+
+function copyBtn(key, label, copied) {
+  const style = 'display:inline-flex;align-items:center;gap:6px;padding:5px 11px;font-size:12px;font-weight:500;border-radius:7px;cursor:pointer;font-family:var(--font-sans);border:1px solid ' +
+    (copied ? 'rgba(118,185,0,.4);background:var(--accent-soft);color:var(--accent-text)' : 'var(--border-2);background:var(--surface);color:var(--text-muted)');
+  const glyph = copied ? icon('check-outlined') : icon('copy-outlined');
+  return '<button type="button" data-copy="' + esc(key) + '" aria-label="' + esc(label) + '" style="' + style + '">' + glyph + (copied ? 'Copied' : 'Copy') + '</button>';
+}
+
+function tabBtn(label, active, tab) {
+  const style = 'padding:6px 14px;font-size:12.5px;font-weight:500;border:0;cursor:pointer;font-family:var(--font-sans);' +
+    (active ? 'background:var(--accent);color:#fff' : 'background:var(--surface);color:var(--text-muted)');
+  return '<button type="button" role="tab" data-tab="' + tab + '" aria-selected="' + active + '" style="' + style + '">' + label + '</button>';
+}
+
+const performanceMetricDefinitions = [
+  ['e2e_latency_ms_mean', 'E2E Latency', 'ms'],
+  ['decode_tokens_per_second_mean', 'Decode Throughput', 'tok/s'],
+  ['prefill_tokens_per_second_mean', 'Prefill Throughput', 'tok/s'],
+  ['e2e_latency_ms_p50', 'E2E Latency p50', 'ms'],
+  ['decode_tokens_per_second_p50', 'Decode p50', 'tok/s'],
+  ['aggregate_output_tokens_per_second', 'Aggregate output', 'tok/s'],
+  ['ttft_ms_p50', 'TTFT p50', 'ms'],
+  ['ttft_ms_p95', 'TTFT p95', 'ms'],
+  ['peak_gpu_memory_gb_max', 'Peak GPU memory', 'GB'],
+];
+
+const speedBenchCodingMetricFields = new Set([
+  'e2e_latency_ms_mean',
+  'decode_tokens_per_second_mean',
+  'prefill_tokens_per_second_mean',
+]);
+
+function formatPerformanceNumber(value) {
+  const raw = String(value);
+  const match = raw.match(/^(-?)(\d+)(\.\d+)?$/);
+  if (!match) return raw;
+  const grouped = match[2].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  return match[1] + grouped + (match[3] || '');
+}
+
+function formatPerformanceMetric(field, value) {
+  if (field.endsWith('_mean')) {
+    return new Intl.NumberFormat('en-US', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(value);
+  }
+  return formatPerformanceNumber(value);
+}
+
+function profileLabel(id) {
+  return String(id || 'profile')
+    .split(/[.-]/)
+    .filter(Boolean)
+    .map((part) => part[0].toUpperCase() + part.slice(1))
+    .join(' ');
+}
+
+function performanceProfileLabel(profile) {
+  if (profile?.workload?.dataset === 'nvidia/SPEED-Bench'
+      && profile?.workload?.profile === 'throughput_8k') {
+    return 'SPEED-Bench-Coding-8K';
+  }
+  return profileLabel(profile?.id);
+}
+
+// Topology display. A recipe may state its own summary; otherwise the row is
+// derived from the structural values so the hardware name stays in one place
+// and cannot drift from the catalog.
+function topologyText(r) {
+  const t = r.topology;
+  if (!t) return null;
+  if (t.summary) return t.summary;
+  if (t.gpu_count == null) return null;
+
+  // Multi-GPU catalog entries already carry their own count, either as a
+  // leading multiplier in the display name ("4× DGX Spark") or a trailing
+  // -<N>gpu suffix in the raw hardware id (the fallback below when no
+  // display name is present, e.g. "rtx-pro-2gpu") -- strip whichever is
+  // present rather than prefixing a second count.
+  const name = String(r.hardware_display || r.hardware)
+    .replace(/^\d+\u00d7\s*/, '')
+    .replace(/-\d+gpu$/, '');
+  const parts = [t.gpu_count + '\u00d7 ' + name];
+  if (t.node_count != null && t.node_count > 1) parts.push(t.node_count + ' nodes');
+  if (t.tensor_parallel_size != null) parts.push('TP=' + t.tensor_parallel_size);
+  if (t.pipeline_parallel_size != null) parts.push('PP=' + t.pipeline_parallel_size);
+  return parts.join(' \u00b7 ');
+}
+
+function renderPerformance(performance, backendDisplay = null) {
+  const sectionStyle = 'background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px 22px;margin-top:24px';
+  if (!performance) {
+    return '<section aria-label="Measured performance" style="' + sectionStyle + '">' +
+      '<h2 style="font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted);font-weight:600;margin:0 0 7px">Measured performance</h2>' +
+      '<p style="font-size:13.5px;color:var(--text-faint);margin:0">Not measured for this exact recipe.</p>' +
+      '</section>';
+  }
+
+  const profiles = (performance.profiles || []).map((profile) => {
+    const workload = profile.workload || {};
+    const workloadDetails = [
+      workload.dataset ? ['Dataset', workload.dataset] : null,
+      Number.isFinite(workload.context_tokens)
+        ? ['Measured Context', `${formatPerformanceNumber(workload.context_tokens)} tokens`]
+        : null,
+      ['Nominal Input Tokens', formatPerformanceNumber(workload.input_tokens)],
+      ['Output Tokens', formatPerformanceNumber(workload.output_tokens)],
+      ['Concurrency', formatPerformanceNumber(workload.concurrency)],
+      ['Requests', formatPerformanceNumber(workload.requests)],
+    ];
+    const workloadGrid = workloadDetails.filter(Boolean).map(([label, value]) =>
+      '<div style="min-width:0">' +
+        '<dt style="font-size:11px;font-weight:600;color:var(--text-faint);margin:0 0 3px;text-transform:uppercase;letter-spacing:.035em">' + esc(label) + '</dt>' +
+        '<dd style="font-size:12.5px;color:var(--text-muted);margin:0;overflow-wrap:anywhere">' + esc(value) + '</dd>' +
+      '</div>').join('');
+    const speedBenchCoding = workload.dataset === 'nvidia/SPEED-Bench'
+      && workload.profile === 'throughput_8k';
+    const metrics = performanceMetricDefinitions
+      .filter(([field]) => Number.isFinite(profile.results?.[field])
+        && (!speedBenchCoding || speedBenchCodingMetricFields.has(field)))
+      .map(([field, label, unit]) =>
+        '<div style="background:var(--surface-well);border:1px solid var(--border);border-radius:8px;padding:11px 12px">' +
+          '<div style="font-size:11.5px;color:var(--text-muted);margin-bottom:4px">' + esc(label) + '</div>' +
+          '<div style="font-size:17px;font-weight:600;line-height:1.2">' + esc(formatPerformanceMetric(field, profile.results[field]) + ' ' + unit) + '</div>' +
+        '</div>').join('');
+    return '<div style="display:flex;flex-direction:column;gap:10px">' +
+      '<div><h3 style="font-size:15px;font-weight:600;margin:0 0 10px">' + esc(performanceProfileLabel(profile)) + '</h3>' +
+      '<dl style="display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:12px 18px;margin:0">' + workloadGrid + '</dl></div>' +
+      '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(125px,1fr));gap:8px">' + metrics + '</div>' +
+      '</div>';
+  }).join('<div style="height:1px;background:var(--border);margin:16px 0"></div>');
+
+  const system = performance.system || {};
+  const statusBadge = performance.status === 'optimized'
+    ? '<span style="display:inline-flex;align-items:center;border:1px solid color-mix(in srgb,var(--accent) 45%,var(--border));border-radius:999px;padding:2px 7px;font-size:10px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--accent)">Optimized</span>'
+    : '';
+  const systemDetails = [
+    system.os_version || (system.operating_system ? osName(system.operating_system) : null),
+    system.driver_version ? `Driver ${system.driver_version}` : null,
+    system.cuda_version ? `CUDA ${system.cuda_version}` : null,
+    performance.software?.backend_version
+      ? `${backendDisplay || 'Backend'} ${performance.software.backend_version}`
+      : null,
+  ].filter(Boolean).map((value) => '<span>' + esc(value) + '</span>').join('');
+  return '<section aria-label="Measured performance" style="' + sectionStyle + '">' +
+    '<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:14px">' +
+      '<div><div style="display:flex;align-items:center;gap:8px;margin:0 0 3px"><h2 style="font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted);font-weight:600;margin:0">Measured performance</h2>' + statusBadge + '</div>' +
+      '<p style="font-size:12px;color:var(--text-faint);margin:0">Measured ' + esc(performance.measured_at) + ' · ' + esc(system.label) + '</p></div>' +
+    '</div>' + profiles +
+    '<div style="display:flex;flex-wrap:wrap;gap:8px 18px;border-top:1px solid var(--border);margin-top:16px;padding-top:12px;font-size:11.5px;color:var(--text-muted)">' +
+      '<span>' + esc(`${system.accelerator_count}× ${system.accelerator}`) + '</span>' +
+      systemDetails +
+    '</div>' +
+    '</section>';
+}
+
+// The full workspace body (both columns + details/about). `ui` = {copied, clientTab}.
+function renderWorkspaceBody(m, sel, ui, invalid) {
+  const recs = nonDeprecated(m);
+  const r = recs.find((x) => x.hardware === sel.hardware
+    && x.platform?.os === sel.os
+    && x.backend === sel.backend
+    && x.precision === (sel.precision ?? null)
+    && (x.variant ?? null) === (sel.variant ?? null)) || recs[0];
+  const copied = (ui && ui.copied) || '';
+  const clientTab = (ui && ui.clientTab) || 'shell';
+
+  const hOpts = hwOptions(recs);
+  const oOpts = osOptions(recs, r.hardware);
+  const bOpts = beOptions(recs, r.hardware, r.platform?.os);
+  const pOpts = precisionOptions(recs, r.hardware, r.platform?.os, r.backend);
+  const vaOpts = variantOptions(recs, r.hardware, r.platform?.os, r.backend, r.precision);
+
+  const recBadge = recipeBadge(r.status);
+  const isExp = r.status === 'experimental';
+  const why = r.status === 'optimized'
+    ? 'Maintained starting point for this hardware, operating system, and backend. Alternatives remain available above.'
+    : 'Closest available configuration for this hardware, operating system, and backend. This recipe is experimental — review the commands before running in production.';
+
+  // Every source command stays on one self-contained page. A recipe normally
+  // has one execution option; DeepSeek also preserves its second container and
+  // launch as an ordered alternative.
+  const execution = executionOptions(r);
+  let blocks = '';
+  for (const option of execution) {
+    let optionBlocks = '';
+    const optionPrefix = option.id || 'default';
+    if (option.runtime && option.runtime.setup_command) {
+      const key = optionPrefix + ':setup';
+      const runtimeQualifier = option.runtime.label && option.runtime.label !== 'Container'
+        ? 'Runtime: ' + option.runtime.label + '.'
+        : null;
+      const note = [runtimeQualifier, option.runtime.setup_instructions,
+        option.runtime.image ? 'Container image: ' + option.runtime.image : null].filter(Boolean).join(' ');
+      optionBlocks += commandBlock(key, option.runtime.setup_label || 'Start container', 'container-outlined',
+        option.runtime.setup_command, note, copied === key);
+    }
+    if (option.serve && option.serve.command) {
+      const key = optionPrefix + ':serve';
+      const note = [option.serve.instructions, r.sampling ? 'Sampling — ' + r.sampling : null].filter(Boolean).join(' ');
+      optionBlocks += commandBlock(key, option.serve.label || 'Launch', 'play-circle-outlined',
+        option.serve.command, note, copied === key);
+      for (const command of (option.serve.additional_commands || [])) {
+        const extraKey = optionPrefix + ':serve:' + command.id;
+        optionBlocks += commandBlock(extraKey, command.label, 'play-circle-outlined', command.command,
+          command.instructions || '', copied === extraKey);
+      }
+    }
+    const hasClients = !!(option.clients && (option.clients.shell || option.clients.python));
+    if (hasClients) {
+      const code = clientTab === 'python' ? (option.clients.python || '') : (option.clients.shell || '');
+      const clientKey = optionPrefix + ':client';
+      optionBlocks +=
+        '<div>' +
+        '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:8px">' +
+        '<h3 style="font-size:13px;font-weight:600;margin:0;display:flex;align-items:center;gap:7px"><span style="color:var(--text-faint)">' + icon('api-outlined') + '</span>Test the endpoint</h3>' +
+        '<div style="display:flex;align-items:center;gap:8px">' +
+        '<div role="tablist" aria-label="Client language" style="display:inline-flex;border:1px solid var(--border-2);border-radius:7px;overflow:hidden">' +
+        tabBtn('Shell', clientTab === 'shell', 'shell') + tabBtn('Python', clientTab === 'python', 'python') +
+        '</div>' + copyBtn(clientKey, 'Copy client example', copied === clientKey) +
+        '</div></div>' +
+        '<pre class="cair-code" style="' + codePre + '"><code>' + esc(code) + '</code></pre>' +
+        '</div>';
+    }
+    if (execution.length > 1) {
+      blocks += '<section style="border:1px solid var(--border);border-radius:10px;padding:16px;display:flex;flex-direction:column;gap:20px">' +
+        '<h3 style="font-size:14px;font-weight:600;margin:0">' + esc(option.label || option.id) + '</h3>' + optionBlocks + '</section>';
+    } else {
+      blocks += optionBlocks;
+    }
+  }
+
+  // recipe details
+  const details = [];
+  details.push(detailRow('Operating system', osName(r.platform?.os), 'text'));
+  details.push(detailRow('Execution', executionName(r.platform?.execution), 'text'));
+  if (r.backend_version) details.push(detailRow('Backend version', r.backend_version, 'text'));
+  if (r.backend_min_version) details.push(detailRow('Backend min version', r.backend_min_version, 'text'));
+  if (r.precision) details.push(detailRow('Precision', r.precision, 'text'));
+  if (r.min_vidmem_gb != null) details.push(detailRow('Min GPU memory', r.min_vidmem_gb + ' GB', 'text'));
+  details.push(detailRow('Checkpoint', shortUrl(r.checkpoint.target), 'link', r.checkpoint.target));
+  if (r.checkpoint.draft) details.push(detailRow('Draft model', shortUrl(r.checkpoint.draft), 'link', r.checkpoint.draft));
+  if (r.mtp) details.push(detailRow('MTP', r.mtp, 'text'));
+  if (r.concurrency != null) details.push(detailRow('Concurrency', String(r.concurrency), 'text'));
+  const topology = topologyText(r);
+  if (topology) details.push(detailRow('Topology', topology, 'text'));
+  for (const option of execution) {
+    if (option.runtime && option.runtime.image) {
+      const qualifier = option.runtime.label && option.runtime.label !== 'Container'
+        ? option.runtime.label
+        : (execution.length > 1 ? (option.label || option.id) : null);
+      const label = qualifier ? 'Runtime — ' + qualifier : 'Runtime';
+      details.push(detailRow(label, option.runtime.image, option.runtime.image_url ? 'code-link' : 'code', option.runtime.image_url));
+    }
+  }
+  if (r.serve && r.serve.api_model) details.push(detailRow('Served model', r.serve.api_model, 'code'));
+  if (r.serve && r.serve.port) details.push(detailRow('Port', String(r.serve.port), 'text'));
+  if (r.notes) details.push(detailRow('Notes', r.notes, 'markdown'));
+  details.push(detailRow('Recipe ID', r.id, 'code'));
+
+  const precisionPart = r.precision_label || r.precision;
+  const variantPart = r.variant ? ' · ' + r.variant : '';
+  const recTitle = r.hardware_display + ' · ' + osName(r.platform?.os) + ' · ' + r.backend_display
+    + (precisionPart ? ' · ' + precisionPart : '') + variantPart;
+
+  const invalidNotice = invalid
+    ? '<div role="status" style="display:flex;align-items:center;gap:10px;background:var(--webpe-yellow-050);color:var(--webpe-yellow-900);border:1px solid var(--webpe-yellow-100);border-radius:8px;padding:10px 14px;margin-bottom:18px;font-size:13.5px">' + icon('info-circle-outlined') + 'The requested configuration was not found. Showing the closest available recipe.</div>'
+    : '';
+
+  const caution = isExp
+    ? '<div style="display:flex;gap:10px;align-items:flex-start;background:var(--webpe-yellow-050);color:var(--webpe-yellow-900);border-bottom:1px solid var(--webpe-yellow-100);padding:12px 22px;font-size:13px;line-height:1.45"><span style="color:var(--webpe-yellow-300);margin-top:1px">' + icon('warning-filled') + '</span><span>' +
+      esc('Experimental recipe — available for review but not a maintained default.') + '</span></div>'
+    : '';
+
+  const security = r.security
+    ? '<div style="display:flex;gap:10px;align-items:flex-start;background:var(--surface-well);color:var(--text-muted);border-bottom:1px solid var(--border);padding:12px 22px;font-size:13px;line-height:1.45"><span style="color:var(--text-faint);margin-top:1px">' + icon('safety-certificate-outlined') + '</span><span><strong>Security:</strong> ' + esc(r.security) + '</span></div>'
+    : '';
+
+  return invalidNotice +
+    '<div style="display:grid;grid-template-columns:38fr 62fr;gap:24px;align-items:start" class="ws-cols">' +
+      // LEFT
+      '<section aria-label="Choose configuration" style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:22px;box-shadow:var(--shadow-card)">' +
+        '<h2 style="font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted);font-weight:600;margin:0 0 18px">Choose configuration</h2>' +
+        '<div style="display:flex;flex-direction:column;gap:16px">' +
+          selectField(1, 'Hardware', selectHtml('hardware', hOpts, r.hardware)) +
+          selectField(2, 'OS', selectHtml('os', oOpts, r.platform?.os)) +
+          selectField(3, 'Backend', selectHtml('backend', bOpts, r.backend)) +
+          (pOpts.length ? selectField(4, 'Precision', selectHtml('precision', pOpts, r.precision)) : '') +
+          (vaOpts.length ? selectField(5, 'Variant', selectHtml('variant', vaOpts, r.variant)) : '') +
+        '</div>' +
+        '<div style="border-top:1px solid var(--border);margin:20px 0 0;padding-top:18px">' +
+          '<h3 style="font-size:12.5px;font-weight:600;margin:0 0 6px">Why this recipe</h3>' +
+          '<p style="font-size:13.5px;color:var(--text-muted);margin:0 0 16px;line-height:1.5">' + esc(why) + '</p>' +
+          '<dl style="margin:0;display:flex;flex-direction:column;gap:10px">' +
+            '<div style="display:flex;justify-content:space-between;gap:12px"><dt style="font-size:13px;color:var(--text-muted)">Precision</dt><dd style="margin:0;font-size:13px;font-weight:500;text-align:right">' + esc(r.precision_label || r.precision || '—') + '</dd></div>' +
+            (r.min_vidmem_gb != null ? '<div style="display:flex;justify-content:space-between;gap:12px"><dt style="font-size:13px;color:var(--text-muted)">Min GPU memory</dt><dd style="margin:0;font-size:13px;font-weight:500;text-align:right">' + esc(r.min_vidmem_gb + ' GB') + '</dd></div>' : '') +
+            '<div style="display:flex;justify-content:space-between;gap:12px"><dt style="font-size:13px;color:var(--text-muted)">Checkpoint</dt><dd style="margin:0;font-size:13px;text-align:right;word-break:break-all"><a href="' + esc(r.checkpoint.target) + '" target="_blank" rel="noopener noreferrer">' + esc(shortUrl(r.checkpoint.target)) + '</a></dd></div>' +
+          '</dl>' +
+        '</div>' +
+      '</section>' +
+      // RIGHT
+      '<section aria-label="Recipe commands" class="ws-panel" style="position:sticky;top:76px;display:flex;flex-direction:column;background:var(--surface);border:1px solid var(--border);border-radius:12px;box-shadow:var(--shadow-card);overflow:hidden">' +
+        '<div style="padding:20px 22px 18px;border-bottom:1px solid var(--border)">' +
+          '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px">' +
+            '<h2 style="font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted);font-weight:600;margin:0">Selected recipe</h2>' +
+            badgeHtml(recBadge.kind, recBadge.label, recBadge.icon) +
+          '</div>' +
+          '<p style="font-size:17px;font-weight:600;margin:0;letter-spacing:-.01em">' + esc(recTitle) + '</p>' +
+        '</div>' +
+        caution + security +
+        '<div style="padding:20px 22px 22px;display:flex;flex-direction:column;gap:22px">' + blocks + '</div>' +
+      '</section>' +
+    '</div>' + renderPerformance(r.performance, r.backend_display) +
+    // details + about
+    '<div style="display:grid;grid-template-columns:38fr 62fr;gap:24px;align-items:start;margin-top:24px" class="ws-cols">' +
+      '<section style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:22px">' +
+        '<h2 style="font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted);font-weight:600;margin:0 0 16px">Recipe details</h2>' +
+        '<dl style="margin:0;display:flex;flex-direction:column;gap:0">' + details.join('') + '</dl>' +
+      '</section>' +
+      '<section style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:22px 24px">' +
+        '<h2 style="font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted);font-weight:600;margin:0 0 12px">About this model</h2>' +
+        '<p style="font-size:15px;line-height:1.6;margin:0 0 14px;color:var(--text)">' + esc(m.summary || 'No description available.') + '</p>' +
+        '<p style="font-size:13.5px;color:var(--text-muted);line-height:1.6;margin:0">' + esc('Builder: ' + m.builder + '  ·  Family: ' + (m.family || '—') + '  ·  Model ID: ' + m.id) + '</p>' +
+      '</section>' +
+    '</div>' + renderPlannedConfigurations(m);
+}
+
+function renderPlannedConfigurations(m) {
+  const planned = m.planned_configurations || [];
+  if (!planned.length) return '';
+  const rows = planned.map((item) => {
+    const hardware = item.hardware_label || item.hardware || 'Hardware pending';
+    const platform = item.platform
+      ? osName(item.platform.os) + ' · ' + executionName(item.platform.execution)
+      : 'Platform pending';
+    const backend = item.backend || 'Backend pending';
+    const precision = item.precision || 'Precision pending';
+    return '<li style="padding:10px 0;border-bottom:1px solid var(--border)"><div style="font-size:13.5px;font-weight:500">' +
+      esc(hardware + ' · ' + platform + ' · ' + backend + ' · ' + precision) + '</div><div style="font-size:12.5px;color:var(--text-muted);margin-top:3px">' +
+      inlineMarkdown(item.status || item.note || 'Configuration pending') + '</div></li>';
+  }).join('');
+  return '<section style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:22px 24px;margin-top:24px">' +
+    '<h2 style="font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted);font-weight:600;margin:0 0 10px">Planned configurations</h2>' +
+    '<ul style="list-style:none;padding:0;margin:0">' + rows + '</ul></section>';
+}
+
+function selectField(step, label, selectMarkup) {
+  return '<label style="display:flex;flex-direction:column;gap:6px;font-size:12.5px;font-weight:500;color:var(--text-muted)">' +
+    '<span style="display:inline-flex;align-items:center;gap:8px"><span style="' + stepBadge + '">' + step + '</span>' + esc(label) + '</span>' +
+    selectMarkup + '</label>';
+}
+
+function commandBlock(key, title, iconName, code, note, copied) {
+  return '<div>' +
+    '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">' +
+      '<h3 style="font-size:13px;font-weight:600;margin:0;display:flex;align-items:center;gap:7px"><span style="color:var(--text-faint)">' + icon(iconName) + '</span>' + esc(title) + '</h3>' +
+      copyBtn(key, 'Copy ' + title.toLowerCase() + ' command', copied) +
+    '</div>' +
+    (note ? '<p style="font-size:12px;color:var(--text-muted);margin:0 0 8px">' + esc(note) + '</p>' : '') +
+    '<pre class="cair-code" style="' + codePre + '"><code>' + esc(code) + '</code></pre>' +
+    '</div>';
+}
+
+function detailRow(label, value, type, href) {
+  let inner;
+  if (type === 'link') inner = '<a href="' + esc(href) + '" target="_blank" rel="noopener noreferrer">' + esc(value) + '</a>';
+  else if (type === 'code-link') inner = '<a href="' + esc(href) + '" target="_blank" rel="noopener noreferrer"><code style="font-family:var(--font-mono);font-size:12px;background:var(--surface-well);padding:1px 6px;border-radius:4px">' + esc(value) + '</code></a>';
+  else if (type === 'code') inner = '<code style="font-family:var(--font-mono);font-size:12px;background:var(--surface-well);padding:1px 6px;border-radius:4px">' + esc(value) + '</code>';
+  else if (type === 'markdown') inner = '<span style="font-weight:500">' + inlineMarkdown(value) + '</span>';
+  else inner = '<span style="font-weight:500">' + esc(value) + '</span>';
+  return '<div style="display:flex;justify-content:space-between;gap:16px;padding:9px 0;border-bottom:1px solid var(--border)">' +
+    '<dt style="font-size:13px;color:var(--text-muted);white-space:nowrap">' + esc(label) + '</dt>' +
+    '<dd style="margin:0;font-size:13px;text-align:right;word-break:break-word">' + inner + '</dd></div>';
+}
+
+// ---- Directory cards + rows (SSR only; client filters by show/hide) ---------
+function modelPlatforms(m) {
+  const values = (m.recipes || []).map((r) => {
+    if (!r.platform) return null;
+    return osName(r.platform.os) + ' · ' + executionName(r.platform.execution);
+  }).filter(Boolean);
+  return uniq(values);
+}
+
+function renderCard(m, href) {
+  const pending = m.availability !== 'available';
+  const b = modelBadge(m);
+  const chips = [
+    ...(m.available_hardware || []).map((h) => chip(hwName(m, h))),
+    ...modelPlatforms(m).map((platform) => chip(platform)),
+    ...(m.available_backends || []).map((be) => chip(beName(m, be))),
+  ].join('');
+  const nrec = (m.recipes || []).length;
+  const title = '<a href="' + esc(href) + '" style="color:var(--text)">' + esc(m.display_name) + '</a>';
+  const footer = pending
+    ? '<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:auto"><p style="font-size:12.5px;color:var(--text-faint);margin:0;line-height:1.45;flex:1">Model tracked — ' + esc(String((m.planned_configurations || []).length)) + ' planned configuration' + ((m.planned_configurations || []).length === 1 ? '' : 's') + ', no complete recipe yet.</p><a href="' + esc(href) + '" class="card-btn view">View plans' + icon('right-outlined') + '</a></div>'
+    : '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:auto">' +
+        '<a href="' + esc(href) + '" class="card-btn view">' + (nrec > 1 ? 'View ' + nrec + ' recipes' : 'View recipe') + icon('right-outlined') + '</a>' +
+      '</div>';
+  return '<article data-model data-search="' + esc(searchBlob(m)) + '" data-modality="' + esc((m.modalities || []).join(' ')) + '" data-pending="' + (pending ? '1' : '0') + '" data-multi="' + (isMulti(m) ? '1' : '0') + '" style="display:flex;flex-direction:column;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:18px 18px 16px;box-shadow:var(--shadow-card)">' +
+    '<div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:3px">' +
+      '<h3 style="font-size:16.5px;font-weight:600;margin:0;line-height:1.25;flex:1">' + title + '</h3>' +
+      badgeHtml(b.kind, b.label, b.icon) +
+    '</div>' +
+    '<p style="font-size:12.5px;color:var(--text-muted);margin:0 0 14px">' + esc(m.builder + ' · ' + (m.family || '—')) + '</p>' +
+    '<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px;min-height:24px">' + chips + '</div>' +
+    footer +
+    '</article>';
+}
+
+function renderRow(m, href) {
+  const pending = m.availability !== 'available';
+  const b = modelBadge(m);
+  const name = '<a href="' + esc(href) + '"' + (pending ? ' style="color:var(--text-muted)"' : '') + '>' + esc(m.display_name) + '</a>';
+  const link = '<a href="' + esc(href) + '" aria-label="' + esc((pending ? 'View plans for ' : 'View recipes for ') + m.display_name) + '" style="color:var(--text-faint)">' + icon('right-outlined') + '</a>';
+  const td = 'padding:12px 16px;border-bottom:1px solid var(--border);color:var(--text-muted)';
+  return '<tr data-model data-search="' + esc(searchBlob(m)) + '" data-modality="' + esc((m.modalities || []).join(' ')) + '" data-pending="' + (pending ? '1' : '0') + '" data-multi="' + (isMulti(m) ? '1' : '0') + '">' +
+    '<td style="padding:12px 16px;border-bottom:1px solid var(--border);font-weight:500">' + name + '</td>' +
+    '<td style="' + td + '">' + esc(m.family || '—') + '</td>' +
+    '<td style="' + td + '">' + esc(modalityText(m)) + '</td>' +
+    '<td style="' + td + '">' + esc((m.available_hardware || []).map((h) => hwName(m, h)).join(', ') || '—') + '</td>' +
+    '<td style="' + td + '">' + esc(modelPlatforms(m).join(', ') || '—') + '</td>' +
+    '<td style="' + td + '">' + esc((m.available_backends || []).map((be) => beName(m, be)).join(', ') || '—') + '</td>' +
+    '<td style="padding:12px 16px;border-bottom:1px solid var(--border)">' + badgeHtml(b.kind, b.label, b.icon) + '</td>' +
+    '<td style="padding:12px 16px;border-bottom:1px solid var(--border);text-align:right">' + link + '</td>' +
+    '</tr>';
+}
+
+function hwName(m, id) { const r = (m.recipes || []).find((x) => x.hardware === id); return r ? r.hardware_display : id; }
+function beName(m, id) { const r = (m.recipes || []).find((x) => x.backend === id); return r ? r.backend_display : id; }
+
+function searchBlob(m) {
+  return [m.display_name, m.id, m.builder, m.family, (m.modalities || []).join(' '),
+    (m.available_hardware || []).map((h) => hwName(m, h)).join(' '),
+    modelPlatforms(m).join(' '),
+    (m.available_backends || []).map((b) => beName(m, b)).join(' '),
+    ...(m.recipes || []).flatMap((r) => [
+      r.hardware_display,
+      r.platform?.os,
+      r.platform?.execution,
+      r.backend_display,
+      r.variant,
+      r.precision,
+    ]),
+    ...(m.planned_configurations || []).flatMap((p) => [
+      p.hardware, p.hardware_label, p.platform?.os, p.platform?.execution,
+      p.backend, p.variant, p.precision, p.status, p.note,
+    ])].filter(Boolean).join(' ').toLowerCase();
+}
+
+(function(){
+var M=window.__MODEL__,root=document.getElementById('ws-body');
+var ui={copied:'',clientTab:'shell'},sel,invalid=false,ct;
+function params(){var p=new URLSearchParams(location.search);return{hardware:p.get('hardware')||'',os:p.get('os')||'',backend:p.get('backend')||'',precision:p.get('precision')||'',variant:p.get('variant')||''};}
+function resolveInitial(){var pk=pickRecipe(M,params());if(!pk.recipe)return;sel={hardware:pk.recipe.hardware,os:pk.recipe.platform&&pk.recipe.platform.os,backend:pk.recipe.backend,precision:pk.recipe.precision,variant:pk.recipe.variant};invalid=pk.invalid;}
+function draw(){root.innerHTML=renderWorkspaceBody(M,sel,ui,invalid);}
+function syncURL(){var qs='hardware='+encodeURIComponent(sel.hardware||'')+'&os='+encodeURIComponent(sel.os||'')+'&backend='+encodeURIComponent(sel.backend||'')+'&precision='+encodeURIComponent(sel.precision||'')+'&variant='+encodeURIComponent(sel.variant||'');history.replaceState(null,'',location.pathname+'?'+qs);}
+function setSel(patch){var next=Object.assign({},sel,patch);sel=repairSelection(M,next);invalid=false;ui.copied='';syncURL();draw();}
+function currentRecipe(){var recs=M.recipes.filter(function(r){return r.status!=='deprecated';});return recs.find(function(x){return x.hardware===sel.hardware&&x.platform&&x.platform.os===sel.os&&x.backend===sel.backend&&x.precision===sel.precision&&x.variant===sel.variant;})||recs[0];}
+function textFor(k){var r=currentRecipe(),p=k.split(':'),id=p[0],kind=p[1],extra=p[2]||'',opt=executionOptions(r).find(function(x){return x.id===id;})||executionOptions(r)[0];if(kind==='setup')return(opt.runtime&&opt.runtime.setup_command)||'';if(kind==='serve'){if(extra){var cmd=((opt.serve&&opt.serve.additional_commands)||[]).find(function(x){return x.id===extra;});return(cmd&&cmd.command)||'';}return(opt.serve&&opt.serve.command)||'';}if(kind==='client')return opt.clients?(ui.clientTab==='python'?opt.clients.python:opt.clients.shell):'';return'';}
+function lbl(k){var kind=k.split(':')[1];return kind==='setup'?'Setup command':kind==='serve'?'Launch command':'Client example';}
+function announce(msg){var el=document.getElementById('cair-live');if(el)el.textContent=msg;}
+function doCopy(k){var text=textFor(k);function done(){ui.copied=k;draw();announce(lbl(k)+' copied to clipboard');clearTimeout(ct);ct=setTimeout(function(){ui.copied='';draw();},1900);}try{if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(text).then(done,done);else{var ta=document.createElement('textarea');ta.value=text;document.body.appendChild(ta);ta.select();document.execCommand('copy');ta.remove();done();}}catch(e){done();}}
+root.addEventListener('change',function(e){var s=e.target.getAttribute&&e.target.getAttribute('data-sel');if(s)setSel(defineSel(s,e.target.value));});
+function defineSel(k,v){var o={};o[k]=v;return o;}
+root.addEventListener('click',function(e){
+  var tab=e.target.closest&&e.target.closest('[data-tab]');if(tab){ui.clientTab=tab.getAttribute('data-tab');draw();return;}
+  var cp=e.target.closest&&e.target.closest('[data-copy]');if(cp){doCopy(cp.getAttribute('data-copy'));return;}
+});
+window.addEventListener('popstate',function(){resolveInitial();draw();});
+resolveInitial();draw();
+})();</script>
+</body>
+</html>

@@ -1,0 +1,56 @@
+schema_version: 3
+title: <Model> · <Hardware> · <Backend>
+model: <builder>/<model>
+hardware: <exact-nvidia-sku>
+platform:
+  os: <linux-or-windows> # must match the path
+  execution: native
+backend: llama-cpp
+backend_version: <exact backend release or build, e.g. b10505 or 0.28.3>
+status: experimental
+# variant: <sub-variant-slug>   # optional; set when multiple sub-variants share the same precision
+
+# Native recipes carry their install and build steps here; there is no container
+# to describe them.
+prerequisites:
+  - <exact precondition, e.g. llama.cpp build b4585 on PATH>
+
+limitations:
+  - <exact limitation>
+
+# Required to reach `status: optimized`; omit entirely while experimental.
+# validation:
+#   validated_at: <YYYY-MM-DD>
+#   validated_by: perflab
+#   evidence: <optional; internal link is fine; never shown on the site>
+#   tested_stack:
+#     os_version: <exact OS build>
+#     python: <python version>
+
+precision:
+  label: <exact precision label>    # display string, e.g. Q4_K_M or Int4
+  # slug: <override>                # omit to auto-derive from label via slugify
+
+checkpoint:
+  target: https://huggingface.co/<org>/<checkpoint>
+  target_label: <org/checkpoint>
+  draft: null
+  draft_label: null
+
+mtp: null
+concurrency: null
+topology: null
+sampling: null
+security: null
+runtime: null
+
+serve:
+  label: Launch
+  target: single-node
+  instructions: <Run in a Linux shell for Linux llama.cpp; PowerShell for Windows llama.cpp>
+  command: |
+    <exact command; llama.cpp uses platform-correct continuations and preserves the source load mode (omitted = default mmap)>
+  port: null
+  api_model: null
+
+notes: null

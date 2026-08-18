@@ -1,0 +1,11 @@
+schema_version: 1
+id: meta/muse-glimmer-30b
+display_name: Muse Glimmer 30B
+builder: meta
+family: Muse Glimmer
+summary: Meta Muse Glimmer 30B multimodal reasoning model.
+upstream: https://huggingface.co/meta-models/Muse-Glimmer-30B
+modalities:
+  - text
+  - image
+availability: available

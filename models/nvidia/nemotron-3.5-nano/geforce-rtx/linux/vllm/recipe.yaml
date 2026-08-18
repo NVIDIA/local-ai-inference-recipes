@@ -1,0 +1,68 @@
+schema_version: 3
+title: NVIDIA Nemotron 3.5 Nano · GeForce RTX GPUs · vLLM
+model: nvidia/nemotron-3.5-nano
+hardware: geforce-rtx
+platform:
+  os: linux
+  execution: container
+backend: vllm
+min_vidmem_gb: 24
+status: experimental
+precision:
+  label: NVFP4
+checkpoint:
+  target: https://huggingface.co/nvidia/smart-panda-mtp-graft-NVFP4-20260701
+  target_label: nvidia/smart-panda-mtp-graft-NVFP4-20260701
+  draft: null
+  draft_label: null
+mtp: null
+concurrency: null
+topology:
+  summary: 1× GeForce RTX GPUs
+  gpu_count: 1
+  node_count: 1
+  tensor_parallel_size: 1
+sampling: null
+security: Evaluation configuration only. Host networking exposes vLLM on host interfaces; use a firewall or reverse proxy, a scoped read-only HF token, and an isolated cache. For production, pin tested image, model, and code revisions.
+runtime:
+  kind: container
+  label: Container
+  image: vllm/vllm-openai:v0.24.0-ubuntu2404
+  image_url: https://hub.docker.com/r/vllm/vllm-openai/tags?name=v0.24.0-ubuntu2404
+  setup_label: Start container
+  setup_target: single-node
+  setup_instructions: Set `HF_TOKEN` in the host environment.
+  setup_command: |
+    docker run --rm -it \
+      --gpus all \
+      --ipc host \
+      --network host \
+      --shm-size=16g \
+      --ulimit memlock=-1 \
+      --ulimit stack=67108864 \
+      -e HF_TOKEN=$HF_TOKEN \
+      -v ~/.cache/huggingface:/root/.cache/huggingface \
+      --entrypoint /bin/bash \
+      vllm/vllm-openai:v0.24.0-ubuntu2404
+serve:
+  label: Launch
+  target: single-node
+  instructions: null
+  command: |
+    wget https://huggingface.co/nvidia/NVIDIA-Nemotron-3-Ultra-550B-A55B-NVFP4/resolve/main/ultra_v3_reasoning_parser.py
+    vllm serve nvidia/smart-panda-mtp-graft-NVFP4-20260701 \
+      --trust-remote-code \
+      --kv-cache-dtype fp8 \
+      --gpu-memory-utilization 0.95 \
+      --max-model-len 262144 \
+      --tensor-parallel-size 1 \
+      --tool-call-parser qwen3_coder \
+      --enable-auto-tool-choice \
+      --max-num-batched-tokens 4096 \
+      --enable-chunked-prefill \
+      --enable-prefix-caching \
+      --reasoning-parser ultra_v3 \
+      --reasoning-parser-plugin ultra_v3_reasoning_parser.py
+  port: null
+  api_model: nvidia/smart-panda-mtp-graft-NVFP4-20260701
+notes: The source identifies this as Nemotron 3.5 Nano but uses a provisional private/gated checkpoint and a [Nemotron 3 Ultra parser](https://huggingface.co/nvidia/NVIDIA-Nemotron-3-Ultra-550B-A55B-NVFP4).

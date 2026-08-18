@@ -1,0 +1,9 @@
+schema_version: 1
+id: llama-cpp
+display_name: llama.cpp
+protocol: openai-compatible
+upstream: https://github.com/ggml-org/llama.cpp
+notes: >
+  Served with llama-server, which exposes an OpenAI-compatible API. Recipes use GGUF
+  checkpoints and name the exact GGUF file; split checkpoints point to the first shard.
+  Native launch recipes are supported on Linux and Windows.

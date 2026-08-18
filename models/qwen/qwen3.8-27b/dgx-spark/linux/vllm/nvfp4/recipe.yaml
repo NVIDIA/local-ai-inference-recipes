@@ -1,0 +1,72 @@
+schema_version: 3
+title: Qwen3.8-27B · DGX Spark · vLLM
+model: qwen/qwen3.8-27b
+hardware: dgx-spark
+platform:
+  os: linux
+  execution: container
+backend: vllm
+status: experimental
+limitations:
+  - Temporary recipe pending an NVIDIA quantized checkpoint; the source says a DSpark configuration would be faster but requires a custom modification.
+precision:
+  label: NVFP4
+checkpoint:
+  target: https://huggingface.co/RadixArk/Qwen3.8-27B-NVFP4
+  target_label: RadixArk/Qwen3.8-27B-NVFP4
+  draft: null
+  draft_label: null
+mtp: MTP=5
+concurrency: 8
+topology:
+  summary: 1× DGX Spark
+  gpu_count: 1
+  node_count: 1
+  tensor_parallel_size: null
+sampling: null
+security: Evaluation configuration only. Host networking exposes vLLM on host interfaces; use a firewall or reverse proxy, a scoped read-only HF token, and an isolated cache. For production, pin tested image, model, and code revisions.
+runtime:
+  kind: container
+  label: Container (tested nightly)
+  image: vllm/vllm-openai:nightly-aa9903490c616dc6871e5acc62cec7bb1e5e9434
+  image_url: https://hub.docker.com/r/vllm/vllm-openai/tags?name=nightly-aa9903490c616dc6871e5acc62cec7bb1e5e9434
+  setup_label: Start container
+  setup_target: single-node
+  setup_instructions: Set `HF_TOKEN` in the host environment.
+  setup_command: |
+    docker run --rm -it \
+      --gpus all \
+      --ipc host \
+      --network host \
+      --shm-size=16g \
+      --ulimit memlock=-1 \
+      --ulimit stack=67108864 \
+      -e HF_TOKEN=$HF_TOKEN \
+      -v ~/.cache/huggingface:/root/.cache/huggingface \
+      --entrypoint /bin/bash \
+      vllm/vllm-openai:nightly-aa9903490c616dc6871e5acc62cec7bb1e5e9434
+serve:
+  label: Launch
+  target: single-node
+  instructions: null
+  command: |
+    vllm serve RadixArk/Qwen3.8-27B-NVFP4 \
+      --host 0.0.0.0 \
+      --port 8000 \
+      --trust-remote-code \
+      --kv-cache-dtype fp8 \
+      --gpu-memory-utilization 0.7 \
+      --max-model-len 262144 \
+      --max-num-seqs 8 \
+      --max-num-batched-tokens 8192 \
+      --enable-chunked-prefill \
+      --async-scheduling \
+      --enable-prefix-caching \
+      --speculative-config '{"method":"mtp","num_speculative_tokens":5}' \
+      --load-format instanttensor \
+      --reasoning-parser qwen3 \
+      --tool-call-parser qwen3_xml \
+      --enable-auto-tool-choice
+  port: 8000
+  api_model: RadixArk/Qwen3.8-27B-NVFP4
+notes: null

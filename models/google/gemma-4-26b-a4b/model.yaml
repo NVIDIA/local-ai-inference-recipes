@@ -1,0 +1,9 @@
+schema_version: 1
+id: google/gemma-4-26b-a4b
+display_name: Gemma-4-26B-A4B
+builder: google
+family: Gemma 4
+summary: Google Gemma 4 (26B-A4B) text-generation model.
+modalities:
+  - text
+availability: available

@@ -1,0 +1,9 @@
+schema_version: 1
+id: deepseek/deepseek-v4-flash
+display_name: DeepSeek-V4-Flash
+builder: deepseek
+family: DeepSeek-V4
+summary: DeepSeek V4 Flash text-generation model.
+modalities:
+  - text
+availability: available

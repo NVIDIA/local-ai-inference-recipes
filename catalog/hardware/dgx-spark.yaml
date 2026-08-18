@@ -1,0 +1,8 @@
+schema_version: 1
+id: dgx-spark
+display_name: DGX Spark
+vendor: nvidia
+kind: sku
+architecture: blackwell
+gpu_count: 1
+external_shareable: true

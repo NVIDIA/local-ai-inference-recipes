@@ -1,0 +1,257 @@
+{
+  "schema_version": 1,
+  "generated": "DO NOT EDIT. Generated from catalog/recommended.yaml. Run: make recommended-catalog",
+  "hardware": [
+    {
+      "schema_version": 1,
+      "id": "dgx-spark",
+      "display_name": "DGX Spark",
+      "vendor": "nvidia",
+      "kind": "sku",
+      "architecture": "blackwell",
+      "gpu_count": 1
+    },
+    {
+      "schema_version": 1,
+      "id": "geforce-rtx",
+      "display_name": "GeForce RTX GPUs",
+      "vendor": "nvidia",
+      "kind": "sku",
+      "architecture": "blackwell",
+      "gpu_count": 1
+    },
+    {
+      "schema_version": 1,
+      "id": "rtx-pro",
+      "display_name": "RTX Pro GPUs",
+      "vendor": "nvidia",
+      "kind": "sku",
+      "architecture": "blackwell",
+      "gpu_count": 1
+    }
+  ],
+  "backends": [
+    {
+      "schema_version": 1,
+      "id": "llama-cpp",
+      "display_name": "llama.cpp",
+      "protocol": "openai-compatible",
+      "upstream": "https://github.com/ggml-org/llama.cpp",
+      "notes": "Served with llama-server, which exposes an OpenAI-compatible API. Recipes use GGUF checkpoints and name the exact GGUF file; split checkpoints point to the first shard. Native launch recipes are supported on Linux and Windows."
+    },
+    {
+      "schema_version": 1,
+      "id": "vllm",
+      "display_name": "vLLM",
+      "protocol": "openai-compatible",
+      "upstream": "https://github.com/vllm-project/vllm",
+      "container_default": "vllm/vllm-openai:v0.24.0-ubuntu2404"
+    }
+  ],
+  "models": [
+    {
+      "id": "qwen/qwen3.6-35b-a3b",
+      "display_name": "Qwen3.6-35B-A3B",
+      "builder": "qwen",
+      "family": "Qwen3.6",
+      "summary": "Qwen 3.6 (35B-A3B) text-generation model.",
+      "upstream": null,
+      "modalities": [
+        "text"
+      ],
+      "recipes": [
+        {
+          "id": "qwen/qwen3.6-35b-a3b/dgx-spark/linux/vllm/nvfp4-w4a16",
+          "hardware": "dgx-spark",
+          "hardware_display": "DGX Spark",
+          "platform": {
+            "os": "linux",
+            "execution": "container"
+          },
+          "backend": "vllm",
+          "backend_display": "vLLM",
+          "backend_version": null,
+          "backend_min_version": null,
+          "min_vidmem_gb": null,
+          "precision": "nvfp4-w4a16",
+          "variant": null,
+          "status": "experimental",
+          "runnable": false,
+          "prerequisites": [],
+          "limitations": [],
+          "precision_label": "NVFP4-W4A16",
+          "checkpoint": {
+            "target": "https://huggingface.co/nvidia/Qwen3.6-35B-A3B-NVFP4",
+            "target_label": "nvidia/Qwen3.6-35B-A3B-NVFP4",
+            "draft": null,
+            "draft_label": null
+          },
+          "security": "Evaluation configuration only. Host networking exposes vLLM on host interfaces; use a firewall or reverse proxy, a scoped read-only HF token, and an isolated cache. For production, pin tested image, model, and code revisions.",
+          "topology": {
+            "summary": "1× DGX Spark",
+            "gpu_count": 1,
+            "node_count": 1,
+            "tensor_parallel_size": 1
+          },
+          "runtime": {
+            "kind": "container",
+            "label": "Container",
+            "image": "vllm/vllm-openai:v0.28.0",
+            "image_url": "https://hub.docker.com/r/vllm/vllm-openai/tags?name=v0.28.0",
+            "setup_label": "Start container",
+            "setup_target": "single-node",
+            "setup_instructions": "Set `HF_TOKEN` in the host environment.",
+            "setup_command": "docker run --rm -it \\\n  --gpus all \\\n  --ipc host \\\n  --network host \\\n  --shm-size=16g \\\n  --ulimit memlock=-1 \\\n  --ulimit stack=67108864 \\\n  -e HF_TOKEN=$HF_TOKEN \\\n  -v ~/.cache/huggingface:/root/.cache/huggingface \\\n  --entrypoint /bin/bash \\\n  vllm/vllm-openai:v0.28.0"
+          },
+          "serve": {
+            "label": "Launch",
+            "target": "single-node",
+            "instructions": null,
+            "command": "vllm serve nvidia/Qwen3.6-35B-A3B-NVFP4 \\\n  --host 0.0.0.0 \\\n  --port 8000 \\\n  --tensor-parallel-size 1 \\\n  --trust-remote-code \\\n  --kv-cache-dtype fp8 \\\n  --attention-backend flashinfer \\\n  --moe-backend marlin \\\n  --gpu-memory-utilization 0.5 \\\n  --max-model-len 262144 \\\n  --max-num-seqs 8 \\\n  --max-num-batched-tokens 8192 \\\n  --enable-chunked-prefill \\\n  --async-scheduling \\\n  --enable-prefix-caching \\\n  --speculative-config '{\"method\":\"mtp\",\"num_speculative_tokens\":3,\"moe_backend\":\"triton\"}' \\\n  --load-format fastsafetensors \\\n  --reasoning-parser qwen3 \\\n  --tool-call-parser qwen3_xml \\\n  --enable-auto-tool-choice",
+            "port": 8000,
+            "api_model": "nvidia/Qwen3.6-35B-A3B-NVFP4"
+          },
+          "launch": null,
+          "sampling": null,
+          "notes": null,
+          "clients": {
+            "shell": "curl http://localhost:8000/v1/chat/completions \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\"model\": \"nvidia/Qwen3.6-35B-A3B-NVFP4\", \"messages\": [{\"role\": \"user\", \"content\": \"Hello\"}]}'",
+            "python": "from openai import OpenAI\n\nclient = OpenAI(base_url=\"http://localhost:8000/v1\", api_key=\"EMPTY\")\nresp = client.chat.completions.create(\n    model=\"nvidia/Qwen3.6-35B-A3B-NVFP4\",\n    messages=[{\"role\": \"user\", \"content\": \"Hello\"}],\n)\nprint(resp.choices[0].message.content)"
+          }
+        }
+      ]
+    },
+    {
+      "id": "qwen/qwen3.8-27b",
+      "display_name": "Qwen3.8-27B",
+      "builder": "qwen",
+      "family": "Qwen3.8",
+      "summary": "Qwen 3.8 27B text-generation model.",
+      "upstream": null,
+      "modalities": [
+        "text"
+      ],
+      "recipes": [
+        {
+          "id": "qwen/qwen3.8-27b/geforce-rtx/windows/llama-cpp/q4-k-m/mtp",
+          "hardware": "geforce-rtx",
+          "hardware_display": "GeForce RTX GPUs",
+          "platform": {
+            "os": "windows",
+            "execution": "native"
+          },
+          "backend": "llama-cpp",
+          "backend_display": "llama.cpp",
+          "backend_version": "b10287",
+          "backend_min_version": "b10287",
+          "min_vidmem_gb": 24,
+          "precision": "q4-k-m",
+          "variant": "mtp",
+          "status": "optimized",
+          "runnable": true,
+          "prerequisites": [
+            "A Windows build of llama.cpp commit 7316c32d4f241820a5a4e12582f0f0b2b04938a7 providing llama-server.exe."
+          ],
+          "limitations": [
+            "Validated only with the 8K SPEED-Bench throughput workload, concurrency 1, 256 generated tokens, and 15 measured requests.",
+            "Performance was measured with a 40,960-token server context; the launch command uses a 65,536-token context."
+          ],
+          "precision_label": "Q4_K_M",
+          "checkpoint": {
+            "target": "https://huggingface.co/unsloth/Qwen3.8-27B-GGUF/blob/f1bfb127c64f7072bdd2cad55f258b9c8b2910fe/Qwen3.8-27B-Q4_K_M.gguf",
+            "target_label": "unsloth/Qwen3.8-27B-GGUF",
+            "draft": null,
+            "draft_label": null
+          },
+          "security": null,
+          "topology": null,
+          "runtime": null,
+          "serve": {
+            "label": "Launch MTP · n=2",
+            "target": "single-node",
+            "instructions": "Run in PowerShell. llama-server downloads and caches the target GGUF from Hugging Face.",
+            "command": "llama-server.exe -hf \"unsloth/Qwen3.8-27B-GGUF\" `\n  -hff \"Qwen3.8-27B-Q4_K_M.gguf\" `\n  --no-mmproj `\n  --backend-sampling `\n  --batch-size 4096 `\n  --ubatch-size 2048 `\n  --ctx-size 65536 `\n  --parallel 1 `\n  --n-predict 256 `\n  -ngl 999 `\n  --jinja `\n  --chat-template-kwargs '{\"preserve_thinking\":true}' `\n  --spec-type draft-mtp `\n  --spec-draft-n-max 2 `\n  --spec-draft-backend-sampling",
+            "port": null,
+            "api_model": null
+          },
+          "launch": null,
+          "sampling": "Target backend sampling: ON; speculative draft backend sampling: ON",
+          "notes": "The pinned [Q4_K_M target GGUF](https://huggingface.co/unsloth/Qwen3.8-27B-GGUF/blob/f1bfb127c64f7072bdd2cad55f258b9c8b2910fe/Qwen3.8-27B-Q4_K_M.gguf) contains integrated MTP layers, so no separate draft checkpoint is required. The MTP depth and batch settings are the Pareto-balanced RTX 5090 selection.",
+          "clients": null
+        },
+        {
+          "id": "qwen/qwen3.8-27b/rtx-pro/windows/llama-cpp/q4-k-m/mtp",
+          "hardware": "rtx-pro",
+          "hardware_display": "RTX Pro GPUs",
+          "platform": {
+            "os": "windows",
+            "execution": "native"
+          },
+          "backend": "llama-cpp",
+          "backend_display": "llama.cpp",
+          "backend_version": "b10287",
+          "backend_min_version": "b10287",
+          "min_vidmem_gb": 24,
+          "precision": "q4-k-m",
+          "variant": "mtp",
+          "status": "optimized",
+          "runnable": true,
+          "prerequisites": [
+            "A Windows build of llama.cpp commit 7316c32d4f241820a5a4e12582f0f0b2b04938a7 providing llama-server.exe."
+          ],
+          "limitations": [
+            "Validated only with the 8K SPEED-Bench throughput workload, concurrency 1, 256 generated tokens, and 15 measured requests.",
+            "Performance was measured with a 40,960-token server context; the launch command uses a 65,536-token context."
+          ],
+          "precision_label": "Q4_K_M",
+          "checkpoint": {
+            "target": "https://huggingface.co/unsloth/Qwen3.8-27B-GGUF/blob/f1bfb127c64f7072bdd2cad55f258b9c8b2910fe/Qwen3.8-27B-Q4_K_M.gguf",
+            "target_label": "unsloth/Qwen3.8-27B-GGUF",
+            "draft": null,
+            "draft_label": null
+          },
+          "security": null,
+          "topology": null,
+          "runtime": null,
+          "serve": {
+            "label": "Launch MTP · n=3",
+            "target": "single-node",
+            "instructions": "Run in PowerShell. llama-server downloads and caches the target GGUF from Hugging Face.",
+            "command": "llama-server.exe -hf \"unsloth/Qwen3.8-27B-GGUF\" `\n  -hff \"Qwen3.8-27B-Q4_K_M.gguf\" `\n  --no-mmproj `\n  --batch-size 4096 `\n  --ubatch-size 1024 `\n  --ctx-size 65536 `\n  --parallel 1 `\n  --n-predict 256 `\n  -ngl 999 `\n  --jinja `\n  --chat-template-kwargs '{\"preserve_thinking\":true}' `\n  --spec-type draft-mtp `\n  --spec-draft-n-max 3 `\n  --spec-draft-backend-sampling",
+            "port": null,
+            "api_model": null
+          },
+          "launch": null,
+          "sampling": "Target backend sampling: OFF; speculative draft backend sampling: ON",
+          "notes": "The pinned [Q4_K_M target GGUF](https://huggingface.co/unsloth/Qwen3.8-27B-GGUF/blob/f1bfb127c64f7072bdd2cad55f258b9c8b2910fe/Qwen3.8-27B-Q4_K_M.gguf) contains integrated MTP layers, so no separate draft checkpoint is required. The MTP depth and batch settings are the Pareto-balanced RTX PRO 6000 selection.",
+          "clients": null
+        }
+      ]
+    }
+  ],
+  "recommended_recipes": {
+    "llama-cpp": {
+      "windows": [
+        {
+          "hardware": "geforce-rtx",
+          "model": "qwen/qwen3.8-27b",
+          "recipe": "qwen/qwen3.8-27b/geforce-rtx/windows/llama-cpp/q4-k-m/mtp"
+        },
+        {
+          "hardware": "rtx-pro",
+          "model": "qwen/qwen3.8-27b",
+          "recipe": "qwen/qwen3.8-27b/rtx-pro/windows/llama-cpp/q4-k-m/mtp"
+        }
+      ]
+    },
+    "vllm": {
+      "linux": [
+        {
+          "hardware": "dgx-spark",
+          "model": "qwen/qwen3.6-35b-a3b",
+          "recipe": "qwen/qwen3.6-35b-a3b/dgx-spark/linux/vllm/nvfp4-w4a16"
+        }
+      ]
+    }
+  }
+}
