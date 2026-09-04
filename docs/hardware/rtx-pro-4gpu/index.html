@@ -1,0 +1,1052 @@
+<!DOCTYPE html>
+<!--
+SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+SPDX-License-Identifier: LicenseRef-NvidiaProprietary
+
+NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
+property and proprietary rights in and to this material, related
+documentation and any modifications thereto. Any use, reproduction,
+disclosure or distribution of this material and related documentation
+without an express license agreement from NVIDIA CORPORATION or
+its affiliates is strictly prohibited.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>4× RTX PRO GPUs — recipes</title>
+<link rel="icon" href="../../assets/favicon.ico" type="image/x-icon">
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body>
+<div class="cair" id="cair-root">
+<script>(function(){try{var t=localStorage.getItem('cair-theme');if(t==='dark'){document.currentScript.parentNode.classList.add('dark');}}catch(e){}})();</script>
+<a href="#main" style="position:absolute;left:-9999px;top:0;background:var(--accent);color:#fff;padding:8px 14px;border-radius:4px;z-index:50">Skip to content</a>
+<header style="position:sticky;top:0;z-index:30;display:flex;align-items:center;gap:20px;padding:0 24px;height:60px;background:var(--surface);border-bottom:1px solid var(--border)">
+  <a href="../../index.html" style="display:flex;align-items:center;gap:11px;text-decoration:none;color:var(--text)">
+    <img src="../../assets/favicon.ico" alt="" style="height:22px;width:auto;display:block" />
+    <span style="font-weight:600;font-size:15px;letter-spacing:-.01em;white-space:nowrap">Local AI Inference Recipes</span>
+  </a>
+  <nav aria-label="Primary" style="display:flex;align-items:center;gap:4px;margin-left:auto">
+    <a href="../../index.html" style="display:flex;align-items:center;gap:6px;padding:7px 11px;border-radius:6px;font-size:14px;font-weight:500;color:var(--text)">Home</a>
+    
+    
+    <a href="https://github.com/NVIDIA/local-ai-inference-recipes" target="_blank" rel="noopener noreferrer" style="display:flex;align-items:center;gap:6px;padding:7px 11px;border-radius:6px;font-size:14px;color:var(--text-muted)"><span class="aicon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 1024 1024" fill="currentColor" aria-hidden="true" focusable="false"><path fill="currentColor" d="M740 161c-61.8 0-112 50.2-112 112c0 50.1 33.1 92.6 78.5 106.9v95.9L320 602.4V318.1c44.2-15 76-56.9 76-106.1c0-61.8-50.2-112-112-112s-112 50.2-112 112c0 49.2 31.8 91 76 106.1V706c-44.2 15-76 56.9-76 106.1c0 61.8 50.2 112 112 112s112-50.2 112-112c0-49.2-31.8-91-76-106.1v-27.8l423.5-138.7a50.52 50.52 0 0 0 34.9-48.2V378.2c42.9-15.8 73.6-57 73.6-105.2c0-61.8-50.2-112-112-112m-504 51a48.01 48.01 0 0 1 96 0a48.01 48.01 0 0 1-96 0m96 600a48.01 48.01 0 0 1-96 0a48.01 48.01 0 0 1 96 0m408-491a48.01 48.01 0 0 1 0-96a48.01 48.01 0 0 1 0 96"/></svg></span>Repository</a>
+    
+    <button type="button" id="cair-theme-btn" aria-label="Switch theme" title="Switch theme" style="display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;margin-left:6px;border:1px solid var(--border);border-radius:8px;background:var(--surface);color:var(--text-muted);cursor:pointer;font-size:16px">☾</button>
+  </nav>
+</header>
+<main id="main">
+<div class="cair-fade" style="max-width:1280px;margin:0 auto;padding:28px 24px 72px"><a href="../../index.html" style="display:inline-flex;align-items:center;gap:6px;font-size:13.5px;color:var(--text-muted);margin-bottom:18px"><span class="aicon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 1024 1024" fill="currentColor" aria-hidden="true" focusable="false"><path fill="currentColor" d="M724 218.3V141c0-6.7-7.7-10.4-12.9-6.3L260.3 486.8a31.86 31.86 0 0 0 0 50.3l450.8 352.1c5.3 4.1 12.9.4 12.9-6.3v-77.3c0-4.9-2.3-9.6-6.1-12.6l-360-281l360-281.1c3.8-3 6.1-7.7 6.1-12.6"/></svg></span>All hardware</a>
+  <header style="margin-bottom:26px">
+    <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:6px">
+      <h1 style="font-size:28px;font-weight:600;letter-spacing:-.01em;margin:0">4× RTX PRO GPUs</h1>
+    </div>
+    <p style="font-size:15px;color:var(--text);margin:0 0 8px;max-width:70ch">1 model available on this hardware.</p>
+  </header><div id="ws-body"><div style="display:grid;grid-template-columns:38fr 62fr;gap:24px;align-items:start" class="ws-cols"><section aria-label="Choose configuration" style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:22px;box-shadow:var(--shadow-card)"><h2 style="font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted);font-weight:600;margin:0 0 18px">Choose configuration</h2><div style="display:flex;flex-direction:column;gap:16px"><label style="display:flex;flex-direction:column;gap:6px;font-size:12.5px;font-weight:500;color:var(--text-muted)"><span style="display:inline-flex;align-items:center;gap:8px"><span style="display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:5px;background:var(--accent-soft);color:var(--accent-text);font-size:11px;font-weight:600">1</span>Model</span><select class="cair-sel" data-sel="model" style="height:42px;padding:0 12px;font-size:14px;font-family:var(--font-sans);background:var(--surface);border:1px solid var(--border-2);border-radius:8px;color:var(--text)"><option value="qwen/qwen3.8-flash-next" selected>Qwen3.8 Flash-Next</option></select></label><label style="display:flex;flex-direction:column;gap:6px;font-size:12.5px;font-weight:500;color:var(--text-muted)"><span style="display:inline-flex;align-items:center;gap:8px"><span style="display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:5px;background:var(--accent-soft);color:var(--accent-text);font-size:11px;font-weight:600">2</span>OS</span><select class="cair-sel" data-sel="os" style="height:42px;padding:0 12px;font-size:14px;font-family:var(--font-sans);background:var(--surface);border:1px solid var(--border-2);border-radius:8px;color:var(--text)"><option value="linux" selected>Linux</option></select></label><label style="display:flex;flex-direction:column;gap:6px;font-size:12.5px;font-weight:500;color:var(--text-muted)"><span style="display:inline-flex;align-items:center;gap:8px"><span style="display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:5px;background:var(--accent-soft);color:var(--accent-text);font-size:11px;font-weight:600">3</span>Backend</span><select class="cair-sel" data-sel="backend" style="height:42px;padding:0 12px;font-size:14px;font-family:var(--font-sans);background:var(--surface);border:1px solid var(--border-2);border-radius:8px;color:var(--text)"><option value="vllm" selected>vLLM</option></select></label></div><div style="border-top:1px solid var(--border);margin:20px 0 0;padding-top:18px"><dl style="margin:0;display:flex;flex-direction:column;gap:10px"><div style="display:flex;justify-content:space-between;gap:12px"><dt style="font-size:13px;color:var(--text-muted)">Precision</dt><dd style="margin:0;font-size:13px;font-weight:500;text-align:right">NVFP4</dd></div><div style="display:flex;justify-content:space-between;gap:12px"><dt style="font-size:13px;color:var(--text-muted)">Checkpoint</dt><dd style="margin:0;font-size:13px;text-align:right;word-break:break-all"><a href="https://huggingface.co/Inferact/Qwen3.8-Flash-Next-NVFP4" target="_blank" rel="noopener noreferrer">hf: Inferact/Qwen3.8-Flash-Next-NVFP4</a></dd></div></dl></div></section><section aria-label="Recipe commands" class="ws-panel" style="position:sticky;top:76px;display:flex;flex-direction:column;background:var(--surface);border:1px solid var(--border);border-radius:12px;box-shadow:var(--shadow-card);overflow:hidden"><div style="padding:20px 22px 18px;border-bottom:1px solid var(--border)"><div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px"><h2 style="font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted);font-weight:600;margin:0">Selected recipe</h2></div><p style="font-size:17px;font-weight:600;margin:0;letter-spacing:-.01em">4× RTX PRO GPUs · Linux · vLLM · NVFP4</p></div><div style="display:flex;gap:10px;align-items:flex-start;background:var(--webpe-yellow-050);color:var(--webpe-yellow-900);border-bottom:1px solid var(--webpe-yellow-100);padding:12px 22px;font-size:13px;line-height:1.45"><span style="color:var(--webpe-yellow-300);margin-top:1px"><span class="aicon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 1024 1024" fill="currentColor" aria-hidden="true" focusable="false"><path fill="currentColor" d="M512 472a40 40 0 1 0 80 0a40 40 0 1 0-80 0m367 352.9L696.3 352V178H768v-68H256v68h71.7v174L145 824.9c-2.8 7.4-4.3 15.2-4.3 23.1c0 35.3 28.7 64 64 64h614.6c7.9 0 15.7-1.5 23.1-4.3c33-12.7 49.4-49.8 36.6-82.8M395.7 364.7V180h232.6v184.7L719.2 600c-20.7-5.3-42.1-8-63.9-8c-61.2 0-119.2 21.5-165.3 60a188.78 188.78 0 0 1-121.3 43.9c-32.7 0-64.1-8.3-91.8-23.7zM210.5 844l41.7-107.8c35.7 18.1 75.4 27.8 116.6 27.8c61.2 0 119.2-21.5 165.3-60c33.9-28.2 76.3-43.9 121.3-43.9c35 0 68.4 9.5 97.6 27.1L813.5 844z"/></svg></span></span><span>Experimental recipe — not yet Optimized.</span></div><div style="padding:20px 22px 22px;display:flex;flex-direction:column;gap:22px"><div><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px"><h3 style="font-size:13px;font-weight:600;margin:0;display:flex;align-items:center;gap:7px"><span style="color:var(--text-faint)"><span class="aicon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 1024 1024" fill="currentColor" aria-hidden="true" focusable="false"><path fill="currentColor" d="M832 64H192c-17.7 0-32 14.3-32 32v832c0 17.7 14.3 32 32 32h640c17.7 0 32-14.3 32-32V96c0-17.7-14.3-32-32-32m-40 824H232V687h97.9c11.6 32.8 32 62.3 59.1 84.7c34.5 28.5 78.2 44.3 123 44.3s88.5-15.7 123-44.3c27.1-22.4 47.5-51.9 59.1-84.7H792v-63H643.6l-5.2 24.7C626.4 708.5 573.2 752 512 752s-114.4-43.5-126.5-103.3l-5.2-24.7H232V136h560zM320 341h384c4.4 0 8-3.6 8-8v-48c0-4.4-3.6-8-8-8H320c-4.4 0-8 3.6-8 8v48c0 4.4 3.6 8 8 8m0 160h384c4.4 0 8-3.6 8-8v-48c0-4.4-3.6-8-8-8H320c-4.4 0-8 3.6-8 8v48c0 4.4 3.6 8 8 8"/></svg></span></span>Start container</h3><button type="button" data-copy="default:setup" aria-label="Copy start container command" style="display:inline-flex;align-items:center;gap:6px;padding:5px 11px;font-size:12px;font-weight:500;border-radius:7px;cursor:pointer;font-family:var(--font-sans);border:1px solid var(--border-2);background:var(--surface);color:var(--text-muted)"><span class="aicon" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 16 16"></svg></span>Copy</button></div><p style="font-size:12px;color:var(--text-muted);margin:0 0 8px">Set `HF_TOKEN` in the host environment. Container image: vllm/vllm-openai:qwen38-flash-next</p><pre class="cair-code" style="background:var(--code-bg);color:var(--code-fg);border-radius:9px;padding:14px 16px;overflow-x:auto;font-family:var(--font-mono);font-size:12.5px;line-height:1.6;white-space:pre"><code>docker run --rm -it \
+  --gpus all \
+  --ipc host \
+  --network host \
+  --shm-size=16g \
+  --ulimit memlock=-1 \
+  --ulimit stack=67108864 \
+  -e HF_TOKEN=$HF_TOKEN \
+  -v ~/.cache/huggingface:/root/.cache/huggingface \
+  --entrypoint /bin/bash \
+  vllm/vllm-openai:qwen38-flash-next</code></pre></div><div><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px"><h3 style="font-size:13px;font-weight:600;margin:0;display:flex;align-items:center;gap:7px"><span style="color:var(--text-faint)"><span class="aicon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 1024 1024" fill="currentColor" aria-hidden="true" focusable="false"><path fill="currentColor" d="M512 64C264.6 64 64 264.6 64 512s200.6 448 448 448s448-200.6 448-448S759.4 64 512 64m0 820c-205.4 0-372-166.6-372-372s166.6-372 372-372s372 166.6 372 372s-166.6 372-372 372"/><path fill="currentColor" d="m719.4 499.1l-296.1-215A15.9 15.9 0 0 0 398 297v430c0 13.1 14.8 20.5 25.3 12.9l296.1-215a15.9 15.9 0 0 0 0-25.8m-257.6 134V390.9L628.5 512z"/></svg></span></span>Launch</h3><button type="button" data-copy="default:serve" aria-label="Copy launch command" style="display:inline-flex;align-items:center;gap:6px;padding:5px 11px;font-size:12px;font-weight:500;border-radius:7px;cursor:pointer;font-family:var(--font-sans);border:1px solid var(--border-2);background:var(--surface);color:var(--text-muted)"><span class="aicon" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 16 16"></svg></span>Copy</button></div><pre class="cair-code" style="background:var(--code-bg);color:var(--code-fg);border-radius:9px;padding:14px 16px;overflow-x:auto;font-family:var(--font-mono);font-size:12.5px;line-height:1.6;white-space:pre"><code>vllm serve Inferact/Qwen3.8-Flash-Next-NVFP4 \
+  --host 0.0.0.0 \
+  --port 8000 \
+  --no-enable-flashinfer-autotune \
+  --max-num-seqs 16 \
+  --gpu-memory-utilization 0.95 \
+  --max-num-batched-tokens 8192 \
+  --enable-prefix-caching \
+  --moe-backend marlin \
+  --tensor-parallel-size 4 \
+  --enable-auto-tool-choice \
+  --tool-call-parser qwen3_xml \
+  --reasoning-parser qwen3</code></pre></div><div style="border:1px solid var(--border);border-radius:9px;overflow:hidden"><button id="recipe-disclosure-toggle-qwen-qwen3-8-flash-next-rtx-pro-4gpu-linux-vllm-nvfp4-default-client" type="button" data-recipe-section-toggle="qwen/qwen3.8-flash-next/rtx-pro-4gpu/linux/vllm/nvfp4:default:client" aria-expanded="false" aria-controls="recipe-disclosure-qwen-qwen3-8-flash-next-rtx-pro-4gpu-linux-vllm-nvfp4-default-client" style="width:100%;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 14px;border:0;background:var(--surface-well);color:var(--text);font-family:var(--font-sans);cursor:pointer;text-align:left"><span style="display:flex;align-items:flex-start;gap:8px;min-width:0"><span aria-hidden="true" style="color:var(--text-faint);margin-top:1px"><span class="aicon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 1024 1024" fill="currentColor" aria-hidden="true" focusable="false"><path fill="currentColor" d="m917.7 148.8l-42.4-42.4c-1.6-1.6-3.6-2.3-5.7-2.3s-4.1.8-5.7 2.3l-76.1 76.1a199.27 199.27 0 0 0-112.1-34.3c-51.2 0-102.4 19.5-141.5 58.6L432.3 308.7a8.03 8.03 0 0 0 0 11.3L704 591.7c1.6 1.6 3.6 2.3 5.7 2.3c2 0 4.1-.8 5.7-2.3l101.9-101.9c68.9-69 77-175.7 24.3-253.5l76.1-76.1c3.1-3.2 3.1-8.3 0-11.4M769.1 441.7l-59.4 59.4l-186.8-186.8l59.4-59.4c24.9-24.9 58.1-38.7 93.4-38.7s68.4 13.7 93.4 38.7c24.9 24.9 38.7 58.1 38.7 93.4s-13.8 68.4-38.7 93.4m-190.2 105a8.03 8.03 0 0 0-11.3 0L501 613.3L410.7 523l66.7-66.7c3.1-3.1 3.1-8.2 0-11.3L441 408.6a8.03 8.03 0 0 0-11.3 0L363 475.3l-43-43a7.85 7.85 0 0 0-5.7-2.3c-2 0-4.1.8-5.7 2.3L206.8 534.2c-68.9 69-77 175.7-24.3 253.5l-76.1 76.1a8.03 8.03 0 0 0 0 11.3l42.4 42.4c1.6 1.6 3.6 2.3 5.7 2.3s4.1-.8 5.7-2.3l76.1-76.1c33.7 22.9 72.9 34.3 112.1 34.3c51.2 0 102.4-19.5 141.5-58.6l101.9-101.9c3.1-3.1 3.1-8.2 0-11.3l-43-43l66.7-66.7c3.1-3.1 3.1-8.2 0-11.3zM441.7 769.1a131.32 131.32 0 0 1-93.4 38.7c-35.3 0-68.4-13.7-93.4-38.7a131.32 131.32 0 0 1-38.7-93.4c0-35.3 13.7-68.4 38.7-93.4l59.4-59.4l186.8 186.8z"/></svg></span></span><span><span style="display:block;font-size:13px;font-weight:600">Test the endpoint</span><span style="display:block;font-size:11.5px;color:var(--text-muted);margin-top:2px">Send a sample chat-completions request to the running server.</span></span></span><span aria-hidden="true" style="font-size:16px;color:var(--text-faint)">+</span></button><div id="recipe-disclosure-qwen-qwen3-8-flash-next-rtx-pro-4gpu-linux-vllm-nvfp4-default-client" role="region" aria-labelledby="recipe-disclosure-toggle-qwen-qwen3-8-flash-next-rtx-pro-4gpu-linux-vllm-nvfp4-default-client" hidden></div></div></div></section></div><div style="display:grid;grid-template-columns:38fr 62fr;gap:24px;align-items:start;margin-top:24px" class="ws-cols"><section style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:22px"><h2 style="font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted);font-weight:600;margin:0 0 16px">Recipe details</h2><dl style="margin:0;display:flex;flex-direction:column;gap:0"><div style="display:flex;justify-content:space-between;gap:16px;padding:9px 0;border-bottom:1px solid var(--border)"><dt style="font-size:13px;color:var(--text-muted);flex-shrink:0;max-width:55%">Operating system</dt><dd style="margin:0;font-size:13px;text-align:right;word-break:break-word;min-width:0;flex:1"><span style="font-weight:500">Linux</span></dd></div><div style="display:flex;justify-content:space-between;gap:16px;padding:9px 0;border-bottom:1px solid var(--border)"><dt style="font-size:13px;color:var(--text-muted);flex-shrink:0;max-width:55%">Execution</dt><dd style="margin:0;font-size:13px;text-align:right;word-break:break-word;min-width:0;flex:1"><span style="font-weight:500">Container</span></dd></div><div style="display:flex;justify-content:space-between;gap:16px;padding:9px 0;border-bottom:1px solid var(--border)"><dt style="font-size:13px;color:var(--text-muted);flex-shrink:0;max-width:55%">Precision</dt><dd style="margin:0;font-size:13px;text-align:right;word-break:break-word;min-width:0;flex:1"><span style="font-weight:500">nvfp4</span></dd></div><div style="display:flex;justify-content:space-between;gap:16px;padding:9px 0;border-bottom:1px solid var(--border)"><dt style="font-size:13px;color:var(--text-muted);flex-shrink:0;max-width:55%">Checkpoint</dt><dd style="margin:0;font-size:13px;text-align:right;word-break:break-word;min-width:0;flex:1"><a href="https://huggingface.co/Inferact/Qwen3.8-Flash-Next-NVFP4" target="_blank" rel="noopener noreferrer">hf: Inferact/Qwen3.8-Flash-Next-NVFP4</a></dd></div><div style="display:flex;justify-content:space-between;gap:16px;padding:9px 0;border-bottom:1px solid var(--border)"><dt style="font-size:13px;color:var(--text-muted);flex-shrink:0;max-width:55%">Topology</dt><dd style="margin:0;font-size:13px;text-align:right;word-break:break-word;min-width:0;flex:1"><span style="font-weight:500">4× RTX PRO 6000</span></dd></div><div style="display:flex;justify-content:space-between;gap:16px;padding:9px 0;border-bottom:1px solid var(--border)"><dt style="font-size:13px;color:var(--text-muted);flex-shrink:0;max-width:55%">Runtime</dt><dd style="margin:0;font-size:13px;text-align:right;word-break:break-word;min-width:0;flex:1"><a href="https://hub.docker.com/r/vllm/vllm-openai/tags?name=qwen38-flash-next" target="_blank" rel="noopener noreferrer"><code style="font-family:var(--font-mono);font-size:12px;background:var(--surface-well);padding:1px 6px;border-radius:4px">vllm/vllm-openai:qwen38-flash-next</code></a></dd></div><div style="display:flex;justify-content:space-between;gap:16px;padding:9px 0;border-bottom:1px solid var(--border)"><dt style="font-size:13px;color:var(--text-muted);flex-shrink:0;max-width:55%">Served model</dt><dd style="margin:0;font-size:13px;text-align:right;word-break:break-word;min-width:0;flex:1"><code style="font-family:var(--font-mono);font-size:12px;background:var(--surface-well);padding:1px 6px;border-radius:4px">Inferact/Qwen3.8-Flash-Next-NVFP4</code></dd></div><div style="display:flex;justify-content:space-between;gap:16px;padding:9px 0;border-bottom:1px solid var(--border)"><dt style="font-size:13px;color:var(--text-muted);flex-shrink:0;max-width:55%">Port</dt><dd style="margin:0;font-size:13px;text-align:right;word-break:break-word;min-width:0;flex:1"><span style="font-weight:500">8000</span></dd></div><div style="display:flex;justify-content:space-between;gap:16px;padding:9px 0;border-bottom:1px solid var(--border)"><dt style="font-size:13px;color:var(--text-muted);flex-shrink:0;max-width:55%">Recipe ID</dt><dd style="margin:0;font-size:13px;text-align:right;word-break:break-word;min-width:0;flex:1"><code style="font-family:var(--font-mono);font-size:12px;background:var(--surface-well);padding:1px 6px;border-radius:4px">qwen/qwen3.8-flash-next/rtx-pro-4gpu/linux/vllm/nvfp4</code></dd></div></dl></section><section aria-label="Measured performance" style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px 22px;overflow:hidden;min-width:0"><h2 style="font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted);font-weight:600;margin:0 0 7px">Measured performance</h2><p style="font-size:13.5px;color:var(--text-faint);margin:0">Not measured for this exact recipe.</p></section></div></div></div>
+</main>
+<footer style="border-top:1px solid var(--border);background:var(--surface)">
+  <div style="max-width:1280px;margin:0 auto;padding:28px 24px;display:flex;gap:24px;flex-wrap:wrap;align-items:center;font-size:13px;color:var(--text-muted)">
+    <div style="display:flex;gap:18px;flex-wrap:wrap;margin-left:auto;align-items:center">
+      <a href="https://github.com/NVIDIA/local-ai-inference-recipes" target="_blank" rel="noopener noreferrer">Repository</a>
+      <a href="https://github.com/NVIDIA/local-ai-inference-recipes/blob/main/LICENSE" target="_blank" rel="noopener noreferrer">License</a>
+      <span style="display:inline-flex;align-items:center;gap:6px;color:var(--text-faint)"><span class="aicon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 1024 1024" fill="currentColor" aria-hidden="true" focusable="false"><path fill="currentColor" d="M512 64C264.6 64 64 264.6 64 512s200.6 448 448 448s448-200.6 448-448S759.4 64 512 64m0 820c-205.4 0-372-166.6-372-372s166.6-372 372-372s372 166.6 372 372s-166.6 372-372 372"/><path fill="currentColor" d="M686.7 638.6L544.1 535.5V288c0-4.4-3.6-8-8-8H488c-4.4 0-8 3.6-8 8v275.4c0 2.6 1.2 5 3.3 6.5l165.4 120.6c3.6 2.6 8.6 1.8 11.2-1.7l28.6-39c2.6-3.7 1.8-8.7-1.8-11.2"/></svg></span>Catalog schema v2 · 18 models</span>
+    </div>
+  </div>
+</footer>
+<div id="cair-live" aria-live="polite" role="status" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap"></div>
+</div>
+<script>var ICONS = {"search-outlined":"\u003csvg xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" height=\"16\" viewBox=\"0 0 1024 1024\" fill=\"currentColor\" aria-hidden=\"true\" focusable=\"false\">\u003cpath fill=\"currentColor\" d=\"M909.6 854.5L649.9 594.8C690.2 542.7 712 479 712 412c0-80.2-31.3-155.4-87.9-212.1S492.1 112 412 112s-155.5 31.3-212.1 87.9C143.2 256.5 112 331.8 112 412c0 80.1 31.3 155.5 87.9 212.1C256.5 680.8 331.8 712 412 712c67 0 130.6-21.8 182.7-62l259.7 259.6a8.2 8.2 0 0 0 11.6 0l43.6-43.5a8.2 8.2 0 0 0 0-11.6M570.4 570.4C528 612.7 471.8 636 412 636s-116-23.3-158.4-65.6C211.3 528 188 471.8 188 412s23.3-116.1 65.6-158.4C296 211.3 352.2 188 412 188s116.1 23.2 158.4 65.6S636 352.2 636 412s-23.3 116.1-65.6 158.4\"/>\u003c/svg>","thunderbolt-filled":"\u003csvg xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" height=\"16\" viewBox=\"0 0 1024 1024\" fill=\"currentColor\" aria-hidden=\"true\" focusable=\"false\">\u003cpath fill=\"currentColor\" d=\"M848 359.3H627.7L825.8 109c4.1-5.3.4-13-6.3-13H436c-2.8 0-5.5 1.5-6.9 4L170 547.5c-3.1 5.3.7 12 6.9 12h174.4l-89.4 357.6c-1.9 7.8 7.5 13.3 13.3 7.7L853.5 373c5.2-4.9 1.7-13.7-5.5-13.7\"/>\u003c/svg>","right-outlined":"\u003csvg xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" height=\"16\" viewBox=\"0 0 1024 1024\" fill=\"currentColor\" aria-hidden=\"true\" focusable=\"false\">\u003cpath fill=\"currentColor\" d=\"M765.7 486.8L314.9 134.7A7.97 7.97 0 0 0 302 141v77.3c0 4.9 2.3 9.6 6.1 12.6l360 281.1l-360 281.1c-3.9 3-6.1 7.7-6.1 12.6V883c0 6.7 7.7 10.4 12.9 6.3l450.8-352.1a31.96 31.96 0 0 0 0-50.4\"/>\u003c/svg>","left-outlined":"\u003csvg xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" height=\"16\" viewBox=\"0 0 1024 1024\" fill=\"currentColor\" aria-hidden=\"true\" focusable=\"false\">\u003cpath fill=\"currentColor\" d=\"M724 218.3V141c0-6.7-7.7-10.4-12.9-6.3L260.3 486.8a31.86 31.86 0 0 0 0 50.3l450.8 352.1c5.3 4.1 12.9.4 12.9-6.3v-77.3c0-4.9-2.3-9.6-6.1-12.6l-360-281l360-281.1c3.8-3 6.1-7.7 6.1-12.6\"/>\u003c/svg>","appstore-outlined":"\u003csvg xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" height=\"16\" viewBox=\"0 0 1024 1024\" fill=\"currentColor\" aria-hidden=\"true\" focusable=\"false\">\u003cpath fill=\"currentColor\" d=\"M464 144H160c-8.8 0-16 7.2-16 16v304c0 8.8 7.2 16 16 16h304c8.8 0 16-7.2 16-16V160c0-8.8-7.2-16-16-16m-52 268H212V212h200zm452-268H560c-8.8 0-16 7.2-16 16v304c0 8.8 7.2 16 16 16h304c8.8 0 16-7.2 16-16V160c0-8.8-7.2-16-16-16m-52 268H612V212h200zM464 544H160c-8.8 0-16 7.2-16 16v304c0 8.8 7.2 16 16 16h304c8.8 0 16-7.2 16-16V560c0-8.8-7.2-16-16-16m-52 268H212V612h200zm452-268H560c-8.8 0-16 7.2-16 16v304c0 8.8 7.2 16 16 16h304c8.8 0 16-7.2 16-16V560c0-8.8-7.2-16-16-16m-52 268H612V612h200z\"/>\u003c/svg>","menu-outlined":"\u003csvg xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" height=\"16\" viewBox=\"0 0 1024 1024\" fill=\"currentColor\" aria-hidden=\"true\" focusable=\"false\">\u003cpath fill=\"currentColor\" d=\"M904 160H120c-4.4 0-8 3.6-8 8v64c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-64c0-4.4-3.6-8-8-8m0 624H120c-4.4 0-8 3.6-8 8v64c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-64c0-4.4-3.6-8-8-8m0-312H120c-4.4 0-8 3.6-8 8v64c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-64c0-4.4-3.6-8-8-8\"/>\u003c/svg>","close-outlined":"\u003csvg xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" height=\"16\" viewBox=\"0 0 1024 1024\" fill=\"currentColor\" aria-hidden=\"true\" focusable=\"false\">\u003cpath fill=\"currentColor\" fill-rule=\"evenodd\" d=\"M799.855 166.312c.023.007.043.018.084.059l57.69 57.69c.041.041.052.06.059.084a.1.1 0 0 1 0 .069c-.007.023-.018.042-.059.083L569.926 512l287.703 287.703c.041.04.052.06.059.083a.12.12 0 0 1 0 .07c-.007.022-.018.042-.059.083l-57.69 57.69c-.041.041-.06.052-.084.059a.1.1 0 0 1-.069 0c-.023-.007-.042-.018-.083-.059L512 569.926L224.297 857.629c-.04.041-.06.052-.083.059a.12.12 0 0 1-.07 0c-.022-.007-.042-.018-.083-.059l-57.69-57.69c-.041-.041-.052-.06-.059-.084a.1.1 0 0 1 0-.069c.007-.023.018-.042.059-.083L454.073 512L166.371 224.297c-.041-.04-.052-.06-.059-.083a.12.12 0 0 1 0-.07c.007-.022.018-.042.059-.083l57.69-57.69c.041-.041.06-.052.084-.059a.1.1 0 0 1 .069 0c.023.007.042.018.083.059L512 454.073l287.703-287.702c.04-.041.06-.052.083-.059a.12.12 0 0 1 .07 0Z\"/>\u003c/svg>","experiment-outlined":"\u003csvg xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" height=\"16\" viewBox=\"0 0 1024 1024\" fill=\"currentColor\" aria-hidden=\"true\" focusable=\"false\">\u003cpath fill=\"currentColor\" d=\"M512 472a40 40 0 1 0 80 0a40 40 0 1 0-80 0m367 352.9L696.3 352V178H768v-68H256v68h71.7v174L145 824.9c-2.8 7.4-4.3 15.2-4.3 23.1c0 35.3 28.7 64 64 64h614.6c7.9 0 15.7-1.5 23.1-4.3c33-12.7 49.4-49.8 36.6-82.8M395.7 364.7V180h232.6v184.7L719.2 600c-20.7-5.3-42.1-8-63.9-8c-61.2 0-119.2 21.5-165.3 60a188.78 188.78 0 0 1-121.3 43.9c-32.7 0-64.1-8.3-91.8-23.7zM210.5 844l41.7-107.8c35.7 18.1 75.4 27.8 116.6 27.8c61.2 0 119.2-21.5 165.3-60c33.9-28.2 76.3-43.9 121.3-43.9c35 0 68.4 9.5 97.6 27.1L813.5 844z\"/>\u003c/svg>","check-circle-filled":"\u003csvg xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" height=\"16\" viewBox=\"0 0 1024 1024\" fill=\"currentColor\" aria-hidden=\"true\" focusable=\"false\">\u003cpath fill=\"currentColor\" d=\"M512 64C264.6 64 64 264.6 64 512s200.6 448 448 448s448-200.6 448-448S759.4 64 512 64m193.5 301.7l-210.6 292a31.8 31.8 0 0 1-51.7 0L318.5 484.9c-3.8-5.3 0-12.7 6.5-12.7h46.9c10.2 0 19.9 4.9 25.9 13.3l71.2 98.8l157.2-218c6-8.3 15.6-13.3 25.9-13.3H699c6.5 0 10.3 7.4 6.5 12.7\"/>\u003c/svg>","clock-circle-outlined":"\u003csvg xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" height=\"16\" viewBox=\"0 0 1024 1024\" fill=\"currentColor\" aria-hidden=\"true\" focusable=\"false\">\u003cpath fill=\"currentColor\" d=\"M512 64C264.6 64 64 264.6 64 512s200.6 448 448 448s448-200.6 448-448S759.4 64 512 64m0 820c-205.4 0-372-166.6-372-372s166.6-372 372-372s372 166.6 372 372s-166.6 372-372 372\"/>\u003cpath fill=\"currentColor\" d=\"M686.7 638.6L544.1 535.5V288c0-4.4-3.6-8-8-8H488c-4.4 0-8 3.6-8 8v275.4c0 2.6 1.2 5 3.3 6.5l165.4 120.6c3.6 2.6 8.6 1.8 11.2-1.7l28.6-39c2.6-3.7 1.8-8.7-1.8-11.2\"/>\u003c/svg>","warning-filled":"\u003csvg xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" height=\"16\" viewBox=\"0 0 1024 1024\" fill=\"currentColor\" aria-hidden=\"true\" focusable=\"false\">\u003cpath fill=\"currentColor\" d=\"m955.7 856l-416-720c-6.2-10.7-16.9-16-27.7-16s-21.6 5.3-27.7 16l-416 720C56 877.4 71.4 904 96 904h832c24.6 0 40-26.6 27.7-48M480 416c0-4.4 3.6-8 8-8h48c4.4 0 8 3.6 8 8v184c0 4.4-3.6 8-8 8h-48c-4.4 0-8-3.6-8-8zm32 352a48.01 48.01 0 0 1 0-96a48.01 48.01 0 0 1 0 96\"/>\u003c/svg>","info-circle-outlined":"\u003csvg xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" height=\"16\" viewBox=\"0 0 1024 1024\" fill=\"currentColor\" aria-hidden=\"true\" focusable=\"false\">\u003cpath fill=\"currentColor\" d=\"M512 64C264.6 64 64 264.6 64 512s200.6 448 448 448s448-200.6 448-448S759.4 64 512 64m0 820c-205.4 0-372-166.6-372-372s166.6-372 372-372s372 166.6 372 372s-166.6 372-372 372\"/>\u003cpath fill=\"currentColor\" d=\"M464 336a48 48 0 1 0 96 0a48 48 0 1 0-96 0m72 112h-48c-4.4 0-8 3.6-8 8v272c0 4.4 3.6 8 8 8h48c4.4 0 8-3.6 8-8V456c0-4.4-3.6-8-8-8\"/>\u003c/svg>","container-outlined":"\u003csvg xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" height=\"16\" viewBox=\"0 0 1024 1024\" fill=\"currentColor\" aria-hidden=\"true\" focusable=\"false\">\u003cpath fill=\"currentColor\" d=\"M832 64H192c-17.7 0-32 14.3-32 32v832c0 17.7 14.3 32 32 32h640c17.7 0 32-14.3 32-32V96c0-17.7-14.3-32-32-32m-40 824H232V687h97.9c11.6 32.8 32 62.3 59.1 84.7c34.5 28.5 78.2 44.3 123 44.3s88.5-15.7 123-44.3c27.1-22.4 47.5-51.9 59.1-84.7H792v-63H643.6l-5.2 24.7C626.4 708.5 573.2 752 512 752s-114.4-43.5-126.5-103.3l-5.2-24.7H232V136h560zM320 341h384c4.4 0 8-3.6 8-8v-48c0-4.4-3.6-8-8-8H320c-4.4 0-8 3.6-8 8v48c0 4.4 3.6 8 8 8m0 160h384c4.4 0 8-3.6 8-8v-48c0-4.4-3.6-8-8-8H320c-4.4 0-8 3.6-8 8v48c0 4.4 3.6 8 8 8\"/>\u003c/svg>","play-circle-outlined":"\u003csvg xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" height=\"16\" viewBox=\"0 0 1024 1024\" fill=\"currentColor\" aria-hidden=\"true\" focusable=\"false\">\u003cpath fill=\"currentColor\" d=\"M512 64C264.6 64 64 264.6 64 512s200.6 448 448 448s448-200.6 448-448S759.4 64 512 64m0 820c-205.4 0-372-166.6-372-372s166.6-372 372-372s372 166.6 372 372s-166.6 372-372 372\"/>\u003cpath fill=\"currentColor\" d=\"m719.4 499.1l-296.1-215A15.9 15.9 0 0 0 398 297v430c0 13.1 14.8 20.5 25.3 12.9l296.1-215a15.9 15.9 0 0 0 0-25.8m-257.6 134V390.9L628.5 512z\"/>\u003c/svg>","api-outlined":"\u003csvg xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" height=\"16\" viewBox=\"0 0 1024 1024\" fill=\"currentColor\" aria-hidden=\"true\" focusable=\"false\">\u003cpath fill=\"currentColor\" d=\"m917.7 148.8l-42.4-42.4c-1.6-1.6-3.6-2.3-5.7-2.3s-4.1.8-5.7 2.3l-76.1 76.1a199.27 199.27 0 0 0-112.1-34.3c-51.2 0-102.4 19.5-141.5 58.6L432.3 308.7a8.03 8.03 0 0 0 0 11.3L704 591.7c1.6 1.6 3.6 2.3 5.7 2.3c2 0 4.1-.8 5.7-2.3l101.9-101.9c68.9-69 77-175.7 24.3-253.5l76.1-76.1c3.1-3.2 3.1-8.3 0-11.4M769.1 441.7l-59.4 59.4l-186.8-186.8l59.4-59.4c24.9-24.9 58.1-38.7 93.4-38.7s68.4 13.7 93.4 38.7c24.9 24.9 38.7 58.1 38.7 93.4s-13.8 68.4-38.7 93.4m-190.2 105a8.03 8.03 0 0 0-11.3 0L501 613.3L410.7 523l66.7-66.7c3.1-3.1 3.1-8.2 0-11.3L441 408.6a8.03 8.03 0 0 0-11.3 0L363 475.3l-43-43a7.85 7.85 0 0 0-5.7-2.3c-2 0-4.1.8-5.7 2.3L206.8 534.2c-68.9 69-77 175.7-24.3 253.5l-76.1 76.1a8.03 8.03 0 0 0 0 11.3l42.4 42.4c1.6 1.6 3.6 2.3 5.7 2.3s4.1-.8 5.7-2.3l76.1-76.1c33.7 22.9 72.9 34.3 112.1 34.3c51.2 0 102.4-19.5 141.5-58.6l101.9-101.9c3.1-3.1 3.1-8.2 0-11.3l-43-43l66.7-66.7c3.1-3.1 3.1-8.2 0-11.3zM441.7 769.1a131.32 131.32 0 0 1-93.4 38.7c-35.3 0-68.4-13.7-93.4-38.7a131.32 131.32 0 0 1-38.7-93.4c0-35.3 13.7-68.4 38.7-93.4l59.4-59.4l186.8 186.8z\"/>\u003c/svg>","branches-outlined":"\u003csvg xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" height=\"16\" viewBox=\"0 0 1024 1024\" fill=\"currentColor\" aria-hidden=\"true\" focusable=\"false\">\u003cpath fill=\"currentColor\" d=\"M740 161c-61.8 0-112 50.2-112 112c0 50.1 33.1 92.6 78.5 106.9v95.9L320 602.4V318.1c44.2-15 76-56.9 76-106.1c0-61.8-50.2-112-112-112s-112 50.2-112 112c0 49.2 31.8 91 76 106.1V706c-44.2 15-76 56.9-76 106.1c0 61.8 50.2 112 112 112s112-50.2 112-112c0-49.2-31.8-91-76-106.1v-27.8l423.5-138.7a50.52 50.52 0 0 0 34.9-48.2V378.2c42.9-15.8 73.6-57 73.6-105.2c0-61.8-50.2-112-112-112m-504 51a48.01 48.01 0 0 1 96 0a48.01 48.01 0 0 1-96 0m96 600a48.01 48.01 0 0 1-96 0a48.01 48.01 0 0 1 96 0m408-491a48.01 48.01 0 0 1 0-96a48.01 48.01 0 0 1 0 96\"/>\u003c/svg>","copy-outlined":"\u003csvg width=\"16\" height=\"16\" viewBox=\"0 0 16 16\">\u003c/svg>","check-outlined":"\u003csvg xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" height=\"16\" viewBox=\"0 0 1024 1024\" fill=\"currentColor\" aria-hidden=\"true\" focusable=\"false\">\u003cpath fill=\"currentColor\" d=\"M912 190h-69.9c-9.8 0-19.1 4.5-25.1 12.2L404.7 724.5L207 474a32 32 0 0 0-25.1-12.2H112c-6.7 0-10.4 7.7-6.3 12.9l273.9 347c12.8 16.2 37.4 16.2 50.3 0l488.4-618.9c4.1-5.1.4-12.8-6.3-12.8\"/>\u003c/svg>","safety-certificate-outlined":"\u003csvg xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" height=\"16\" viewBox=\"0 0 1024 1024\" fill=\"currentColor\" aria-hidden=\"true\" focusable=\"false\">\u003cpath fill=\"currentColor\" d=\"M866.9 169.9L527.1 54.1C523 52.7 517.5 52 512 52s-11 .7-15.1 2.1L157.1 169.9c-8.3 2.8-15.1 12.4-15.1 21.2v482.4c0 8.8 5.7 20.4 12.6 25.9L499.3 968c3.5 2.7 8 4.1 12.6 4.1s9.2-1.4 12.6-4.1l344.7-268.6c6.9-5.4 12.6-17 12.6-25.9V191.1c.2-8.8-6.6-18.3-14.9-21.2M810 654.3L512 886.5L214 654.3V226.7l298-101.6l298 101.6zm-405.8-201c-3-4.1-7.8-6.6-13-6.6H336c-6.5 0-10.3 7.4-6.5 12.7l126.4 174a16.1 16.1 0 0 0 26 0l212.6-292.7c3.8-5.3 0-12.7-6.5-12.7h-55.2c-5.1 0-10 2.5-13 6.6L468.9 542.4z\"/>\u003c/svg>"};</script>
+<script>(function(){
+var root=document.getElementById('cair-root'),btn=document.getElementById('cair-theme-btn');
+function g(){return root.classList.contains('dark')?'\u2600':'\u263e';}
+function l(){return root.classList.contains('dark')?'Switch to light theme':'Switch to dark theme';}
+if(btn){btn.textContent=g();btn.setAttribute('aria-label',l());btn.title=l();
+btn.addEventListener('click',function(){var d=!root.classList.contains('dark');root.classList.toggle('dark',d);try{localStorage.setItem('cair-theme',d?'dark':'light');}catch(e){}btn.textContent=g();btn.setAttribute('aria-label',l());btn.title=l();});}
+})();</script>
+<script>// SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+// SPDX-License-Identifier: Apache-2.0
+// Pure rendering helpers for the Local AI Inference Recipes site.
+//
+// Pure = string in, string out. No Node APIs and no DOM APIs, so the SAME code
+// pre-renders pages in Node (internal/site/build.mjs) and re-renders on interaction in the
+// browser (this file's source is inlined into model pages). Icons resolve from a
+// global `ICONS` map (built once from ant-icons at build time).
+
+function esc(s) {
+  return String(s == null ? '' : s)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function icon(name) {
+  const map = (typeof globalThis !== 'undefined' && globalThis.ICONS) || {};
+  return '<span class="aicon" aria-hidden="true">' + (map[name] || '') + '</span>';
+}
+
+function shortUrl(u) {
+  if (!u) return '';
+  return u.replace(/^https?:\/\//, '').replace(/^huggingface\.co\//, 'hf: ');
+}
+
+function inlineMarkdown(s) {
+  const text = String(s == null ? '' : s);
+  const re = /\[([^\]]+)\]\((https?:\/\/[^)]+)\)/g;
+  let out = '';
+  let start = 0;
+  let match;
+  while ((match = re.exec(text))) {
+    out += esc(text.slice(start, match.index));
+    out += '<a href="' + esc(match[2]) + '" target="_blank" rel="noopener noreferrer">' + esc(match[1]) + '</a>';
+    start = match.index + match[0].length;
+  }
+  return out + esc(text.slice(start));
+}
+
+function badgeStyle(kind) {
+  const base = 'display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:500;padding:3px 9px;border-radius:999px;white-space:nowrap;';
+  if (kind === 'optimized') return base + 'background:var(--accent-soft);color:var(--accent-text);border:1px solid rgba(118,185,0,.35)';
+  if (kind === 'experimental') return base + 'background:var(--webpe-yellow-050);color:var(--webpe-yellow-700);border:1px solid var(--webpe-yellow-100)';
+  if (kind === 'pending') return base + 'background:var(--surface-well);color:var(--text-muted);border:1px solid var(--border-2)';
+  if (kind === 'deprecated') return base + 'background:var(--surface-well);color:var(--text-faint);border:1px solid var(--border)';
+  return base + 'background:var(--surface-well);color:var(--text-muted);border:1px solid var(--border)';
+}
+
+function recipeBadge(status) {
+  if (status === 'optimized') return { label: 'Optimized', kind: 'optimized', icon: 'check-circle-filled' };
+  if (status === 'experimental') return { label: 'Experimental', kind: 'experimental', icon: 'experiment-outlined' };
+  return { label: status, kind: 'deprecated', icon: 'info-circle-outlined' };
+}
+
+function selectRecommendation(recommendations, hardware, os) {
+  if (!hardware) return null;
+  return (recommendations || []).find((r) =>
+    r.hardware === hardware && (!os || r.os === os)) || null;
+}
+
+function badgeHtml(kind, label, iconName) {
+  return '<span style="' + badgeStyle(kind) + '">' + icon(iconName) + esc(label) + '</span>';
+}
+
+function uniq(a) { return [...new Set(a)]; }
+function nonDeprecated(m) { return (m.recipes || []).filter((r) => r.status !== 'deprecated'); }
+
+function executionOptions(r) {
+  const primary = {
+    id: (r.launch && r.launch.id) || 'default',
+    label: (r.launch && r.launch.label) || null,
+    runtime: r.runtime || null,
+    serve: r.serve,
+    clients: r.clients || null,
+  };
+  return [primary, ...((r.launch && r.launch.alternatives) || [])];
+}
+
+// Single-GPU hardware ids (no trailing -<N>gpu) sort before their multi-GPU
+// siblings, so e.g. "dgx-spark" lists ahead of "dgx-spark-2gpu" regardless of
+// each recipe's position in the model's own recipes array.
+const isMultiGpuHardwareId = (id) => /-\d+gpu$/.test(id);
+
+function hwOptions(recs) {
+  return uniq(recs.map((r) => r.hardware))
+    .map((id) => ({ value: id, label: recs.find((r) => r.hardware === id).hardware_display }))
+    .sort((a, b) => (isMultiGpuHardwareId(a.value) - isMultiGpuHardwareId(b.value)) || a.value.localeCompare(b.value));
+}
+function osName(os) {
+  if (os === 'windows') return 'Windows';
+  if (os === 'linux') return 'Linux';
+  return os || 'OS pending';
+}
+function executionName(execution) {
+  if (execution === 'container') return 'Container';
+  if (execution === 'native') return 'Native';
+  return execution || 'Execution pending';
+}
+function osOptions(recs, hw) {
+  const f = recs.filter((r) => r.hardware === hw);
+  return uniq(f.map((r) => r.platform?.os).filter(Boolean))
+    .map((os) => ({ value: os, label: osName(os) }));
+}
+function beOptions(recs, hw, os) {
+  const f = recs.filter((r) => r.hardware === hw && r.platform?.os === os);
+  return uniq(f.map((r) => r.backend)).map((id) => ({ value: id, label: f.find((r) => r.backend === id).backend_display }));
+}
+// Precision options for a given hw/os/backend combination.
+// value = precision slug, label = human-readable precision.
+function precisionOptions(recs, hw, os, be) {
+  const filtered = recs.filter((r) => r.hardware === hw && r.platform?.os === os && r.backend === be);
+  return uniq(filtered.map((r) => r.precision).filter(Boolean))
+    .map((slug) => {
+      const r = filtered.find((x) => x.precision === slug);
+      return { value: slug, label: r.precision_label || slug };
+    });
+}
+
+// Sub-variant options for a given hw/os/backend/precision combination.
+// Returns entries only when actual sub-variants exist (i.e., multiple recipes share a precision).
+function variantOptions(recs, hw, os, be, precisionSlug) {
+  return recs.filter((r) => r.hardware === hw && r.platform?.os === os
+      && r.backend === be && r.precision === precisionSlug && r.variant != null)
+    .map((r) => ({ value: r.variant, label: r.variant }));
+}
+
+// Resolve a recipe from URL params. Returns { recipe, invalid }.
+// params: { hardware, os, backend, precision, variant }
+function pickRecipe(m, params) {
+  const recs = nonDeprecated(m);
+  if (!recs.length) return { recipe: null, invalid: false };
+  let invalid = false;
+  if (params && (params.hardware || params.os || params.backend || params.precision || params.variant)) {
+    let matches = recs;
+    if (params.hardware) matches = matches.filter((r) => r.hardware === params.hardware);
+    if (params.os) matches = matches.filter((r) => r.platform?.os === params.os);
+    if (params.backend) matches = matches.filter((r) => r.backend === params.backend);
+    if (params.precision) matches = matches.filter((r) => r.precision === params.precision);
+    if (params.variant) matches = matches.filter((r) => r.variant === params.variant);
+    if (matches.length === 1) return { recipe: matches[0], invalid: false };
+    // Partial match: stay within the filtered set rather than jumping to recs[0].
+    if (matches.length > 0) {
+      const best = matches.find((r) => r.default && r.status === 'optimized') || matches.find((r) => r.status === 'optimized') || matches[0];
+      return { recipe: best, invalid: true };
+    }
+    invalid = true;
+  }
+  const def = recs.find((r) => r.default && r.status === 'optimized') || recs.find((r) => r.status === 'optimized') || recs[0];
+  return { recipe: def, invalid };
+}
+
+// Repair a partial selection to a valid recipe (used on selector change).
+// sel: { hardware, os, backend, precision, variant }
+function repairSelection(m, sel) {
+  const recs = nonDeprecated(m);
+  const cur = { ...sel };
+  if (!recs.length) return cur;
+  if (!recs.some((r) => r.hardware === cur.hardware)) cur.hardware = recs[0].hardware;
+  const hwRecs = recs.filter((r) => r.hardware === cur.hardware);
+  if (!hwRecs.some((r) => r.platform?.os === cur.os)) cur.os = hwRecs[0].platform?.os;
+  const osRecs = hwRecs.filter((r) => r.platform?.os === cur.os);
+  if (!osRecs.some((r) => r.backend === cur.backend)) cur.backend = osRecs[0].backend;
+  const beRecs = osRecs.filter((r) => r.backend === cur.backend);
+  if (!beRecs.some((r) => r.precision === cur.precision)) {
+    cur.precision = beRecs[0].precision;
+  }
+  const prRecs = beRecs.filter((r) => r.precision === cur.precision);
+  const variantsExist = prRecs.some((r) => r.variant != null);
+  if (variantsExist) {
+    if (!prRecs.some((r) => r.variant === cur.variant)) cur.variant = prRecs[0].variant;
+  } else {
+    cur.variant = null;
+  }
+  return cur;
+}
+
+function selectHtml(id, opts, value) {
+  const options = opts.map((o) =>
+    '<option value="' + esc(o.value) + '"' + (o.value === value ? ' selected' : '') + '>' + esc(o.label) + '</option>').join('');
+  return '<select class="cair-sel" data-sel="' + id + '" style="height:42px;padding:0 12px;font-size:14px;font-family:var(--font-sans);background:var(--surface);border:1px solid var(--border-2);border-radius:8px;color:var(--text)">' + options + '</select>';
+}
+
+const stepBadge = 'display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:5px;background:var(--accent-soft);color:var(--accent-text);font-size:11px;font-weight:600';
+const codePre = 'background:var(--code-bg);color:var(--code-fg);border-radius:9px;padding:14px 16px;overflow-x:auto;font-family:var(--font-mono);font-size:12.5px;line-height:1.6;white-space:pre';
+
+function copyBtn(key, label, copied) {
+  const style = 'display:inline-flex;align-items:center;gap:6px;padding:5px 11px;font-size:12px;font-weight:500;border-radius:7px;cursor:pointer;font-family:var(--font-sans);border:1px solid ' +
+    (copied ? 'rgba(118,185,0,.4);background:var(--accent-soft);color:var(--accent-text)' : 'var(--border-2);background:var(--surface);color:var(--text-muted)');
+  const glyph = copied ? icon('check-outlined') : icon('copy-outlined');
+  return '<button type="button" data-copy="' + esc(key) + '" aria-label="' + esc(label) + '" style="' + style + '">' + glyph + (copied ? 'Copied' : 'Copy') + '</button>';
+}
+
+function tabBtn(label, active, tab) {
+  const style = 'padding:6px 14px;font-size:12.5px;font-weight:500;border:0;cursor:pointer;font-family:var(--font-sans);' +
+    (active ? 'background:var(--accent);color:#fff' : 'background:var(--surface);color:var(--text-muted)');
+  return '<button type="button" role="tab" data-tab="' + tab + '" aria-selected="' + active + '" style="' + style + '">' + label + '</button>';
+}
+
+function recipeDisclosure(panelId, title, iconName, summary, expanded, body) {
+  const safeId = String(panelId).replace(/[^A-Za-z0-9_-]+/g, '-');
+  const buttonId = 'recipe-disclosure-toggle-' + safeId;
+  const regionId = 'recipe-disclosure-' + safeId;
+  const content = expanded
+    ? '<div id="' + esc(regionId) + '" role="region" aria-labelledby="' + esc(buttonId) + '" style="border-top:1px solid var(--border);padding:14px 16px 16px">' + body + '</div>'
+    : '<div id="' + esc(regionId) + '" role="region" aria-labelledby="' + esc(buttonId) + '" hidden></div>';
+  return '<div style="border:1px solid var(--border);border-radius:9px;overflow:hidden">' +
+    '<button id="' + esc(buttonId) + '" type="button" data-recipe-section-toggle="' + esc(panelId) + '" aria-expanded="' + String(expanded) + '" aria-controls="' + esc(regionId) + '" style="width:100%;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 14px;border:0;background:var(--surface-well);color:var(--text);font-family:var(--font-sans);cursor:pointer;text-align:left">' +
+      '<span style="display:flex;align-items:flex-start;gap:8px;min-width:0"><span aria-hidden="true" style="color:var(--text-faint);margin-top:1px">' + icon(iconName) + '</span>' +
+      '<span><span style="display:block;font-size:13px;font-weight:600">' + esc(title) + '</span>' +
+      '<span style="display:block;font-size:11.5px;color:var(--text-muted);margin-top:2px">' + esc(summary) + '</span></span></span>' +
+      '<span aria-hidden="true" style="font-size:16px;color:var(--text-faint)">' + (expanded ? '−' : '+') + '</span>' +
+    '</button>' + content + '</div>';
+}
+
+const performanceMetricDefinitions = [
+  ['e2e_latency_ms_mean', 'E2E Latency', 'ms'],
+  ['decode_tokens_per_second_mean', 'Decode Throughput', 'tok/s'],
+  ['prefill_tokens_per_second_mean', 'Prefill Throughput', 'tok/s'],
+  ['e2e_latency_ms_p50', 'E2E Latency p50', 'ms'],
+  ['decode_tokens_per_second_p50', 'Decode p50', 'tok/s'],
+  ['aggregate_output_tokens_per_second', 'Aggregate output', 'tok/s'],
+  ['ttft_ms_p50', 'TTFT p50', 'ms'],
+  ['ttft_ms_p95', 'TTFT p95', 'ms'],
+  ['peak_gpu_memory_gb_max', 'Peak GPU memory', 'GB'],
+];
+
+const speedBenchThroughputMetricFields = new Set([
+  'e2e_latency_ms_mean',
+  'decode_tokens_per_second_mean',
+  'prefill_tokens_per_second_mean',
+]);
+
+// Hugging Face dataset ids follow the "org/name" convention (e.g.
+// "nvidia/SPEED-Bench") -- turn one into its dataset page URL, or return
+// null for anything that doesn't look like an id so callers fall back to
+// plain text instead of a broken link.
+function huggingFaceDatasetUrl(id) {
+  return typeof id === 'string' && /^[^/\s]+\/[^/\s]+$/.test(id)
+    ? 'https://huggingface.co/datasets/' + id
+    : null;
+}
+
+function formatPerformanceNumber(value) {
+  const raw = String(value);
+  const match = raw.match(/^(-?)(\d+)(\.\d+)?$/);
+  if (!match) return raw;
+  const grouped = match[2].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  return match[1] + grouped + (match[3] || '');
+}
+
+function formatPerformanceMetric(field, value) {
+  if (field.endsWith('_mean')) {
+    return new Intl.NumberFormat('en-US', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(value);
+  }
+  return formatPerformanceNumber(value);
+}
+
+function profileLabel(id) {
+  return String(id || 'profile')
+    .split(/[.-]/)
+    .filter(Boolean)
+    .map((part) => part[0].toUpperCase() + part.slice(1))
+    .join(' ');
+}
+
+function performanceProfileLabel(profile, recipe) {
+  if (profile?.workload?.dataset === 'nvidia/SPEED-Bench'
+      && profile?.workload?.profile === 'throughput_8k') {
+    return 'SPEED-Bench-Throughput-8K';
+  }
+  return profileLabel(profile?.id);
+}
+
+function powerShellString(value) {
+  return `'${String(value).replaceAll("'", "''")}'`;
+}
+
+function posixString(value) {
+  return `'${String(value).replaceAll("'", `'\\''`)}'`;
+}
+
+function powerShellInvocation(lines) {
+  return ['&{', ...lines.map((line) => (line ? '  ' + line : '')), '}'].join('\n');
+}
+
+// These are the exact sweep-harness revisions audited for the published 64K
+// results. The performance schema intentionally has no sampling-parameters
+// field, so refuse to generate a command for a new harness revision until its
+// invocation has been checked instead of silently inheriting this setting.
+const speedBenchThroughput8kExtraInputsByHarnessVersion = new Map([
+  ['7316c32d4f241820a5a4e12582f0f0b2b04938a7', '{"temperature":1}'],
+  ['ee4c505a4fb37be8ea37a78af272e74dad2835c1', '{"temperature":1}'],
+  ['fe8156f789011f6ea0baf6917ea09f88b89d9554', '{"temperature":1}'],
+  ['d11b3cc7ed2b146a6045d55db30f46d511e25011', '{"temperature":1}'],
+]);
+
+// SPEED-Bench's --limit applies to each category. The published Throughput-8K
+// workload uses all three categories with five samples apiece, producing the
+// 15 measured requests recorded in performance.yaml. Keep this invocation in
+// one shared renderer contract instead of duplicating free-form commands in
+// every performance manifest.
+function speedBenchReproductionCommands(recipe, performance, profile) {
+  const workload = profile?.workload || {};
+  if (recipe?.backend !== 'llama-cpp' || recipe?.platform?.os !== 'windows') return null;
+  if (performance?.harness?.name !== 'llama.cpp SPEED-Bench') return null;
+  if (workload.dataset !== 'nvidia/SPEED-Bench' || workload.profile !== 'throughput_8k') return null;
+  if (workload.requests !== 15 || !Number.isFinite(workload.output_tokens)
+      || !Number.isFinite(workload.concurrency)) return null;
+
+  const version = recipe.backend_version;
+  const option = executionOptions(recipe).find((item) => item.id === performance?.launch_id)
+    || executionOptions(recipe)[0];
+  const port = option?.serve?.port;
+  const apiModel = option?.serve?.api_model;
+  const extraInputs = speedBenchThroughput8kExtraInputsByHarnessVersion
+    .get(performance?.harness?.version);
+  if (!/^b[1-9][0-9]{2,}$/.test(version || '') || !Number.isInteger(port)
+      || !apiModel || !extraInputs) return null;
+
+  const rootName = `llama-speed-bench-${version}`;
+  const sourceRoot = `https://raw.githubusercontent.com/ggml-org/llama.cpp/${version}/tools/server/bench/speed-bench`;
+  const outputName = `speedbench-${workload.profile}.json`;
+  const apiBase = 'http://127.0.0.1:' + port + '/v1';
+  const continuation = '`';
+  const setup = powerShellInvocation([
+    `$speedBenchRoot = Join-Path $HOME ${powerShellString(rootName)}`,
+    '$null = New-Item -ItemType Directory -Force -Path $speedBenchRoot',
+    `Invoke-WebRequest -Uri ${powerShellString(`${sourceRoot}/speed_bench.py`)} -OutFile (Join-Path $speedBenchRoot 'speed_bench.py')`,
+    `Invoke-WebRequest -Uri ${powerShellString(`${sourceRoot}/requirements.txt`)} -OutFile (Join-Path $speedBenchRoot 'requirements.txt')`,
+    "python -m venv (Join-Path $speedBenchRoot '.venv')",
+    "$speedBenchPython = Join-Path $speedBenchRoot '.venv\\Scripts\\python.exe'",
+    "& $speedBenchPython -m pip install -r (Join-Path $speedBenchRoot 'requirements.txt')",
+  ]);
+  const run = powerShellInvocation([
+    `$speedBenchRoot = Join-Path $HOME ${powerShellString(rootName)}`,
+    "$speedBenchPython = Join-Path $speedBenchRoot '.venv\\Scripts\\python.exe'",
+    `$speedBenchOutput = Join-Path (Get-Location) ${powerShellString(outputName)}`,
+    `& $speedBenchPython (Join-Path $speedBenchRoot 'speed_bench.py') ${continuation}`,
+    `  --url ${powerShellString(apiBase)} ${continuation}`,
+    `  --model ${powerShellString(apiModel)} ${continuation}`,
+    `  --bench ${powerShellString(workload.profile)} ${continuation}`,
+    `  --category 'all' ${continuation}`,
+    `  --osl ${workload.output_tokens} ${continuation}`,
+    `  --concurrency ${workload.concurrency} ${continuation}`,
+    `  --limit 5 ${continuation}`,
+    `  --timeout 900 ${continuation}`,
+    `  --extra-inputs ${powerShellString(extraInputs)} ${continuation}`,
+    '  --output $speedBenchOutput',
+    '',
+    "if ($LASTEXITCODE -ne 0) { throw 'SPEED-Bench failed with exit code ' + $LASTEXITCODE + '.' }",
+    "if (-not (Test-Path -LiteralPath $speedBenchOutput)) { throw 'SPEED-Bench did not create the expected results file.' }",
+    '$speedBenchResult = Get-Content -Raw -LiteralPath $speedBenchOutput | ConvertFrom-Json -ErrorAction Stop',
+    "if ([int]$speedBenchResult.selected_samples -ne 15 -or [int]$speedBenchResult.completed_samples -ne 15 -or [int]$speedBenchResult.failed_samples -ne 0) { throw 'Expected 15 successful samples and 0 failures; refusing to display partial metrics.' }",
+    "$overallRows = @($speedBenchResult.summary | Where-Object { $_.category -eq 'overall' })",
+    "if ($overallRows.Count -ne 1) { throw 'SPEED-Bench results do not contain exactly one overall summary.' }",
+    '$overall = $overallRows[0]',
+    "if ($null -eq $overall.avg_prompt_t_s -or $null -eq $overall.avg_pred_t_s -or $null -eq $overall.avg_latency) { throw 'SPEED-Bench overall summary is missing required metrics.' }",
+    '[pscustomobject]@{',
+    "  'Prefill throughput (tok/s)' = [Math]::Round([double]$overall.avg_prompt_t_s, 2)",
+    "  'Decode throughput (tok/s)' = [Math]::Round([double]$overall.avg_pred_t_s, 2)",
+    "  'E2E latency (ms)' = [Math]::Round(([double]$overall.avg_latency * 1000), 2)",
+    '}',
+  ]);
+
+  return { setup, run };
+}
+
+// AIPerf reproduction for Linux vLLM recipes measured with the SPEED-Bench
+// throughput_8k split. Keep the invocation in one shared renderer contract
+// instead of duplicating free-form commands in every performance manifest: it
+// mirrors the published llama.cpp SPEED-Bench-Throughput-8K captures — concurrency 1,
+// greedy single-output length — and reads the measured request count and warmup
+// count from the recorded workload so the command reproduces the same workload shape
+// used for those measurements. vLLM serves OpenAI-compatible chat at port 8000 by
+// default, so that is the fallback when the recipe's launch command does not set an
+// explicit port. `harness.name` must be the lowercase `aiperf` tool name. aiperf
+// registers throughput (speed_bench_throughput_8k) but no coding-at-8K dataset,
+// so the 8K-throughput split is the closest match.
+function aiperfReproductionCommands(recipe, performance, profile) {
+  const workload = profile?.workload || {};
+  if (recipe?.backend !== 'vllm' || recipe?.platform?.os !== 'linux') return null;
+  if (performance?.harness?.name !== 'aiperf') return null;
+  if (workload.dataset !== 'nvidia/SPEED-Bench' || workload.profile !== 'throughput_8k') return null;
+  if (!Number.isInteger(workload.output_tokens) || !Number.isInteger(workload.requests)
+      || !Number.isInteger(workload.warmup_requests)) return null;
+
+  const option = executionOptions(recipe).find((item) => item.id === performance?.launch_id)
+    || executionOptions(recipe)[0];
+  const apiModel = option?.serve?.api_model;
+  if (!apiModel) return null;
+  const port = Number.isInteger(option?.serve?.port) ? option.serve.port : 8000;
+  const apiBase = 'http://127.0.0.1:' + port;
+  const warmup = workload.warmup_requests > 0
+    ? `  --warmup-request-count ${workload.warmup_requests} \\`
+    : null;
+
+  const setup = [
+    'AIPERF_VENV="$HOME/aiperf-venv"',
+    '# aiperf builds the crick wheel from source on aarch64 and needs Python headers:',
+    'sudo apt-get install -y python3-dev',
+    'python3 -m venv "$AIPERF_VENV"',
+    '"$AIPERF_VENV/bin/pip" install --upgrade pip',
+    '"$AIPERF_VENV/bin/pip" install aiperf',
+    'source "$AIPERF_VENV/bin/activate"',
+    '',
+    '# SPEED-Bench draws one source from the gated cais/hle dataset:',
+    '#   https://huggingface.co/datasets/cais/hle',
+    '# 1. Create a read Hugging Face access token:',
+    '#    https://huggingface.co/settings/tokens',
+    '# 2. Accept the cais/hle terms — open the dataset page and click',
+    '#    "Agree and access repository", or request access from the command',
+    "#    line with your token:",
+    "#      python -c \"from huggingface_hub import request_access; request_access(repo_id='cais/hle', repo_type='dataset', token='<token>')\"",
+    '# 3. Export the token so the prepare script can authenticate:',
+    'export HF_TOKEN=<your-hf-access-token>',
+    '',
+    'SPEED_BENCH_DIR="$HOME/speed-bench-throughput-8k"',
+    'mkdir -p "$SPEED_BENCH_DIR"',
+    'curl -LsSf https://raw.githubusercontent.com/NVIDIA-NeMo/Skills/refs/heads/main/nemo_skills/dataset/speed-bench/prepare.py \\',
+    '  -o "$SPEED_BENCH_DIR/prepare.py"',
+    'python3 "$SPEED_BENCH_DIR/prepare.py" --config throughput_8k --output_dir "$SPEED_BENCH_DIR"',
+  ].join('\n');
+  const run = [
+    'AIPERF_VENV="$HOME/aiperf-venv"',
+    'SPEED_BENCH_DIR="$HOME/speed-bench-throughput-8k"',
+    '"$AIPERF_VENV/bin/aiperf" profile \\',
+    `  --model ${posixString(apiModel)} \\`,
+    '  --endpoint-type chat \\',
+    '  --streaming \\',
+    '  --use-server-token-count \\',
+    `  --url ${apiBase} \\`,
+    '  --custom-dataset-type speed_bench_throughput_8k \\',
+    '  --input-file "$SPEED_BENCH_DIR/throughput_8k.jsonl" \\',
+    `  --server-metrics ${apiBase}/metrics \\`,
+    '  --concurrency 1 \\',
+    `  --osl ${workload.output_tokens} \\`,
+    `  --request-count ${workload.requests} \\`,
+    ...(warmup ? [warmup] : []),
+    '  --output-artifact-dir ./artifacts/speed_bench_throughput_8k',
+    '',
+    'test -f ./artifacts/speed_bench_throughput_8k/profile_export_aiperf.json',
+    '',
+    '"$AIPERF_VENV/bin/python3" - <<PY',
+    'import json',
+    'from pathlib import Path',
+    '',
+    "results = json.loads(Path('artifacts/speed_bench_throughput_8k/profile_export_aiperf.json').read_text())",
+    'for label, metric in [',
+    "    ('Prefill throughput (tok/s)', 'active_prefill_throughput'),",
+    "    ('Decode throughput (tok/s)', 'active_decode_throughput'),",
+    "    ('E2E latency (ms)', 'request_latency'),",
+    ']:',
+    "    value = results.get(metric)",
+    "    if not value or value.get('avg') is None:",
+    "        raise SystemExit(f'missing {metric} in profile_export_aiperf.json')",
+    "    avg = value['avg']",
+    "    unit = value.get('unit', '')",
+    "    print(f'{label}: {avg:.2f} {unit}'.strip())",
+    'PY',
+  ].join('\n');
+
+  return { setup, run };
+}
+
+function renderAIPerfReproduction(recipe, performance, profile, copied, expanded) {
+  const commands = aiperfReproductionCommands(recipe, performance, profile);
+  if (!commands) return '';
+  const profileId = profile.id || 'speed-bench';
+  const regionId = 'benchmark-reproduction-' + String(profileId).replace(/[^A-Za-z0-9_-]+/g, '-');
+  const setupKey = profileId + ':benchmark-setup';
+  const runKey = profileId + ':benchmark-run';
+  const content = expanded
+    ? '<div id="' + esc(regionId) + '" style="border-top:1px solid var(--border);padding:14px 16px 16px;display:flex;flex-direction:column;gap:16px">' +
+        '<p style="font-size:12.5px;line-height:1.5;color:var(--text-muted);margin:0">Keep the vLLM server running and open a second Linux terminal. Python 3 is required. The setup downloads the SPEED-Bench throughput_8k split from <a href="' + esc(huggingFaceDatasetUrl('nvidia/SPEED-Bench')) + '" target="_blank" rel="noopener noreferrer">nvidia/SPEED-Bench</a> and caches it in the prepare step. One SPEED-Bench source, <a href="' + esc(huggingFaceDatasetUrl('cais/hle')) + '" target="_blank" rel="noopener noreferrer">cais/hle</a>, is gated on Hugging Face — the setup creates a read token, accepts the dataset terms, and exports it as `HF_TOKEN`. The run command reproduces the concurrency, output length, and request count used for these measurements, then prints the same prefill throughput, decode throughput, and E2E latency units shown above from the results file.</p>' +
+        '<p style="font-size:12.5px;line-height:1.5;color:var(--text-muted);margin:0">' + esc('The datasets linked above are owned and maintained by third parties. Each user is responsible for checking the dataset contents and their applicable license terms to determine suitability for their intended use.') + '</p>' +
+        '<div><div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px">' +
+          '<h4 style="font-size:12.5px;font-weight:600;margin:0">1. Set up AIPerf and SPEED-Bench</h4>' +
+          copyBtn(setupKey, 'Copy AIPerf setup', copied === setupKey) +
+        '</div><pre class="cair-code" style="' + codePre + '"><code>' + esc(commands.setup) + '</code></pre></div>' +
+        '<div><div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px">' +
+          '<h4 style="font-size:12.5px;font-weight:600;margin:0">2. Run the SPEED-Bench-Throughput-8K workload</h4>' +
+          copyBtn(runKey, 'Copy AIPerf run command', copied === runKey) +
+        '</div><pre class="cair-code" style="' + codePre + '"><code>' + esc(commands.run) + '</code></pre></div>' +
+      '</div>'
+    : '<div id="' + esc(regionId) + '" hidden></div>';
+  return '<div style="border:1px solid var(--border);border-radius:9px;overflow:hidden;margin-top:2px">' +
+    '<button type="button" data-benchmark-toggle="' + esc(profileId) + '" aria-expanded="' + String(expanded) + '" aria-controls="' + esc(regionId) + '" style="width:100%;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 14px;border:0;background:var(--surface-well);color:var(--text);font-family:var(--font-sans);cursor:pointer;text-align:left">' +
+      '<span><span style="display:block;font-size:13px;font-weight:600">Steps to reproduce benchmark</span>' +
+      '<span style="display:block;font-size:11.5px;color:var(--text-muted);margin-top:2px">Copy-paste the matching SPEED-Bench-Throughput-8K workload shape used for these measurements.</span></span>' +
+      '<span aria-hidden="true" style="font-size:16px;color:var(--text-faint)">' + (expanded ? '−' : '+') + '</span>' +
+    '</button>' + content + '</div>';
+}
+
+function renderSpeedBenchReproduction(recipe, performance, profile, copied, expanded) {
+  const commands = speedBenchReproductionCommands(recipe, performance, profile);
+  if (!commands) return '';
+  const profileId = profile.id || 'speed-bench';
+  const regionId = 'benchmark-reproduction-' + String(profileId).replace(/[^A-Za-z0-9_-]+/g, '-');
+  const setupKey = profileId + ':benchmark-setup';
+  const runKey = profileId + ':benchmark-run';
+  const windowsArm64 = (recipe?.prerequisites || [])
+    .some((item) => /\bWindows ARM64\b/i.test(item))
+    || /\bARM64\b/i.test(performance?.system?.os_version || '');
+  const pythonNote = windowsArm64
+    ? 'Python 3 is required. On Windows ARM64, use an x64 Python installation under Windows emulation so the datasets dependency can install.'
+    : 'Python 3 is required.';
+  const content = expanded
+    ? '<div id="' + esc(regionId) + '" style="border-top:1px solid var(--border);padding:14px 16px 16px;display:flex;flex-direction:column;gap:16px">' +
+        '<p style="font-size:12.5px;line-height:1.5;color:var(--text-muted);margin:0">Keep llama-server running and open a second PowerShell window. ' + esc(pythonNote) + ' The dataset downloads from <a href="' + esc(huggingFaceDatasetUrl('nvidia/SPEED-Bench')) + '" target="_blank" rel="noopener noreferrer">nvidia/SPEED-Bench</a> and is cached automatically on the first run; the upstream script loads its current public revision. Five prompts from each of the three categories produce 15 prompts total. The command prints the same prefill throughput, decode throughput, and E2E latency units shown above.</p>' +
+        '<p style="font-size:12.5px;line-height:1.5;color:var(--text-muted);margin:0">' + esc('The dataset linked above is owned and maintained by a third party. Each user is responsible for checking the dataset contents and its applicable license terms to determine suitability for their intended use.') + '</p>' +
+        '<div><div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px">' +
+          '<h4 style="font-size:12.5px;font-weight:600;margin:0">1. Set up SPEED-Bench</h4>' +
+          copyBtn(setupKey, 'Copy SPEED-Bench setup', copied === setupKey) +
+        '</div><pre class="cair-code" style="' + codePre + '"><code>' + esc(commands.setup) + '</code></pre></div>' +
+        '<div><div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px">' +
+          '<h4 style="font-size:12.5px;font-weight:600;margin:0">2. Run 15 prompts</h4>' +
+          copyBtn(runKey, 'Copy SPEED-Bench run command', copied === runKey) +
+        '</div><pre class="cair-code" style="' + codePre + '"><code>' + esc(commands.run) + '</code></pre></div>' +
+      '</div>'
+    : '<div id="' + esc(regionId) + '" hidden></div>';
+  return '<div style="border:1px solid var(--border);border-radius:9px;overflow:hidden;margin-top:2px">' +
+    '<button type="button" data-benchmark-toggle="' + esc(profileId) + '" aria-expanded="' + String(expanded) + '" aria-controls="' + esc(regionId) + '" style="width:100%;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 14px;border:0;background:var(--surface-well);color:var(--text);font-family:var(--font-sans);cursor:pointer;text-align:left">' +
+      '<span><span style="display:block;font-size:13px;font-weight:600">Steps to reproduce benchmark</span>' +
+      '<span style="display:block;font-size:11.5px;color:var(--text-muted);margin-top:2px">Copy-paste the matching SPEED-Bench-Throughput-8K workload shape used for these measurements.</span></span>' +
+      '<span aria-hidden="true" style="font-size:16px;color:var(--text-faint)">' + (expanded ? '−' : '+') + '</span>' +
+    '</button>' + content + '</div>';
+}
+
+// Topology display. A recipe may state its own summary; otherwise the row is
+// derived from the structural values so the hardware name stays in one place
+// and cannot drift from the catalog.
+function topologyText(r) {
+  const t = r.topology;
+  if (!t) return null;
+  if (t.summary) return t.summary;
+  if (t.gpu_count == null) return null;
+
+  // Multi-GPU catalog entries already carry their own count, either as a
+  // leading multiplier in the display name ("4× DGX Spark") or a trailing
+  // -<N>gpu suffix in the raw hardware id (the fallback below when no
+  // display name is present, e.g. "rtx-pro-2gpu") -- strip whichever is
+  // present rather than prefixing a second count.
+  const name = String(r.hardware_display || r.hardware)
+    .replace(/^\d+\u00d7\s*/, '')
+    .replace(/-\d+gpu$/, '');
+  const parts = [t.gpu_count + '\u00d7 ' + name];
+  if (t.node_count != null && t.node_count > 1) parts.push(t.node_count + ' nodes');
+  if (t.tensor_parallel_size != null) parts.push('TP=' + t.tensor_parallel_size);
+  if (t.pipeline_parallel_size != null) parts.push('PP=' + t.pipeline_parallel_size);
+  return parts.join(' \u00b7 ');
+}
+
+function renderPerformance(performance, recipeOrBackend = null, ui = {}) {
+  const recipe = recipeOrBackend && typeof recipeOrBackend === 'object' ? recipeOrBackend : null;
+  const backendDisplay = recipe?.backend_display
+    || (typeof recipeOrBackend === 'string' ? recipeOrBackend : null);
+  const copied = ui?.copied || '';
+  const benchmarkOpenId = typeof ui?.benchmarkOpenId === 'string' ? ui.benchmarkOpenId : '';
+  // overflow:hidden (not just visual) is load-bearing: this section is a
+  // CSS grid item paired with Recipe Details in a fixed 38fr/62fr track. A
+  // grid item's automatic min-width is otherwise its content's min-content
+  // size, and the SPEED-Bench reproduction commands below are long
+  // unbroken lines -- without this, expanding "Steps to reproduce
+  // benchmark" grows the whole grid past the viewport instead of scrolling
+  // horizontally within its own <pre>. overflow:hidden makes the spec's
+  // automatic-minimum-size-of-grid-items rule treat this item's minimum
+  // width as 0, matching the "Selected recipe" panel on the grid above,
+  // which already relies on the same rule.
+  const sectionStyle = 'background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px 22px;overflow:hidden;min-width:0';
+  if (!performance) {
+    return '<section aria-label="Measured performance" style="' + sectionStyle + '">' +
+      '<h2 style="font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted);font-weight:600;margin:0 0 7px">Measured performance</h2>' +
+      '<p style="font-size:13.5px;color:var(--text-faint);margin:0">Not measured for this exact recipe.</p>' +
+      '</section>';
+  }
+
+  const profiles = (performance.profiles || []).map((profile) => {
+    const workload = profile.workload || {};
+    const workloadDetails = [
+      workload.dataset ? ['Dataset', workload.dataset, huggingFaceDatasetUrl(workload.dataset)] : null,
+      Number.isFinite(workload.context_tokens)
+        ? ['Measured Context', `${formatPerformanceNumber(workload.context_tokens)} tokens`]
+        : null,
+      ['Nominal Input Tokens', formatPerformanceNumber(workload.input_tokens)],
+      ['Output Tokens', formatPerformanceNumber(workload.output_tokens)],
+      ['Concurrency', formatPerformanceNumber(workload.concurrency)],
+      ['Requests', formatPerformanceNumber(workload.requests)],
+    ];
+    const workloadGrid = workloadDetails.filter(Boolean).map(([label, value, url]) =>
+      '<div style="min-width:0">' +
+        '<dt style="font-size:11px;font-weight:600;color:var(--text-faint);margin:0 0 3px;text-transform:uppercase;letter-spacing:.035em">' + esc(label) + '</dt>' +
+        '<dd style="font-size:12.5px;color:var(--text-muted);margin:0;overflow-wrap:anywhere">' + (url
+          ? '<a href="' + esc(url) + '" target="_blank" rel="noopener noreferrer">' + esc(value) + '</a>'
+          : esc(value)) + '</dd>' +
+      '</div>').join('');
+    const speedBenchThroughput = workload.dataset === 'nvidia/SPEED-Bench'
+      && workload.profile === 'throughput_8k';
+    const metrics = performanceMetricDefinitions
+      .filter(([field]) => Number.isFinite(profile.results?.[field])
+        && (!speedBenchThroughput || speedBenchThroughputMetricFields.has(field)))
+      .map(([field, label, unit]) =>
+        '<div style="background:var(--surface-well);border:1px solid var(--border);border-radius:8px;padding:11px 12px">' +
+          '<div style="font-size:11.5px;color:var(--text-muted);margin-bottom:4px">' + esc(label) + '</div>' +
+          '<div style="font-size:17px;font-weight:600;line-height:1.2">' + esc(formatPerformanceMetric(field, profile.results[field]) + ' ' + unit) + '</div>' +
+        '</div>').join('');
+    const reproduction = renderSpeedBenchReproduction(
+      recipe, performance, profile, copied, benchmarkOpenId === profile.id,
+    ) || renderAIPerfReproduction(
+      recipe, performance, profile, copied, benchmarkOpenId === profile.id,
+    );
+    return '<div style="display:flex;flex-direction:column;gap:10px">' +
+      '<div><h3 style="font-size:15px;font-weight:600;margin:0 0 10px">' + esc(performanceProfileLabel(profile, recipe)) + '</h3>' +
+      // Fixed column counts, not auto-fit/minmax: this section now lives in
+      // the narrower 62% side-by-side column (paired with Recipe Details)
+      // rather than full page width, so auto-fit's responsive collapse
+      // kicks in far more easily and stacks every stat on its own line.
+      // A fixed count just narrows each cell instead of collapsing them.
+      '<dl style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px 18px;margin:0">' + workloadGrid + '</dl></div>' +
+      '<div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px">' + metrics + '</div>' +
+      reproduction +
+      '</div>';
+  }).join('<div style="height:1px;background:var(--border);margin:16px 0"></div>');
+
+  const system = performance.system || {};
+  const statusBadge = performance.status === 'optimized'
+    ? '<span style="display:inline-flex;align-items:center;border:1px solid color-mix(in srgb,var(--accent) 45%,var(--border));border-radius:999px;padding:2px 7px;font-size:10px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--accent)">Optimized</span>'
+    : '';
+  const systemDetails = [
+    system.os_version || (system.operating_system ? osName(system.operating_system) : null),
+    system.driver_version ? `Driver ${system.driver_version}` : null,
+    system.cuda_version ? `CUDA ${system.cuda_version}` : null,
+    performance.software?.backend_version
+      ? `${backendDisplay || 'Backend'} ${performance.software.backend_version}`
+      : null,
+  ].filter(Boolean).map((value) => '<span>' + esc(value) + '</span>').join('');
+  return '<section aria-label="Measured performance" style="' + sectionStyle + '">' +
+    '<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:14px">' +
+      '<div><div style="display:flex;align-items:center;gap:8px;margin:0 0 3px"><h2 style="font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted);font-weight:600;margin:0">Measured performance</h2>' + statusBadge + '</div>' +
+      '<p style="font-size:12px;color:var(--text-faint);margin:0">Measured ' + esc(performance.measured_at) + ' · ' + esc(system.label) + '</p></div>' +
+    '</div>' + profiles +
+    '<div style="display:flex;flex-wrap:wrap;gap:8px 18px;border-top:1px solid var(--border);margin-top:16px;padding-top:12px;font-size:11.5px;color:var(--text-muted)">' +
+      '<span>' + esc(`${system.accelerator_count}× ${system.accelerator}`) + '</span>' +
+      systemDetails +
+    '</div>' +
+    '</section>';
+}
+
+// The full workspace body (both columns + details/about). `ui` = {copied, clientTab}.
+// primary: optional { key, label, options, value } describing a selector to
+// render as step 1 instead of Hardware — used by hardware pages, where
+// hardware is fixed per-page and the caller instead wants to pick a Model.
+// sel.hardware is still expected to be set (to the fixed hardware id on a
+// hardware page) so the recipe-matching lookup below keeps working unchanged.
+function renderWorkspaceBody(m, sel, ui, invalid, primary) {
+  const recs = nonDeprecated(m);
+  const r = recs.find((x) => x.hardware === sel.hardware
+    && x.platform?.os === sel.os
+    && x.backend === sel.backend
+    && x.precision === (sel.precision ?? null)
+    && (x.variant ?? null) === (sel.variant ?? null)) || recs[0];
+  const copied = (ui && ui.copied) || '';
+  const clientTab = (ui && ui.clientTab) || 'shell';
+  const recipeOpenIds = Array.isArray(ui?.recipeOpenIds) ? ui.recipeOpenIds : [];
+
+  const hOpts = primary ? [] : hwOptions(recs);
+  const oOpts = osOptions(recs, r.hardware);
+  const bOpts = beOptions(recs, r.hardware, r.platform?.os);
+  const pOpts = precisionOptions(recs, r.hardware, r.platform?.os, r.backend);
+  const vaOpts = variantOptions(recs, r.hardware, r.platform?.os, r.backend, r.precision);
+
+  const recBadge = recipeBadge(r.status);
+  const isExp = r.status === 'experimental';
+
+  // Every source command stays on one self-contained page. A recipe normally
+  // has one execution option; DeepSeek also preserves its second container and
+  // launch as an ordered alternative.
+  const execution = executionOptions(r);
+  let blocks = '';
+  for (const option of execution) {
+    let optionBlocks = '';
+    const optionPrefix = option.id || 'default';
+    if (option.runtime && option.runtime.setup_command) {
+      const key = optionPrefix + ':setup';
+      const runtimeQualifier = option.runtime.label && option.runtime.label !== 'Container'
+        ? 'Runtime: ' + option.runtime.label + '.'
+        : null;
+      const note = [runtimeQualifier, option.runtime.setup_instructions,
+        option.runtime.image ? 'Container image: ' + option.runtime.image : null].filter(Boolean).join(' ');
+      const title = option.runtime.setup_label || 'Start container';
+      if (title === 'Download llama.cpp') {
+        const panelId = r.id + ':' + optionPrefix + ':setup';
+        const body = '<div style="display:flex;justify-content:flex-end;margin-bottom:8px">' +
+            copyBtn(key, 'Copy ' + title.toLowerCase() + ' command', copied === key) +
+          '</div>' +
+          (note ? '<p style="font-size:12px;color:var(--text-muted);margin:0 0 8px">' + esc(note) + '</p>' : '') +
+          '<pre class="cair-code" style="' + codePre + '"><code>' + esc(option.runtime.setup_command) + '</code></pre>';
+        optionBlocks += recipeDisclosure(panelId, title, 'container-outlined',
+          'Download the pinned Windows llama.cpp binaries required by this recipe.',
+          recipeOpenIds.includes(panelId), body);
+      } else {
+        optionBlocks += commandBlock(key, title, 'container-outlined',
+          option.runtime.setup_command, note, copied === key);
+      }
+    }
+    if (option.serve && option.serve.command) {
+      const key = optionPrefix + ':serve';
+      const note = [option.serve.instructions, r.sampling ? 'Sampling — ' + r.sampling : null].filter(Boolean).join(' ');
+      optionBlocks += commandBlock(key, option.serve.label || 'Launch', 'play-circle-outlined',
+        option.serve.command, note, copied === key);
+      for (const command of (option.serve.additional_commands || [])) {
+        const extraKey = optionPrefix + ':serve:' + command.id;
+        optionBlocks += commandBlock(extraKey, command.label, 'play-circle-outlined', command.command,
+          command.instructions || '', copied === extraKey);
+      }
+    }
+    const hasClients = !!(option.clients && (option.clients.shell || option.clients.python));
+    if (hasClients) {
+      const code = clientTab === 'python' ? (option.clients.python || '') : (option.clients.shell || '');
+      const clientKey = optionPrefix + ':client';
+      const panelId = r.id + ':' + optionPrefix + ':client';
+      const shellTabLabel = r.platform?.os === 'windows' ? 'PowerShell' : 'Shell';
+      const body =
+        '<div style="display:flex;align-items:center;justify-content:flex-end;margin-bottom:10px;flex-wrap:wrap;gap:8px">' +
+        '<div style="display:flex;align-items:center;gap:8px">' +
+        '<div role="tablist" aria-label="Client language" style="display:inline-flex;border:1px solid var(--border-2);border-radius:7px;overflow:hidden">' +
+        tabBtn(shellTabLabel, clientTab === 'shell', 'shell') + tabBtn('Python', clientTab === 'python', 'python') +
+        '</div>' + copyBtn(clientKey, 'Copy client example', copied === clientKey) +
+        '</div></div>' +
+        '<pre class="cair-code" style="' + codePre + '"><code>' + esc(code) + '</code></pre>';
+      optionBlocks += recipeDisclosure(panelId, 'Test the endpoint', 'api-outlined',
+        'Send a sample chat-completions request to the running server.',
+        recipeOpenIds.includes(panelId), body);
+    }
+    if (execution.length > 1) {
+      blocks += '<section style="border:1px solid var(--border);border-radius:10px;padding:16px;display:flex;flex-direction:column;gap:20px">' +
+        '<h3 style="font-size:14px;font-weight:600;margin:0">' + esc(option.label || option.id) + '</h3>' + optionBlocks + '</section>';
+    } else {
+      blocks += optionBlocks;
+    }
+  }
+
+  // recipe details
+  const details = [];
+  details.push(detailRow('Operating system', osName(r.platform?.os), 'text'));
+  details.push(detailRow('Execution', executionName(r.platform?.execution), 'text'));
+  if (r.backend_version) details.push(detailRow('Backend version', r.backend_version, 'text'));
+  if (r.backend_min_version) details.push(detailRow('Backend min version', r.backend_min_version, 'text'));
+  if (r.precision) details.push(detailRow('Precision', r.precision, 'text'));
+  if (r.min_vidmem_gb != null) details.push(detailRow('Min GPU memory', r.min_vidmem_gb + ' GB', 'text'));
+  details.push(detailRow('Checkpoint', shortUrl(r.checkpoint.target), 'link', r.checkpoint.target));
+  if (r.checkpoint.draft) details.push(detailRow('Draft model', shortUrl(r.checkpoint.draft), 'link', r.checkpoint.draft));
+  if (r.mtp) details.push(detailRow('MTP', r.mtp, 'text'));
+  if (r.concurrency != null) details.push(detailRow('Concurrency', String(r.concurrency), 'text'));
+  const topology = topologyText(r);
+  if (topology) details.push(detailRow('Topology', topology, 'text'));
+  for (const option of execution) {
+    if (option.runtime && option.runtime.image) {
+      const qualifier = option.runtime.label && option.runtime.label !== 'Container'
+        ? option.runtime.label
+        : (execution.length > 1 ? (option.label || option.id) : null);
+      const label = qualifier ? 'Runtime — ' + qualifier : 'Runtime';
+      details.push(detailRow(label, option.runtime.image, option.runtime.image_url ? 'code-link' : 'code', option.runtime.image_url));
+    }
+  }
+  if (r.serve && r.serve.api_model) details.push(detailRow('Served model', r.serve.api_model, 'code'));
+  if (r.serve && r.serve.port) details.push(detailRow('Port', String(r.serve.port), 'text'));
+  if (r.notes) details.push(detailRow('Notes', r.notes, 'markdown'));
+  details.push(detailRow('Recipe ID', r.id, 'code'));
+
+  const precisionPart = r.precision_label || r.precision;
+  const variantPart = r.variant ? ' · ' + r.variant : '';
+  const recTitle = r.hardware_display + ' · ' + osName(r.platform?.os) + ' · ' + r.backend_display
+    + (precisionPart ? ' · ' + precisionPart : '') + variantPart;
+
+  const invalidNotice = invalid
+    ? '<div role="status" style="display:flex;align-items:center;gap:10px;background:var(--webpe-yellow-050);color:var(--webpe-yellow-900);border:1px solid var(--webpe-yellow-100);border-radius:8px;padding:10px 14px;margin-bottom:18px;font-size:13.5px">' + icon('info-circle-outlined') + 'The requested configuration was not found. Showing the closest available recipe.</div>'
+    : '';
+
+  const caution = isExp
+    ? '<div style="display:flex;gap:10px;align-items:flex-start;background:var(--webpe-yellow-050);color:var(--webpe-yellow-900);border-bottom:1px solid var(--webpe-yellow-100);padding:12px 22px;font-size:13px;line-height:1.45"><span style="color:var(--webpe-yellow-300);margin-top:1px">' + icon('experiment-outlined') + '</span><span>' +
+      esc('Experimental recipe — not yet Optimized.') + '</span></div>'
+    : '';
+
+  return invalidNotice +
+    '<div style="display:grid;grid-template-columns:38fr 62fr;gap:24px;align-items:start" class="ws-cols">' +
+      // LEFT
+      '<section aria-label="Choose configuration" style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:22px;box-shadow:var(--shadow-card)">' +
+        '<h2 style="font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted);font-weight:600;margin:0 0 18px">Choose configuration</h2>' +
+        '<div style="display:flex;flex-direction:column;gap:16px">' +
+          (primary
+            ? selectField(1, primary.label, selectHtml(primary.key, primary.options, primary.value))
+            : selectField(1, 'Hardware', selectHtml('hardware', hOpts, r.hardware))) +
+          selectField(2, 'OS', selectHtml('os', oOpts, r.platform?.os)) +
+          selectField(3, 'Backend', selectHtml('backend', bOpts, r.backend)) +
+          (pOpts.length > 1 ? selectField(4, 'Precision', selectHtml('precision', pOpts, r.precision)) : '') +
+          (vaOpts.length > 1 ? selectField(5, 'Variant', selectHtml('variant', vaOpts, r.variant)) : '') +
+        '</div>' +
+        '<div style="border-top:1px solid var(--border);margin:20px 0 0;padding-top:18px">' +
+          '<dl style="margin:0;display:flex;flex-direction:column;gap:10px">' +
+            '<div style="display:flex;justify-content:space-between;gap:12px"><dt style="font-size:13px;color:var(--text-muted)">Precision</dt><dd style="margin:0;font-size:13px;font-weight:500;text-align:right">' + esc(r.precision_label || r.precision || '—') + '</dd></div>' +
+            (r.min_vidmem_gb != null ? '<div style="display:flex;justify-content:space-between;gap:12px"><dt style="font-size:13px;color:var(--text-muted)">Min GPU memory</dt><dd style="margin:0;font-size:13px;font-weight:500;text-align:right">' + esc(r.min_vidmem_gb + ' GB') + '</dd></div>' : '') +
+            '<div style="display:flex;justify-content:space-between;gap:12px"><dt style="font-size:13px;color:var(--text-muted)">Checkpoint</dt><dd style="margin:0;font-size:13px;text-align:right;word-break:break-all"><a href="' + esc(r.checkpoint.target) + '" target="_blank" rel="noopener noreferrer">' + esc(shortUrl(r.checkpoint.target)) + '</a></dd></div>' +
+          '</dl>' +
+        '</div>' +
+      '</section>' +
+      // RIGHT
+      '<section aria-label="Recipe commands" class="ws-panel" style="position:sticky;top:76px;display:flex;flex-direction:column;background:var(--surface);border:1px solid var(--border);border-radius:12px;box-shadow:var(--shadow-card);overflow:hidden">' +
+        '<div style="padding:20px 22px 18px;border-bottom:1px solid var(--border)">' +
+          '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px">' +
+            '<h2 style="font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted);font-weight:600;margin:0">Selected recipe</h2>' +
+            (isExp ? '' : badgeHtml(recBadge.kind, recBadge.label, recBadge.icon)) +
+          '</div>' +
+          '<p style="font-size:17px;font-weight:600;margin:0;letter-spacing:-.01em">' + esc(recTitle) + '</p>' +
+        '</div>' +
+        caution +
+        '<div style="padding:20px 22px 22px;display:flex;flex-direction:column;gap:22px">' + blocks + '</div>' +
+      '</section>' +
+    '</div>' +
+    // details + measured performance, side by side
+    '<div style="display:grid;grid-template-columns:38fr 62fr;gap:24px;align-items:start;margin-top:24px" class="ws-cols">' +
+      '<section style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:22px">' +
+        '<h2 style="font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted);font-weight:600;margin:0 0 16px">Recipe details</h2>' +
+        '<dl style="margin:0;display:flex;flex-direction:column;gap:0">' + details.join('') + '</dl>' +
+      '</section>' +
+      renderPerformance(r.performance, r, ui) +
+    '</div>' + renderPlannedConfigurations(m);
+}
+
+function renderPlannedConfigurations(m) {
+  const planned = m.planned_configurations || [];
+  if (!planned.length) return '';
+  const rows = planned.map((item) => {
+    const hardware = item.hardware_label || item.hardware || 'Hardware pending';
+    const platform = item.platform
+      ? osName(item.platform.os) + ' · ' + executionName(item.platform.execution)
+      : 'Platform pending';
+    const backend = item.backend || 'Backend pending';
+    const precision = item.precision || 'Precision pending';
+    return '<li style="padding:10px 0;border-bottom:1px solid var(--border)"><div style="font-size:13.5px;font-weight:500">' +
+      esc(hardware + ' · ' + platform + ' · ' + backend + ' · ' + precision) + '</div><div style="font-size:12.5px;color:var(--text-muted);margin-top:3px">' +
+      inlineMarkdown(item.status || item.note || 'Configuration pending') + '</div></li>';
+  }).join('');
+  return '<section style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:22px 24px;margin-top:24px">' +
+    '<h2 style="font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted);font-weight:600;margin:0 0 10px">Planned configurations</h2>' +
+    '<ul style="list-style:none;padding:0;margin:0">' + rows + '</ul></section>';
+}
+
+function selectField(step, label, selectMarkup) {
+  return '<label style="display:flex;flex-direction:column;gap:6px;font-size:12.5px;font-weight:500;color:var(--text-muted)">' +
+    '<span style="display:inline-flex;align-items:center;gap:8px"><span style="' + stepBadge + '">' + step + '</span>' + esc(label) + '</span>' +
+    selectMarkup + '</label>';
+}
+
+function commandBlock(key, title, iconName, code, note, copied) {
+  return '<div>' +
+    '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">' +
+      '<h3 style="font-size:13px;font-weight:600;margin:0;display:flex;align-items:center;gap:7px"><span style="color:var(--text-faint)">' + icon(iconName) + '</span>' + esc(title) + '</h3>' +
+      copyBtn(key, 'Copy ' + title.toLowerCase() + ' command', copied) +
+    '</div>' +
+    (note ? '<p style="font-size:12px;color:var(--text-muted);margin:0 0 8px">' + esc(note) + '</p>' : '') +
+    '<pre class="cair-code" style="' + codePre + '"><code>' + esc(code) + '</code></pre>' +
+    '</div>';
+}
+
+function detailRow(label, value, type, href) {
+  let inner;
+  if (type === 'link') inner = '<a href="' + esc(href) + '" target="_blank" rel="noopener noreferrer">' + esc(value) + '</a>';
+  else if (type === 'code-link') inner = '<a href="' + esc(href) + '" target="_blank" rel="noopener noreferrer"><code style="font-family:var(--font-mono);font-size:12px;background:var(--surface-well);padding:1px 6px;border-radius:4px">' + esc(value) + '</code></a>';
+  else if (type === 'code') inner = '<code style="font-family:var(--font-mono);font-size:12px;background:var(--surface-well);padding:1px 6px;border-radius:4px">' + esc(value) + '</code>';
+  else if (type === 'markdown') inner = '<span style="font-weight:500">' + inlineMarkdown(value) + '</span>';
+  else inner = '<span style="font-weight:500">' + esc(value) + '</span>';
+  return '<div style="display:flex;justify-content:space-between;gap:16px;padding:9px 0;border-bottom:1px solid var(--border)">' +
+    '<dt style="font-size:13px;color:var(--text-muted);flex-shrink:0;max-width:55%">' + esc(label) + '</dt>' +
+    '<dd style="margin:0;font-size:13px;text-align:right;word-break:break-word;min-width:0;flex:1">' + inner + '</dd></div>';
+}
+
+// ---- Directory cards + rows (SSR only; client filters by show/hide) ---------
+function modelPlatforms(m) {
+  const values = (m.recipes || []).map((r) => {
+    if (!r.platform) return null;
+    return osName(r.platform.os) + ' · ' + executionName(r.platform.execution);
+  }).filter(Boolean);
+  return uniq(values);
+}
+
+
+function hwName(m, id) { const r = (m.recipes || []).find((x) => x.hardware === id); return r ? r.hardware_display : id; }
+function beName(m, id) { const r = (m.recipes || []).find((x) => x.backend === id); return r ? r.backend_display : id; }
+
+function searchBlob(m) {
+  return [m.display_name, m.id, m.builder, m.family, (m.modalities || []).join(' '),
+    (m.available_hardware || []).map((h) => hwName(m, h)).join(' '),
+    modelPlatforms(m).join(' '),
+    (m.available_backends || []).map((b) => beName(m, b)).join(' '),
+    ...(m.recipes || []).flatMap((r) => [
+      r.hardware_display,
+      r.platform?.os,
+      r.platform?.execution,
+      r.backend_display,
+      r.variant,
+      r.precision,
+    ]),
+    ...(m.planned_configurations || []).flatMap((p) => [
+      p.hardware, p.hardware_label, p.platform?.os, p.platform?.execution,
+      p.backend, p.variant, p.precision, p.status, p.note,
+    ])].filter(Boolean).join(' ').toLowerCase();
+}
+
+(function(){
+var MODELS=[{"id":"qwen/qwen3.8-flash-next","display_name":"Qwen3.8 Flash-Next","builder":"qwen","family":"Qwen3.8","summary":"Qwen 3.8 (Flash-Next) text and vision model.","upstream":null,"modalities":["text","image"],"availability":"available","recipes":[{"id":"qwen/qwen3.8-flash-next/rtx-pro-4gpu/linux/vllm/nvfp4","hardware":"rtx-pro-4gpu","hardware_display":"4× RTX PRO GPUs","platform":{"os":"linux","execution":"container"},"backend":"vllm","backend_display":"vLLM","backend_version":null,"backend_min_version":null,"min_vidmem_gb":null,"precision":"nvfp4","variant":null,"status":"experimental","default":false,"runnable":false,"validation":null,"prerequisites":[],"limitations":[],"precision_label":"NVFP4","checkpoint":{"target":"https://huggingface.co/Inferact/Qwen3.8-Flash-Next-NVFP4","target_label":"Inferact/Qwen3.8-Flash-Next-NVFP4","draft":null,"draft_label":null},"mtp":null,"security":"Evaluation configuration only. Host networking exposes vLLM on host interfaces; use a firewall or reverse proxy, a scoped read-only HF token, and an isolated cache. For production, pin tested image, model, and code revisions.","topology":{"summary":"4× RTX PRO 6000","gpu_count":4,"node_count":1,"tensor_parallel_size":4},"runtime":{"kind":"container","label":"Container","image":"vllm/vllm-openai:qwen38-flash-next","image_url":"https://hub.docker.com/r/vllm/vllm-openai/tags?name=qwen38-flash-next","setup_label":"Start container","setup_target":"single-node","setup_instructions":"Set `HF_TOKEN` in the host environment.","setup_command":"docker run --rm -it \\\n  --gpus all \\\n  --ipc host \\\n  --network host \\\n  --shm-size=16g \\\n  --ulimit memlock=-1 \\\n  --ulimit stack=67108864 \\\n  -e HF_TOKEN=$HF_TOKEN \\\n  -v ~/.cache/huggingface:/root/.cache/huggingface \\\n  --entrypoint /bin/bash \\\n  vllm/vllm-openai:qwen38-flash-next"},"serve":{"label":"Launch","target":"single-node","instructions":null,"command":"vllm serve Inferact/Qwen3.8-Flash-Next-NVFP4 \\\n  --host 0.0.0.0 \\\n  --port 8000 \\\n  --no-enable-flashinfer-autotune \\\n  --max-num-seqs 16 \\\n  --gpu-memory-utilization 0.95 \\\n  --max-num-batched-tokens 8192 \\\n  --enable-prefix-caching \\\n  --moe-backend marlin \\\n  --tensor-parallel-size 4 \\\n  --enable-auto-tool-choice \\\n  --tool-call-parser qwen3_xml \\\n  --reasoning-parser qwen3","port":8000,"api_model":"Inferact/Qwen3.8-Flash-Next-NVFP4"},"launch":null,"concurrency":null,"sampling":null,"notes":null,"clients":{"shell":"curl http://localhost:8000/v1/chat/completions \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\"model\": \"Inferact/Qwen3.8-Flash-Next-NVFP4\", \"messages\": [{\"role\": \"user\", \"content\": \"Hello\"}]}'","python":"from openai import OpenAI\n\nclient = OpenAI(base_url=\"http://localhost:8000/v1\", api_key=\"EMPTY\")\nresp = client.chat.completions.create(\n    model=\"Inferact/Qwen3.8-Flash-Next-NVFP4\",\n    messages=[{\"role\": \"user\", \"content\": \"Hello\"}],\n)\nprint(resp.choices[0].message.content)"},"performance":null}],"planned_configurations":[],"available_hardware":["dgx-station","rtx-pro-4gpu"],"available_operating_systems":["linux"],"available_backends":["vllm"]}];
+var MODEL_LIST=[{"value":"qwen/qwen3.8-flash-next","label":"Qwen3.8 Flash-Next"}];
+var HW="rtx-pro-4gpu";
+var root=document.getElementById('ws-body');
+var ui={copied:'',clientTab:'shell',benchmarkOpenId:'',recipeOpenIds:[]},sel,invalid=false,ct,M;
+function findModel(id){return MODELS.find(function(x){return x.id===id;});}
+function params(){var p=new URLSearchParams(location.search);return{model:p.get('model')||'',os:p.get('os')||'',backend:p.get('backend')||'',precision:p.get('precision')||'',variant:p.get('variant')||''};}
+function resolveInitial(){
+  var p=params();
+  M=findModel(p.model)||MODELS[0];
+  // hardware is this page's fixed context, not a per-request narrowing
+  // signal -- only pass it (and the rest) into pickRecipe when the URL
+  // actually carries real narrowing params. Otherwise a bare hardware-card
+  // click (no query string) would pass hardware:HW alone, and if the
+  // default model happens to have more than one recipe on this hardware
+  // (e.g. both Windows and Linux), pickRecipe would treat that as an
+  // ambiguous *request* and wrongly show the "closest available recipe"
+  // notice on a plain click that never asked for anything specific.
+  var hasNarrowingParams=!!(p.os||p.backend||p.precision||p.variant);
+  var pk=pickRecipe(M,hasNarrowingParams?{hardware:HW,os:p.os,backend:p.backend,precision:p.precision,variant:p.variant}:{});
+  if(!pk.recipe)return;
+  sel={model:M.id,hardware:HW,os:pk.recipe.platform&&pk.recipe.platform.os,backend:pk.recipe.backend,precision:pk.recipe.precision,variant:pk.recipe.variant};
+  invalid=pk.invalid||(!!p.model&&p.model!==M.id);
+}
+function draw(){root.innerHTML=renderWorkspaceBody(M,sel,ui,invalid,{key:'model',label:'Model',options:MODEL_LIST,value:sel.model});}
+function syncURL(){var qs='model='+encodeURIComponent(sel.model||'')+'&os='+encodeURIComponent(sel.os||'')+'&backend='+encodeURIComponent(sel.backend||'')+'&precision='+encodeURIComponent(sel.precision||'')+'&variant='+encodeURIComponent(sel.variant||'');history.replaceState(null,'',location.pathname+'?'+qs);}
+function setSel(patch){
+  if(patch.model&&patch.model!==sel.model){var next=findModel(patch.model);if(next)M=next;}
+  var merged=Object.assign({},sel,patch,{hardware:HW});
+  sel=repairSelection(M,merged);invalid=false;ui.copied='';ui.benchmarkOpenId='';ui.recipeOpenIds=[];syncURL();draw();
+}
+function currentRecipe(){var recs=M.recipes.filter(function(r){return r.status!=='deprecated';});return recs.find(function(x){return x.hardware===sel.hardware&&x.platform&&x.platform.os===sel.os&&x.backend===sel.backend&&x.precision===sel.precision&&x.variant===sel.variant;})||recs[0];}
+function textFor(k){var r=currentRecipe(),p=k.split(':'),id=p[0],kind=p[1],extra=p[2]||'';if(kind==='benchmark-setup'||kind==='benchmark-run'){var profile=r.performance&&r.performance.profiles&&r.performance.profiles.find(function(x){return x.id===id;});var commands=speedBenchReproductionCommands(r,r.performance,profile)||aiperfReproductionCommands(r,r.performance,profile);return commands?(kind==='benchmark-setup'?commands.setup:commands.run):'';}var opt=executionOptions(r).find(function(x){return x.id===id;})||executionOptions(r)[0];if(kind==='setup')return(opt.runtime&&opt.runtime.setup_command)||'';if(kind==='serve'){if(extra){var cmd=((opt.serve&&opt.serve.additional_commands)||[]).find(function(x){return x.id===extra;});return(cmd&&cmd.command)||'';}return(opt.serve&&opt.serve.command)||'';}if(kind==='client')return opt.clients?(ui.clientTab==='python'?opt.clients.python:opt.clients.shell):'';return'';}
+function lbl(k){var kind=k.split(':')[1];if(kind==='setup')return'Setup command';if(kind==='serve')return'Launch command';if(kind==='benchmark-setup'||kind==='benchmark-run'){var r=currentRecipe();var tool=r&&r.backend==='vllm'?'AIPerf':'SPEED-Bench';return kind==='benchmark-setup'?tool+' setup':tool+' command';}return'Client example';}
+function announce(msg){var el=document.getElementById('cair-live');if(el)el.textContent=msg;}
+function doCopy(k){var text=textFor(k);function done(){ui.copied=k;draw();announce(lbl(k)+' copied to clipboard');clearTimeout(ct);ct=setTimeout(function(){ui.copied='';draw();},1900);}try{if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(text).then(done,done);else{var ta=document.createElement('textarea');ta.value=text;document.body.appendChild(ta);ta.select();document.execCommand('copy');ta.remove();done();}}catch(e){done();}}
+root.addEventListener('change',function(e){var s=e.target.getAttribute&&e.target.getAttribute('data-sel');if(s)setSel(defineSel(s,e.target.value));});
+function defineSel(k,v){var o={};o[k]=v;return o;}
+root.addEventListener('click',function(e){
+  var recipeSection=e.target.closest&&e.target.closest('[data-recipe-section-toggle]');if(recipeSection){var sectionId=recipeSection.getAttribute('data-recipe-section-toggle'),sectionControlledId=recipeSection.getAttribute('aria-controls'),sectionIndex=ui.recipeOpenIds.indexOf(sectionId);ui.recipeOpenIds=sectionIndex===-1?ui.recipeOpenIds.concat(sectionId):ui.recipeOpenIds.filter(function(id){return id!==sectionId;});draw();var sectionButtons=root.querySelectorAll('[data-recipe-section-toggle]'),nextSection;for(var i=0;i<sectionButtons.length;i++){if(sectionButtons[i].getAttribute('aria-controls')===sectionControlledId){nextSection=sectionButtons[i];break;}}if(nextSection)nextSection.focus();return;}
+  var tab=e.target.closest&&e.target.closest('[data-tab]');if(tab){ui.clientTab=tab.getAttribute('data-tab');draw();return;}
+  var benchmark=e.target.closest&&e.target.closest('[data-benchmark-toggle]');if(benchmark){var profileId=benchmark.getAttribute('data-benchmark-toggle'),controlledId=benchmark.getAttribute('aria-controls');ui.benchmarkOpenId=ui.benchmarkOpenId===profileId?'':profileId;draw();var benchmarkButtons=root.querySelectorAll('[data-benchmark-toggle]'),nextBenchmark;for(var i=0;i<benchmarkButtons.length;i++){if(benchmarkButtons[i].getAttribute('aria-controls')===controlledId){nextBenchmark=benchmarkButtons[i];break;}}if(nextBenchmark)nextBenchmark.focus();return;}
+  var cp=e.target.closest&&e.target.closest('[data-copy]');if(cp){doCopy(cp.getAttribute('data-copy'));return;}
+});
+window.addEventListener('popstate',function(){resolveInitial();draw();});
+resolveInitial();draw();
+})();</script>
+</body>
+</html>

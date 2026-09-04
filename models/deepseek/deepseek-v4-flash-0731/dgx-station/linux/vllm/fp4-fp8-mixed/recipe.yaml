@@ -1,0 +1,92 @@
+# SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: LicenseRef-NvidiaProprietary
+#
+# NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
+# property and proprietary rights in and to this material, related
+# documentation and any modifications thereto. Any use, reproduction,
+# disclosure or distribution of this material and related documentation
+# is subject to the Apache 2.0 License
+#
+# Disclaimer: This Local AI Inference Recipes Repo and its recipes are
+# provided for informational purposes only and were created with AI
+# assistance. They must be independently reviewed and validated for
+# accuracy before use. NVIDIA assumes no liability for any use of these
+# recipes or reliance upon them.
+
+schema_version: 3
+title: DeepSeek-V4-Flash-0731 · DGX Station · vLLM
+model: deepseek/deepseek-v4-flash-0731
+hardware: dgx-station
+platform:
+  os: linux
+  execution: container
+backend: vllm
+backend_version: v0.25.1
+backend_min_version: v0.25.1
+status: experimental
+precision:
+  label: FP4 + FP8 Mixed
+checkpoint:
+  target: https://huggingface.co/deepseek-ai/DeepSeek-V4-Flash-0731
+  target_label: deepseek-ai/DeepSeek-V4-Flash-0731
+  draft: null
+  draft_label: null
+mtp: null
+concurrency: 64
+topology:
+  summary: 1× DGX Station
+  gpu_count: 1
+  node_count: 1
+  tensor_parallel_size: 1
+sampling: null
+security: Evaluation configuration only. Host networking exposes vLLM on host interfaces; use a firewall or reverse proxy, a scoped read-only HF token, and an isolated cache. For production, pin tested image, model, and code revisions.
+runtime:
+  kind: container
+  label: Container
+  image: vllm/vllm-openai:v0.25.1
+  image_url: https://hub.docker.com/r/vllm/vllm-openai/tags?name=v0.25.1
+  setup_label: Start container
+  setup_target: single-node
+  setup_instructions: Set HF_TOKEN in the host environment.
+  setup_command: |
+    docker run --rm -it \
+      --gpus all \
+      --ipc host \
+      --network host \
+      --shm-size=16g \
+      --ulimit memlock=-1 \
+      --ulimit stack=67108864 \
+      -e HF_TOKEN=$HF_TOKEN \
+      -v ~/.cache/huggingface:/root/.cache/huggingface \
+      --entrypoint /bin/bash \
+      vllm/vllm-openai:v0.25.1
+serve:
+  label: Launch
+  target: single-node
+  instructions: null
+  command: |
+    vllm serve deepseek-ai/DeepSeek-V4-Flash-0731 \
+      --served-model-name deepseek-v4-flash-0731 \
+      --host 0.0.0.0 --port 8000 \
+      --trust-remote-code \
+      --tensor-parallel-size 1 \
+      --kv-cache-dtype fp8_ds_mla \
+      --block-size 256 \
+      --max-model-len 1048576 \
+      --max-num-seqs 64 \
+      --max-num-batched-tokens 32768 \
+      --max-cudagraph-capture-size 512 \
+      --gpu-memory-utilization 0.88 \
+      --enable-prefix-caching \
+      --enable-prompt-tokens-details \
+      --async-scheduling \
+      --enable-chunked-prefill \
+      --speculative-config '{"method":"dspark","num_speculative_tokens":7,"draft_sample_method":"probabilistic"}' \
+      --tokenizer-mode deepseek_v4 \
+      --tool-call-parser deepseek_v4 --enable-auto-tool-choice \
+      --reasoning-parser deepseek_v4 \
+      --generation-config vllm \
+      --compilation-config '{"custom_ops":["all"]}'
+  port: 8000
+  api_model: deepseek-v4-flash-0731
+notes: null

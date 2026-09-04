@@ -1,0 +1,59 @@
+# SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: LicenseRef-NvidiaProprietary
+#
+# NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
+# property and proprietary rights in and to this material, related
+# documentation and any modifications thereto. Any use, reproduction,
+# disclosure or distribution of this material and related documentation
+# is subject to the Apache 2.0 License
+#
+# Disclaimer: This Local AI Inference Recipes Repo and its recipes are
+# provided for informational purposes only and were created with AI
+# assistance. They must be independently reviewed and validated for
+# accuracy before use. NVIDIA assumes no liability for any use of these
+# recipes or reliance upon them.
+
+# Performance measured on nvspark-64g-1 (1× DGX Spark) with aiperf 0.12.0.
+# Matches the sibling recipe.yaml (status: optimized).
+schema_version: 1
+status: optimized
+recipe_sha256: b841d6fd1ab84dacb575a5b97712f844661e2fd99a608568850df721f8bc419b
+launch_id: default
+measured_at: 2026-09-03
+
+harness:
+  name: aiperf
+  version: 0.12.0
+
+system:
+  label: NVIDIA DGX Spark
+  accelerator: NVIDIA GB10
+  accelerator_count: 1
+  operating_system: linux
+  os_version: Ubuntu 24.04.4 LTS
+  driver_version: 580.173.02
+  cuda_version: "13.0"
+
+software:
+  backend_version: "0.28.1rc1.dev337+g27a94d1ce"
+  model_revision: cc84af2fe71647d87f4486c064f320e1e7535243
+  runtime_revision: sha256:7d5128a92db05e6d70661a18f10e40c17cd2d8fcaad9226e170a0d69f822b795
+
+profiles:
+  - id: throughput-8k
+    workload:
+      input_tokens: 8192
+      context_tokens: 262144
+      dataset: nvidia/SPEED-Bench
+      profile: throughput_8k
+      input_tokens_min: 8053
+      input_tokens_max: 9849
+      input_tokens_total: 90663
+      output_tokens: 256
+      concurrency: 1
+      requests: 10
+      warmup_requests: 3
+    results:
+      prefill_tokens_per_second_mean: 6990.10
+      decode_tokens_per_second_mean: 95.45
+      e2e_latency_ms_mean: 3968.59

@@ -1,0 +1,66 @@
+# SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: LicenseRef-NvidiaProprietary
+#
+# NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
+# property and proprietary rights in and to this material, related
+# documentation and any modifications thereto. Any use, reproduction,
+# disclosure or distribution of this material and related documentation
+# is subject to the Apache 2.0 License
+#
+# Disclaimer: This Local AI Inference Recipes Repo and its recipes are
+# provided for informational purposes only and were created with AI
+# assistance. They must be independently reviewed and validated for
+# accuracy before use. NVIDIA assumes no liability for any use of these
+# recipes or reliance upon them.
+
+schema_version: 3
+title: "NVIDIA Nemotron 3.5 Lightning 30B A3B · NVIDIA RTX PRO 6000 Blackwell · llama.cpp · Q4_K_M"
+model: nvidia/nemotron-3.5-lightning-30b-a3b
+hardware: rtx-pro
+platform:
+  os: linux
+  execution: native
+backend: llama-cpp
+variant: dflash
+status: experimental
+prerequisites:
+  - A Linux build of llama.cpp commit fe8156f789011f6ea0baf6917ea09f88b89d9554 providing llama-server.
+limitations:
+  - These settings are ported from the Windows selection and have not been performance-validated on Linux.
+  - The source sweep used a 40,960-token server context; the launch command uses a 65,536-token context.
+precision:
+  label: Q4_K_M
+checkpoint:
+  target: https://huggingface.co/unsloth/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-GGUF/blob/f2d3fe3694501008786e81e5f20360cbf715496a/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-UD-Q4_K_M.gguf
+  target_label: unsloth/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-GGUF
+  draft: https://huggingface.co/apolo13x/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-DFlash-GGUF/blob/3051796f1bcf60ac44a27c2f79c52a2a2b3e2b37/dflash-NVIDIA-Nemotron-3.5-Lightning-30B-A3B-NVFP4.gguf
+  draft_label: apolo13x/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-DFlash-GGUF/dflash-NVIDIA-Nemotron-3.5-Lightning-30B-A3B-NVFP4.gguf
+mtp: null
+concurrency: 1
+topology: null
+sampling: "Target backend sampling: OFF; speculative draft backend sampling: OFF"
+security: null
+runtime: null
+serve:
+  label: "Launch DFlash · n=6"
+  target: single-node
+  instructions: "Run in a Linux shell. llama-server downloads and caches the target and DFlash GGUF files from Hugging Face."
+  command: |
+    llama-server -hf "unsloth/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-GGUF" \
+      -hff "NVIDIA-Nemotron-3.5-Lightning-30B-A3B-UD-Q4_K_M.gguf" \
+      -hfrd "apolo13x/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-DFlash-GGUF" \
+      --spec-draft-model "dflash-NVIDIA-Nemotron-3.5-Lightning-30B-A3B-NVFP4.gguf" \
+      --no-mmproj \
+      --batch-size 2048 \
+      --ubatch-size 2048 \
+      --ctx-size 65536 \
+      --parallel 1 \
+      -ngl 999 \
+      --jinja \
+      --chat-template-kwargs '{"enable_thinking":true}' \
+      --spec-type draft-dflash \
+      --spec-draft-n-max 6 \
+      --no-spec-draft-backend-sampling
+  port: null
+  api_model: null
+notes: "The pinned [Q4_K_M target](https://huggingface.co/unsloth/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-GGUF/blob/f2d3fe3694501008786e81e5f20360cbf715496a/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-UD-Q4_K_M.gguf) and [DFlash draft](https://huggingface.co/apolo13x/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-DFlash-GGUF/blob/3051796f1bcf60ac44a27c2f79c52a2a2b3e2b37/dflash-NVIDIA-Nemotron-3.5-Lightning-30B-A3B-NVFP4.gguf) are the selected checkpoints."

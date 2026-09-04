@@ -1,0 +1,87 @@
+# SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: LicenseRef-NvidiaProprietary
+#
+# NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
+# property and proprietary rights in and to this material, related
+# documentation and any modifications thereto. Any use, reproduction,
+# disclosure or distribution of this material and related documentation
+# is subject to the Apache 2.0 License
+#
+# Disclaimer: This Local AI Inference Recipes Repo and its recipes are
+# provided for informational purposes only and were created with AI
+# assistance. They must be independently reviewed and validated for
+# accuracy before use. NVIDIA assumes no liability for any use of these
+# recipes or reliance upon them.
+
+schema_version: 3
+title: NVIDIA Nemotron 3 Super 120B A12B · RTX PRO 6000 · vLLM
+model: nvidia/nemotron-3-super-120b-a12b
+hardware: rtx-pro
+platform:
+  os: linux
+  execution: container
+backend: vllm
+status: experimental
+variant: mtp
+precision:
+  label: NVFP4
+checkpoint:
+  target: https://huggingface.co/nvidia/NVIDIA-Nemotron-3-Super-120B-A12B-NVFP4
+  target_label: nvidia/NVIDIA-Nemotron-3-Super-120B-A12B-NVFP4
+  draft: null
+  draft_label: null
+mtp: MTP=3
+concurrency: 8
+topology:
+  summary: 1× RTX PRO 6000
+  gpu_count: 1
+  node_count: 1
+  tensor_parallel_size: null
+sampling: null
+security: Evaluation configuration only. Host networking exposes vLLM on host interfaces; use a firewall or reverse proxy, a scoped read-only HF token, and an isolated cache. For production, pin tested image, model, and code revisions.
+runtime:
+  kind: container
+  label: Container
+  image: vllm/vllm-openai:v0.24.0-ubuntu2404
+  image_url: https://hub.docker.com/r/vllm/vllm-openai/tags?name=v0.24.0-ubuntu2404
+  setup_label: Start container
+  setup_target: single-node
+  setup_instructions: Set `HF_TOKEN` in the host environment.
+  setup_command: |
+    docker run --rm -it \
+      --gpus all \
+      --ipc host \
+      --network host \
+      --shm-size=16g \
+      --ulimit memlock=-1 \
+      --ulimit stack=67108864 \
+      -e HF_TOKEN=$HF_TOKEN \
+      -v ~/.cache/huggingface:/root/.cache/huggingface \
+      --entrypoint /bin/bash \
+      vllm/vllm-openai:v0.24.0-ubuntu2404
+serve:
+  label: Launch
+  target: single-node
+  instructions: null
+  command: |
+    VLLM_FLOAT32_MATMUL_PRECISION="high" \
+    VLLM_ALLOW_LONG_MAX_MODEL_LEN=1 \
+    vllm serve nvidia/NVIDIA-Nemotron-3-Super-120B-A12B-NVFP4 \
+         --host 0.0.0.0 \
+         --port 8000 \
+         --max-model-len 262144 \
+         --gpu-memory-utilization 0.92 \
+         --max-num-seqs 8 \
+         --attention-backend flashinfer \
+         --max-num-batched-tokens 16384 \
+         --kv-cache-dtype fp8 \
+         --mamba-cache-mode align \
+         --mamba_ssm_cache_dtype float32 \
+         --speculative-config '{"method":"mtp","num_speculative_tokens":3}' \
+         --enable-prefix-caching \
+         --reasoning-parser nemotron_v3 \
+         --enable-auto-tool-choice \
+         --tool-call-parser qwen3_xml
+  port: 8000
+  api_model: nvidia/NVIDIA-Nemotron-3-Super-120B-A12B-NVFP4
+notes: null

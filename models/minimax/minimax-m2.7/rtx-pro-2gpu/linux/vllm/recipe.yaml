@@ -1,0 +1,80 @@
+# SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: LicenseRef-NvidiaProprietary
+#
+# NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
+# property and proprietary rights in and to this material, related
+# documentation and any modifications thereto. Any use, reproduction,
+# disclosure or distribution of this material and related documentation
+# is subject to the Apache 2.0 License
+#
+# Disclaimer: This Local AI Inference Recipes Repo and its recipes are
+# provided for informational purposes only and were created with AI
+# assistance. They must be independently reviewed and validated for
+# accuracy before use. NVIDIA assumes no liability for any use of these
+# recipes or reliance upon them.
+
+schema_version: 3
+title: MiniMax-M2.7 · 2× RTX PRO 6000 · vLLM
+model: minimax/minimax-m2.7
+hardware: rtx-pro-2gpu
+platform:
+  os: linux
+  execution: container
+backend: vllm
+status: experimental
+precision:
+  label: NVFP4
+checkpoint:
+  target: https://huggingface.co/nvidia/MiniMax-M2.7-NVFP4
+  target_label: nvidia/MiniMax-M2.7-NVFP4
+  draft: null
+  draft_label: null
+mtp: null
+concurrency: null
+topology:
+  summary: 2× RTX PRO 6000; tensor parallel 2
+  gpu_count: 2
+  node_count: null
+  tensor_parallel_size: 2
+sampling: null
+security: Evaluation configuration only. Host networking exposes vLLM on host interfaces; use a firewall or reverse proxy, a scoped read-only HF token, and an isolated cache. For production, pin tested image, model, and code revisions.
+runtime:
+  kind: container
+  label: Container
+  image: vllm/vllm-openai:v0.24.0-ubuntu2404
+  image_url: https://hub.docker.com/r/vllm/vllm-openai/tags?name=v0.24.0-ubuntu2404
+  setup_label: Start container
+  setup_target: single-node
+  setup_instructions: Set `HF_TOKEN` in the host environment.
+  setup_command: |
+    docker run --rm -it \
+      --gpus all \
+      --ipc host \
+      --network host \
+      --shm-size=16g \
+      --ulimit memlock=-1 \
+      --ulimit stack=67108864 \
+      -e HF_TOKEN=$HF_TOKEN \
+      -v ~/.cache/huggingface:/root/.cache/huggingface \
+      --entrypoint /bin/bash \
+      vllm/vllm-openai:v0.24.0-ubuntu2404
+serve:
+  label: Launch
+  target: single-node
+  instructions: null
+  command: |
+    vllm serve nvidia/MiniMax-M2.7-NVFP4 \
+      --trust-remote-code \
+      --kv-cache-dtype fp8 \
+      --gpu-memory-utilization 0.95 \
+      --tensor-parallel-size 2 \
+      --tool-call-parser minimax_m2 \
+      --enable-auto-tool-choice \
+      --reasoning-parser minimax_m2 \
+      --load-format fastsafetensors \
+      --max-num-batched-tokens 8192 \
+      --enable-chunked-prefill \
+      --enable-prefix-caching
+  port: null
+  api_model: nvidia/MiniMax-M2.7-NVFP4
+notes: null

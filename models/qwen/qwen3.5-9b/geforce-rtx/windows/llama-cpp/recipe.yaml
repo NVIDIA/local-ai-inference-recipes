@@ -1,0 +1,79 @@
+# SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: LicenseRef-NvidiaProprietary
+#
+# NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
+# property and proprietary rights in and to this material, related
+# documentation and any modifications thereto. Any use, reproduction,
+# disclosure or distribution of this material and related documentation
+# is subject to the Apache 2.0 License
+#
+# Disclaimer: This Local AI Inference Recipes Repo and its recipes are
+# provided for informational purposes only and were created with AI
+# assistance. They must be independently reviewed and validated for
+# accuracy before use. NVIDIA assumes no liability for any use of these
+# recipes or reliance upon them.
+
+schema_version: 3
+title: "Qwen3.5-9B · NVIDIA GeForce RTX GPUs · llama.cpp · Q4_K_M"
+model: qwen/qwen3.5-9b
+hardware: geforce-rtx
+platform:
+  os: windows
+  execution: native
+backend: llama-cpp
+backend_version: "b10509"
+backend_min_version: "b10509"
+min_vidmem_gb: 11.5
+status: optimized
+prerequisites:
+  - A Windows build of llama.cpp release b10509 providing llama-server.exe.
+limitations:
+  - Validated only with the 8K SPEED-Bench throughput workload, concurrency 1, 256 generated tokens, and 15 measured requests.
+
+validation:
+  validated_at: 2026-08-31
+  validated_by: Perf-Sweep
+  tested_stack:
+    os_version: "Windows 10.0.26200"
+    driver: "610.88"
+    cuda: "13.3"
+precision:
+  label: Q4_K_M
+checkpoint:
+  target: https://huggingface.co/unsloth/Qwen3.5-9B-MTP-GGUF/blob/main/Qwen3.5-9B-Q4_K_M.gguf
+  target_label: unsloth/Qwen3.5-9B-MTP-GGUF
+  draft: null
+  draft_label: null
+mtp: "ON=2"
+concurrency: 1
+topology: null
+sampling: "Temp=1.0; Top K=20; Top P=0.95; Min P=0; Repetition Penalty=1; Presence Penalty=0"
+security: null
+runtime: null
+serve:
+  label: "Launch MTP · n=2"
+  target: single-node
+  instructions: "Run in PowerShell. llama-server downloads and caches the target GGUF from Hugging Face."
+  command: |
+    llama-server.exe -hf "unsloth/Qwen3.5-9B-MTP-GGUF" `
+      -hff "Qwen3.5-9B-Q4_K_M.gguf" `
+      --no-mmproj `
+      --host 127.0.0.1 `
+      --port 9931 `
+      --batch-size 4096 `
+      --ubatch-size 4096 `
+      --ctx-size 65536 `
+      --parallel 1 `
+      -ngl 999 `
+      --jinja `
+      --spec-type draft-mtp `
+      --spec-draft-n-max 2 `
+      --temp 1.0 `
+      --top-k 20 `
+      --top-p 0.95 `
+      --min-p 0 `
+      --repeat-penalty 1 `
+      --presence-penalty 0
+  port: 9931
+  api_model: unsloth/Qwen3.5-9B-MTP-GGUF
+notes: "The [Q4_K_M target GGUF](https://huggingface.co/unsloth/Qwen3.5-9B-MTP-GGUF/blob/main/Qwen3.5-9B-Q4_K_M.gguf) contains integrated MTP layers, so no separate draft checkpoint is required. Draft depth 2 is the 8K-optimised selection for this hardware: acceptance rate falls as depth rises, so deeper drafts cost 8K throughput while helping only at long context."

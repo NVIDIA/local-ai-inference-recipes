@@ -1,0 +1,57 @@
+# SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: LicenseRef-NvidiaProprietary
+#
+# NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
+# property and proprietary rights in and to this material, related
+# documentation and any modifications thereto. Any use, reproduction,
+# disclosure or distribution of this material and related documentation
+# is subject to the Apache 2.0 License
+#
+# Disclaimer: This Local AI Inference Recipes Repo and its recipes are
+# provided for informational purposes only and were created with AI
+# assistance. They must be independently reviewed and validated for
+# accuracy before use. NVIDIA assumes no liability for any use of these
+# recipes or reliance upon them.
+
+schema_version: 3
+title: Qwen3.5-122B-A10B · NVIDIA RTX PRO 6000 Blackwell · llama.cpp
+model: qwen/qwen3.5-122b-a10b
+hardware: rtx-pro
+platform:
+  os: windows
+  execution: native
+backend: llama-cpp
+status: experimental
+precision:
+  label: Q4_K_M
+checkpoint:
+  target: https://huggingface.co/unsloth/Qwen3.5-122B-A10B-MTP-GGUF/tree/main/UD-Q4_K_M
+  target_label: unsloth/Qwen3.5-122B-A10B-MTP-GGUF
+  draft: null
+  draft_label: null
+mtp: ON=3
+concurrency: 1
+topology: null
+sampling: Temp=1.0; Top K=20; Top P=0.95; Min P=0; Repetition Penalty=1; Presence Penalty=0
+security: null
+runtime: null
+serve:
+  label: Launch
+  target: single-node
+  instructions: Run in PowerShell.
+  command: |
+    llama-server -m UD-Q4_K_M/Qwen3.5-122B-A10B-UD-Q4_K_M-00001-of-00003.gguf `
+      -b 4096 `
+      -ub 4096 `
+      --ctx-size 65536 `
+      --spec-type draft-mtp `
+      --temp 1.0 `
+      --top-k 20 `
+      --top-p 0.95 `
+      --min-p 0 `
+      --repeat-penalty 1 `
+      --presence-penalty 0 `
+      -np 1
+  port: null
+  api_model: null
+notes: Download all three GGUF shards under `UD-Q4_K_M`; `-m` points to the first shard.

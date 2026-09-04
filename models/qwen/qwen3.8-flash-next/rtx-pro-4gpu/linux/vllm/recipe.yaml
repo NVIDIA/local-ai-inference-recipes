@@ -1,0 +1,80 @@
+# SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: LicenseRef-NvidiaProprietary
+#
+# NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
+# property and proprietary rights in and to this material, related
+# documentation and any modifications thereto. Any use, reproduction,
+# disclosure or distribution of this material and related documentation
+# is subject to the Apache 2.0 License
+#
+# Disclaimer: This Local AI Inference Recipes Repo and its recipes are
+# provided for informational purposes only and were created with AI
+# assistance. They must be independently reviewed and validated for
+# accuracy before use. NVIDIA assumes no liability for any use of these
+# recipes or reliance upon them.
+
+schema_version: 3
+title: Qwen3.8-Flash-Next · RTX PRO 6000 · vLLM
+model: qwen/qwen3.8-flash-next
+hardware: rtx-pro-4gpu
+platform:
+  os: linux
+  execution: container
+backend: vllm
+status: experimental
+precision:
+  label: NVFP4
+checkpoint:
+  target: https://huggingface.co/Inferact/Qwen3.8-Flash-Next-NVFP4
+  target_label: Inferact/Qwen3.8-Flash-Next-NVFP4
+  draft: null
+  draft_label: null
+concurrency: null
+topology:
+  summary: 4× RTX PRO 6000
+  gpu_count: 4
+  node_count: 1
+  tensor_parallel_size: 4
+sampling: null
+security: Evaluation configuration only. Host networking exposes vLLM on host interfaces; use a firewall or reverse proxy, a scoped read-only HF token, and an isolated cache. For production, pin tested image, model, and code revisions.
+runtime:
+  kind: container
+  label: Container
+  image: vllm/vllm-openai:qwen38-flash-next
+  image_url: https://hub.docker.com/r/vllm/vllm-openai/tags?name=qwen38-flash-next
+  setup_label: Start container
+  setup_target: single-node
+  setup_instructions: Set `HF_TOKEN` in the host environment.
+  setup_command: |
+    docker run --rm -it \
+      --gpus all \
+      --ipc host \
+      --network host \
+      --shm-size=16g \
+      --ulimit memlock=-1 \
+      --ulimit stack=67108864 \
+      -e HF_TOKEN=$HF_TOKEN \
+      -v ~/.cache/huggingface:/root/.cache/huggingface \
+      --entrypoint /bin/bash \
+      vllm/vllm-openai:qwen38-flash-next
+serve:
+  label: Launch
+  target: single-node
+  instructions: null
+  command: |
+    vllm serve Inferact/Qwen3.8-Flash-Next-NVFP4 \
+      --host 0.0.0.0 \
+      --port 8000 \
+      --no-enable-flashinfer-autotune \
+      --max-num-seqs 16 \
+      --gpu-memory-utilization 0.95 \
+      --max-num-batched-tokens 8192 \
+      --enable-prefix-caching \
+      --moe-backend marlin \
+      --tensor-parallel-size 4 \
+      --enable-auto-tool-choice \
+      --tool-call-parser qwen3_xml \
+      --reasoning-parser qwen3
+  port: 8000
+  api_model: Inferact/Qwen3.8-Flash-Next-NVFP4
+notes: null

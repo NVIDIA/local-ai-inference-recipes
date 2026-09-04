@@ -1,0 +1,62 @@
+# SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: LicenseRef-NvidiaProprietary
+#
+# NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
+# property and proprietary rights in and to this material, related
+# documentation and any modifications thereto. Any use, reproduction,
+# disclosure or distribution of this material and related documentation
+# is subject to the Apache 2.0 License
+#
+# Disclaimer: This Local AI Inference Recipes Repo and its recipes are
+# provided for informational purposes only and were created with AI
+# assistance. They must be independently reviewed and validated for
+# accuracy before use. NVIDIA assumes no liability for any use of these
+# recipes or reliance upon them.
+
+schema_version: 3
+title: "Qwen3.6-35B-A3B · NVIDIA GeForce RTX GPUs · llama.cpp · Q4_K_M"
+model: qwen/qwen3.6-35b-a3b
+hardware: geforce-rtx
+platform:
+  os: linux
+  execution: native
+backend: llama-cpp
+min_vidmem_gb: 26
+variant: mtp
+status: experimental
+prerequisites: null
+limitations: null
+precision:
+  label: Q4_K_M
+checkpoint:
+  target: https://huggingface.co/unsloth/Qwen3.6-35B-A3B-MTP-GGUF/blob/main/Qwen3.6-35B-A3B-UD-Q4_K_M.gguf
+  target_label: unsloth/Qwen3.6-35B-A3B-MTP-GGUF
+  draft: null
+  draft_label: null
+mtp: "ON=2"
+concurrency: 1
+topology: null
+sampling: "Target backend sampling: ON; speculative draft backend sampling: default"
+security: null
+runtime: null
+serve:
+  label: "Launch MTP · n=2"
+  target: single-node
+  instructions: "Run in a Linux shell. llama-server downloads and caches the target GGUF from Hugging Face."
+  command: |
+    llama-server -hf "unsloth/Qwen3.6-35B-A3B-MTP-GGUF" \
+      -hff "Qwen3.6-35B-A3B-UD-Q4_K_M.gguf" \
+      --no-mmproj \
+      --backend-sampling \
+      --batch-size 2048 \
+      --ubatch-size 2048 \
+      --ctx-size 65536 \
+      --parallel 1 \
+      -ngl 999 \
+      --jinja \
+      --chat-template-kwargs '{"preserve_thinking":true}' \
+      --spec-type draft-mtp \
+      --spec-draft-n-max 2
+  port: null
+  api_model: null
+notes: "The public [Q4_K_M target GGUF](https://huggingface.co/unsloth/Qwen3.6-35B-A3B-MTP-GGUF/blob/main/Qwen3.6-35B-A3B-UD-Q4_K_M.gguf) contains integrated MTP layers, so no separate draft checkpoint is required. Use MTP depth 2."

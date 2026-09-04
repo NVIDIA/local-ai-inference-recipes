@@ -1,0 +1,59 @@
+# SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: LicenseRef-NvidiaProprietary
+#
+# NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
+# property and proprietary rights in and to this material, related
+# documentation and any modifications thereto. Any use, reproduction,
+# disclosure or distribution of this material and related documentation
+# is subject to the Apache 2.0 License
+#
+# Disclaimer: This Local AI Inference Recipes Repo and its recipes are
+# provided for informational purposes only and were created with AI
+# assistance. They must be independently reviewed and validated for
+# accuracy before use. NVIDIA assumes no liability for any use of these
+# recipes or reliance upon them.
+
+# Performance measured on nvspark-64g-1 (1× DGX Spark) with aiperf 0.12.0.
+# Matches the sibling recipe.yaml (status: optimized).
+schema_version: 1
+status: optimized
+recipe_sha256: 004ed762e5ea215b1597f3e892d144e1dab3faa0e878658d89bb4ac05539d1e0
+launch_id: default
+measured_at: 2026-09-03
+
+harness:
+  name: aiperf
+  version: 0.12.0
+
+system:
+  label: NVIDIA DGX Spark
+  accelerator: NVIDIA GB10
+  accelerator_count: 1
+  operating_system: linux
+  os_version: Ubuntu 24.04.4 LTS
+  driver_version: 580.173.02
+  cuda_version: "13.0"
+
+software:
+  backend_version: "0.28.0"
+  model_revision: 1355db6a052410cfd62085d94b58866fd0f2c3c5
+  runtime_revision: sha256:61fc8a896b0a4fbbbdc063bc4b0dbc25ce98e02b5050c24aeb7830ac02039b14
+
+profiles:
+  - id: throughput-8k
+    workload:
+      input_tokens: 8192
+      context_tokens: 262144
+      dataset: nvidia/SPEED-Bench
+      profile: throughput_8k
+      input_tokens_min: 8119
+      input_tokens_max: 8814
+      input_tokens_total: 83932
+      output_tokens: 256
+      concurrency: 1
+      requests: 10
+      warmup_requests: 3
+    results:
+      prefill_tokens_per_second_mean: 12276.00
+      decode_tokens_per_second_mean: 94.78
+      e2e_latency_ms_mean: 3374.15

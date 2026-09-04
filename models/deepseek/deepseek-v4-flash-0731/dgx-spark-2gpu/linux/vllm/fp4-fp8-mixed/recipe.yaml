@@ -1,0 +1,207 @@
+# SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: LicenseRef-NvidiaProprietary
+#
+# NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
+# property and proprietary rights in and to this material, related
+# documentation and any modifications thereto. Any use, reproduction,
+# disclosure or distribution of this material and related documentation
+# is subject to the Apache 2.0 License
+#
+# Disclaimer: This Local AI Inference Recipes Repo and its recipes are
+# provided for informational purposes only and were created with AI
+# assistance. They must be independently reviewed and validated for
+# accuracy before use. NVIDIA assumes no liability for any use of these
+# recipes or reliance upon them.
+
+schema_version: 3
+title: DeepSeek-V4-Flash-0731 · 2× DGX Spark · vLLM
+model: deepseek/deepseek-v4-flash-0731
+hardware: dgx-spark-2gpu
+platform:
+  os: linux
+  execution: container
+backend: vllm
+backend_version: "0.1.dev20482+g83cb22a0e.d20260903"
+status: optimized
+
+validation:
+  validated_at: 2026-08-31
+  validated_by: Perf-Sweep
+  tested_stack:
+    os_version: "Ubuntu 24.04.4 LTS"
+    driver: "580.159.03"
+    cuda: "13.0"
+
+limitations:
+  - The source requires the custom B12x container image.
+precision:
+  label: FP4 + FP8 Mixed
+checkpoint:
+  target: https://huggingface.co/deepseek-ai/DeepSeek-V4-Flash-0731
+  target_label: deepseek-ai/DeepSeek-V4-Flash-0731
+  draft: null
+  draft_label: null
+mtp: null
+concurrency: 8
+topology:
+  summary: 2× DGX Spark; one node rank per Spark; tensor parallel 2
+  gpu_count: 2
+  node_count: 2
+  tensor_parallel_size: 2
+sampling: null
+security: Evaluation configuration only. Host networking exposes vLLM on host interfaces; use a firewall or reverse proxy, a scoped read-only HF token, and an isolated cache. For production, pin tested image, model, and code revisions.
+runtime:
+  kind: container
+  label: Container (community, mutable, ARM64, custom B12x)
+  image: eugr/spark-vllm-b12x:latest
+  image_url: https://hub.docker.com/r/eugr/spark-vllm-b12x/tags?name=latest
+  setup_label: Start container
+  setup_target: all-nodes
+  setup_instructions: Run on every node after setting HF_TOKEN; replace the node-specific placeholders.
+  setup_command: |
+    # Example two-Spark values (adjust to your network):
+    #   HEAD_IP="10.100.32.1"        # head node IP on the ETH subnet
+    #   ETH_IF="enp1s0f0np0"        # ConnectX baseboard ethernet (socket/control)
+    #   IB_IF="rocep1s0f0,roceP2p1s0f0"   # RoCE HCA names (data plane) - use both "twins"!
+    export HEAD_IP="<head-connectx-ip>"
+    export ETH_IF="<connectx-interface>"
+    export IB_IF="<roce-interface-1>,<roce-interface-2>"
+    export MASTER_PORT=29501
+    export IMAGE="eugr/spark-vllm-b12x:latest"
+    export HF_CACHE_DIR="$HOME/.cache/huggingface"
+
+    mkdir -p "$HF_CACHE_DIR" "$HOME/.cache/vllm" "$HOME/.cache/flashinfer" "$HOME/.triton"
+
+    docker run --rm -it \
+      --privileged \
+      --gpus all \
+      --ipc host \
+      --network host \
+      --shm-size=16g \
+      --ulimit nofile=1048576:1048576 \
+      --ulimit memlock=-1 \
+      --ulimit stack=67108864 \
+      -e HF_TOKEN=$HF_TOKEN \
+      -e MN_IF_NAME="$ETH_IF" \
+      -e UCX_NET_DEVICES="$ETH_IF" \
+      -e NCCL_SOCKET_IFNAME="$ETH_IF" \
+      -e NCCL_IB_HCA="$IB_IF" \
+      -e NCCL_IB_DISABLE=0 \
+      -e OMPI_MCA_btl_tcp_if_include="$ETH_IF" \
+      -e GLOO_SOCKET_IFNAME="$ETH_IF" \
+      -e TP_SOCKET_IFNAME="$ETH_IF" \
+      -e NCCL_IGNORE_CPU_AFFINITY=1 \
+      -e HEAD_IP="$HEAD_IP" \
+      -e MASTER_PORT="$MASTER_PORT" \
+      -v "$HF_CACHE_DIR:/root/.cache/huggingface" \
+      -v "$HOME/.cache/vllm:/root/.cache/vllm" \
+      -v "$HOME/.cache/flashinfer:/root/.cache/flashinfer" \
+      -v "$HOME/.triton:/root/.triton" \
+      --entrypoint /bin/bash \
+      "$IMAGE"
+serve:
+  label: Launch head
+  target: head
+  instructions: null
+  command: |
+    export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
+    export CUTE_DSL_ARCH="sm_121a"
+    export VLLM_USE_AOT_COMPILE="1"
+    export VLLM_USE_BREAKABLE_CUDAGRAPH="0"
+    export VLLM_MEMORY_PROFILE_INCLUDE_ATTN="1"
+    export VLLM_USE_FLASHINFER_SAMPLER="1"
+    export VLLM_USE_B12X_WO_PROJECTION="1"
+    export VLLM_USE_B12X_MHC="1"
+    export VLLM_USE_B12X_FP8_GEMM="1"
+    export VLLM_USE_B12X_MOE="1"
+    export VLLM_USE_B12X_SPARSE_INDEXER="1"
+    export VLLM_USE_V2_MODEL_RUNNER="1"
+    export B12X_MLA_SM120_UNIFIED="1"
+    export B12X_MOE_FORCE_A8="1"
+    export VLLM_MOE_SKIP_PADDING="0" # 8/17 - need this due to latest changes in vLLM
+    vllm serve deepseek-ai/DeepSeek-V4-Flash-0731 \
+      --host 0.0.0.0 \
+      --port 8000 \
+      --trust-remote-code \
+      --tensor-parallel-size 2 \
+      --kv-cache-dtype fp8 \
+      --block-size 256 \
+      --max-model-len auto \
+      --max-num-seqs 8 \
+      --max-num-batched-tokens 8192 \
+      --gpu-memory-utilization 0.85 \
+      --enable-prefix-caching \
+      --tokenizer-mode deepseek_v4 \
+      --tool-call-parser deepseek_v4 \
+      --enable-auto-tool-choice \
+      --reasoning-parser deepseek_v4 \
+      --reasoning-config '{"reasoning_parser":"deepseek_v4","reasoning_start_str":"","reasoning_end_str":""}' \
+      --default-chat-template-kwargs.thinking=true \
+      --default-chat-template-kwargs.reasoning_effort=high \
+      --load-format instanttensor \
+      --moe-backend b12x \
+      --linear-backend b12x \
+      --attention-backend B12X \
+      --max-cudagraph-capture-size 48 \
+      --compilation-config '{"cudagraph_mode":"FULL_AND_PIECEWISE","custom_ops":["all"]}' \
+      --speculative-config '{"method":"dspark","num_speculative_tokens":5,"draft_sample_method":"probabilistic","attention_backend":"B12X"}' \
+      --nnodes 2 \
+      --node-rank 0 \
+      --master-addr "$HEAD_IP" \
+      --master-port "$MASTER_PORT"
+  port: 8000
+  api_model: deepseek-ai/DeepSeek-V4-Flash-0731
+  additional_commands:
+    -
+      id: worker
+      label: Launch worker
+      target: workers
+      instructions: null
+      command: |
+        export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
+        export CUTE_DSL_ARCH="sm_121a"
+        export VLLM_USE_AOT_COMPILE="1"
+        export VLLM_USE_BREAKABLE_CUDAGRAPH="0"
+        export VLLM_MEMORY_PROFILE_INCLUDE_ATTN="1"
+        export VLLM_USE_FLASHINFER_SAMPLER="1"
+        export VLLM_USE_B12X_WO_PROJECTION="1"
+        export VLLM_USE_B12X_MHC="1"
+        export VLLM_USE_B12X_FP8_GEMM="1"
+        export VLLM_USE_B12X_MOE="1"
+        export VLLM_USE_B12X_SPARSE_INDEXER="1"
+        export VLLM_USE_V2_MODEL_RUNNER="1"
+        export B12X_MLA_SM120_UNIFIED="1"
+        export B12X_MOE_FORCE_A8="1"
+        export VLLM_MOE_SKIP_PADDING="0" # 8/17 - need this due to latest changes in vLLM
+        vllm serve deepseek-ai/DeepSeek-V4-Flash-0731 \
+          --host 0.0.0.0 \
+          --port 8000 \
+          --trust-remote-code \
+          --tensor-parallel-size 2 \
+          --kv-cache-dtype fp8 \
+          --block-size 256 \
+          --max-model-len auto \
+          --max-num-seqs 8 \
+          --max-num-batched-tokens 8192 \
+          --gpu-memory-utilization 0.85 \
+          --enable-prefix-caching \
+          --tokenizer-mode deepseek_v4 \
+          --tool-call-parser deepseek_v4 \
+          --enable-auto-tool-choice \
+          --reasoning-parser deepseek_v4 \
+          --reasoning-config '{"reasoning_parser":"deepseek_v4","reasoning_start_str":"","reasoning_end_str":""}' \
+          --default-chat-template-kwargs.thinking=true \
+          --default-chat-template-kwargs.reasoning_effort=high \
+          --load-format instanttensor \
+          --moe-backend b12x \
+          --linear-backend b12x \
+          --attention-backend B12X \
+          --max-cudagraph-capture-size 48 \
+          --compilation-config '{"cudagraph_mode":"FULL_AND_PIECEWISE","custom_ops":["all"]}' \
+          --speculative-config '{"method":"dspark","num_speculative_tokens":5,"draft_sample_method":"probabilistic","attention_backend":"B12X"}' \
+          --nnodes 2 \
+          --node-rank 1 \
+          --master-addr "$HEAD_IP" \
+          --master-port "$MASTER_PORT" \
+          --headless
+notes: Use the same CX7 port on every node; assign both port subinterfaces on separate subnets; cache the image and checkpoint on every node; start the worker before the head. Docker runs privileged.

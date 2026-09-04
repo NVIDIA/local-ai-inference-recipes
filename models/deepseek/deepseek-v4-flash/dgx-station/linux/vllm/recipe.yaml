@@ -1,0 +1,144 @@
+# SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: LicenseRef-NvidiaProprietary
+#
+# NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
+# property and proprietary rights in and to this material, related
+# documentation and any modifications thereto. Any use, reproduction,
+# disclosure or distribution of this material and related documentation
+# is subject to the Apache 2.0 License
+#
+# Disclaimer: This Local AI Inference Recipes Repo and its recipes are
+# provided for informational purposes only and were created with AI
+# assistance. They must be independently reviewed and validated for
+# accuracy before use. NVIDIA assumes no liability for any use of these
+# recipes or reliance upon them.
+
+schema_version: 3
+title: DeepSeek-V4-Flash · DGX Station · vLLM
+model: deepseek/deepseek-v4-flash
+hardware: dgx-station
+platform:
+  os: linux
+  execution: container
+backend: vllm
+status: experimental
+variant: mtp
+precision:
+  label: FP4 + FP8 Mixed
+checkpoint:
+  target: https://huggingface.co/deepseek-ai/DeepSeek-V4-Flash
+  target_label: deepseek-ai/DeepSeek-V4-Flash
+  draft: null
+  draft_label: null
+mtp: MTP=3
+concurrency: 16
+topology:
+  summary: 1× DGX Station
+  gpu_count: 1
+  node_count: 1
+  tensor_parallel_size: null
+sampling: null
+security: Evaluation configuration only. Host networking exposes vLLM on host interfaces; use a firewall or reverse proxy, a scoped read-only HF token, and an isolated cache. For production, pin tested image, model, and code revisions.
+runtime:
+  kind: container
+  label: Option A container
+  image: vllm/vllm-openai:v0.24.0-ubuntu2404
+  image_url: https://hub.docker.com/r/vllm/vllm-openai/tags?name=v0.24.0-ubuntu2404
+  setup_label: Start container
+  setup_target: single-node
+  setup_instructions: Set `HF_TOKEN` in the host environment.
+  setup_command: |
+    docker run --rm -it \
+      --gpus all \
+      --ipc host \
+      --network host \
+      --shm-size=16g \
+      --ulimit memlock=-1 \
+      --ulimit stack=67108864 \
+      -e HF_TOKEN=$HF_TOKEN \
+      -v ~/.cache/huggingface:/root/.cache/huggingface \
+      --entrypoint /bin/bash \
+      vllm/vllm-openai:v0.24.0-ubuntu2404
+serve:
+  label: Launch
+  target: single-node
+  instructions: null
+  command: |
+    vllm serve deepseek-ai/DeepSeek-V4-Flash \
+      --trust-remote-code \
+      --kv-cache-dtype fp8 \
+      --block-size 256 \
+      --gpu-memory-utilization 0.92 \
+      --max-num-seqs 16 \
+      --attention_config.use_fp4_indexer_cache=True \
+      --compilation-config '{"cudagraph_mode":"FULL_AND_PIECEWISE","custom_ops":["all"]}' \
+      --max-cudagraph-capture-size 128 \
+      --tokenizer-mode deepseek_v4 \
+      --tool-call-parser deepseek_v4 \
+      --enable-auto-tool-choice \
+      --reasoning-parser deepseek_v4 \
+      --enable-chunked-prefill \
+      --enable-prefix-caching \
+      --max-num-batched-tokens 8192 \
+      --no-disable-hybrid-kv-cache-manager \
+      --speculative-config '{"method":"mtp","num_speculative_tokens":3}'
+  port: null
+  api_model: deepseek-ai/DeepSeek-V4-Flash
+notes: The source supplies both alternatives; Option B normalizes one missing shell continuation.
+launch:
+  id: vllm-openai
+  label: Option A · vLLM OpenAI
+  alternatives:
+    -
+      id: nvidia-vllm
+      label: Option B · NVIDIA vLLM
+      runtime:
+        kind: container
+        label: Option B container
+        image: nvcr.io/nvidia/vllm:26.05.post1-py3
+        image_url: https://catalog.ngc.nvidia.com/orgs/nvidia/-/containers/vllm/26.05.post1-py3/tags
+        setup_label: Start container
+        setup_target: single-node
+        setup_instructions: Set `HF_TOKEN` in the host environment.
+        setup_command: |
+          docker run --rm -it \
+            --gpus all \
+            --ipc host \
+            --network host \
+            --shm-size=16g \
+            --ulimit memlock=-1 \
+            --ulimit stack=67108864 \
+            -e HF_TOKEN=$HF_TOKEN \
+            -v ~/.cache/huggingface:/root/.cache/huggingface \
+            --entrypoint /bin/bash \
+            nvcr.io/nvidia/vllm:26.05.post1-py3
+      serve:
+        label: Launch
+        target: single-node
+        instructions: null
+        command: |
+          vllm serve deepseek-ai/DeepSeek-V4-Flash \
+            --tensor-parallel-size 1 \
+            --pipeline-parallel-size 1 \
+            --trust-remote-code \
+            --kv-cache-dtype fp8 \
+            --block-size 256 \
+            --max-num-seqs 16 \
+            --gpu-memory-utilization 0.92 \
+            --max-model-len 1048576 \
+            --attention_config.use_fp4_indexer_cache=True \
+            --compilation-config '{"cudagraph_mode":"FULL_AND_PIECEWISE","custom_ops":["all"]}' \
+            --max-cudagraph-capture-size 128 \
+            --tokenizer-mode deepseek_v4 \
+            --tool-call-parser deepseek_v4 \
+            --enable-auto-tool-choice \
+            --reasoning-parser deepseek_v4 \
+            --enable-chunked-prefill \
+            --enable-prefix-caching \
+            --max-num-batched-tokens 8192 \
+            --no-disable-hybrid-kv-cache-manager \
+            --disable-uvicorn-access-log \
+            --prefix-cache-retention-interval auto \
+            --speculative-config '{"method":"mtp","num_speculative_tokens":3}'
+        port: null
+        api_model: deepseek-ai/DeepSeek-V4-Flash

@@ -1,0 +1,56 @@
+# SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: LicenseRef-NvidiaProprietary
+#
+# NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
+# property and proprietary rights in and to this material, related
+# documentation and any modifications thereto. Any use, reproduction,
+# disclosure or distribution of this material and related documentation
+# is subject to the Apache 2.0 License
+#
+# Disclaimer: This Local AI Inference Recipes Repo and its recipes are
+# provided for informational purposes only and were created with AI
+# assistance. They must be independently reviewed and validated for
+# accuracy before use. NVIDIA assumes no liability for any use of these
+# recipes or reliance upon them.
+
+schema_version: 1
+status: optimized
+recipe_sha256: 6b3d8dcd1d0b6648474dd21d19a5e156d1040d6c54adf427f4c0879d188e7580
+launch_id: default
+measured_at: 2026-09-03
+harness:
+  name: llama.cpp SPEED-Bench
+  version: d11b3cc7ed2b146a6045d55db30f46d511e25011
+
+system:
+  label: "NVIDIA RTX PRO 6000 Blackwell Workstation Edition"
+  accelerator: "NVIDIA RTX PRO 6000 Blackwell Workstation Edition"
+  accelerator_count: 1
+  operating_system: windows
+  os_version: "Windows 10.0.26200"
+  driver_version: "610.88"
+  cuda_version: "13.3"
+
+software:
+  model_revision: 4ca720788d1e01f1bff70c033e0d0028fd02e502
+  backend_version: "b10746"
+  runtime_revision: d11b3cc7ed2b146a6045d55db30f46d511e25011
+
+profiles:
+  - id: throughput-8k
+    workload:
+      input_tokens: 8192
+      context_tokens: 65536
+      dataset: nvidia/SPEED-Bench
+      profile: throughput_8k
+      input_tokens_min: 68
+      input_tokens_max: 9072
+      input_tokens_total: 86387
+      output_tokens: 256
+      concurrency: 1
+      requests: 15
+      warmup_requests: 0
+    results:
+      prefill_tokens_per_second_mean: 2084.49
+      decode_tokens_per_second_mean: 129.42
+      e2e_latency_ms_mean: 4071.68

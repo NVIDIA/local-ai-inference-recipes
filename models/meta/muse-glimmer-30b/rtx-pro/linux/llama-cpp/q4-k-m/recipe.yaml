@@ -1,0 +1,67 @@
+# SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: LicenseRef-NvidiaProprietary
+#
+# NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
+# property and proprietary rights in and to this material, related
+# documentation and any modifications thereto. Any use, reproduction,
+# disclosure or distribution of this material and related documentation
+# is subject to the Apache 2.0 License
+#
+# Disclaimer: This Local AI Inference Recipes Repo and its recipes are
+# provided for informational purposes only and were created with AI
+# assistance. They must be independently reviewed and validated for
+# accuracy before use. NVIDIA assumes no liability for any use of these
+# recipes or reliance upon them.
+
+schema_version: 3
+title: "Muse Glimmer 30B · NVIDIA RTX PRO 6000 Blackwell · llama.cpp · Q4_K_M"
+model: meta/muse-glimmer-30b
+hardware: rtx-pro
+platform:
+  os: linux
+  execution: native
+backend: llama-cpp
+variant: dflash
+status: experimental
+prerequisites:
+  - A Linux build of llama.cpp commit ee4c505a4fb37be8ea37a78af272e74dad2835c1 providing llama-server.
+limitations:
+  - This text-only recipe intentionally does not load the separate perception projector.
+  - These settings are ported from the Windows selection and have not been performance-validated on Linux.
+  - The source sweep used a 40,960-token server context; the launch command uses a 65,536-token context.
+precision:
+  label: Q4_K_M
+checkpoint:
+  target: https://huggingface.co/meta-models/Muse-Glimmer-30B-GGUF/blob/70bf1b61ac09f91b24d39038091b41c582bc5d7a/Muse-Glimmer-30B-KQuant-17GB-Q4_K_M.gguf
+  target_label: meta-models/Muse-Glimmer-30B-GGUF
+  draft: https://huggingface.co/meta-models/Muse-Glimmer-30B-GGUF/blob/70bf1b61ac09f91b24d39038091b41c582bc5d7a/dflash-Muse-Glimmer-30B-Q4_K_M.gguf
+  draft_label: meta-models/Muse-Glimmer-30B-GGUF/dflash-Muse-Glimmer-30B-Q4_K_M.gguf
+mtp: null
+concurrency: 1
+topology: null
+sampling: "Target backend sampling: OFF; speculative draft backend sampling: ON"
+security: null
+runtime: null
+serve:
+  label: "Launch DFlash · n=15"
+  target: single-node
+  instructions: "Run in a Linux shell. llama-server downloads and caches the target and DFlash GGUF files from Hugging Face."
+  command: |
+    llama-server -hf "meta-models/Muse-Glimmer-30B-GGUF" \
+      -hff "Muse-Glimmer-30B-KQuant-17GB-Q4_K_M.gguf" \
+      -hfrd "meta-models/Muse-Glimmer-30B-GGUF" \
+      --spec-draft-model "dflash-Muse-Glimmer-30B-Q4_K_M.gguf" \
+      --no-mmproj \
+      --batch-size 2048 \
+      --ubatch-size 1024 \
+      --ctx-size 65536 \
+      --parallel 1 \
+      -ngl 999 \
+      --jinja \
+      --chat-template-kwargs '{"preserve_thinking":true}' \
+      --spec-type draft-dflash \
+      --spec-draft-n-max 15 \
+      --spec-draft-backend-sampling
+  port: null
+  api_model: null
+notes: "The pinned [Q4_K_M target](https://huggingface.co/meta-models/Muse-Glimmer-30B-GGUF/blob/70bf1b61ac09f91b24d39038091b41c582bc5d7a/Muse-Glimmer-30B-KQuant-17GB-Q4_K_M.gguf) and [DFlash draft](https://huggingface.co/meta-models/Muse-Glimmer-30B-GGUF/blob/70bf1b61ac09f91b24d39038091b41c582bc5d7a/dflash-Muse-Glimmer-30B-Q4_K_M.gguf) are the selected checkpoints."

@@ -1,0 +1,36 @@
+# SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: LicenseRef-NvidiaProprietary
+#
+# NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
+# property and proprietary rights in and to this material, related
+# documentation and any modifications thereto. Any use, reproduction,
+# disclosure or distribution of this material and related documentation
+# is subject to the Apache 2.0 License
+#
+# Disclaimer: This Local AI Inference Recipes Repo and its recipes are
+# provided for informational purposes only and were created with AI
+# assistance. They must be independently reviewed and validated for
+# accuracy before use. NVIDIA assumes no liability for any use of these
+# recipes or reliance upon them.
+
+schema_version: 1
+precisions:
+  - id: nvfp4
+    label: NVFP4
+    description: NVIDIA FP4 quantization
+
+  - id: nvfp4-w4a16
+    label: NVFP4-W4A16
+    description: NVIDIA FP4 weights with FP16 activations
+
+  - id: fp4-fp8-mixed
+    label: FP4 + FP8 Mixed
+    description: Mixed FP4 weights and FP8 KV cache quantization
+
+  - id: q4-k-m
+    label: Q4_K_M
+    description: GGUF 4-bit mixed quantization (medium)
+
+  - id: int4-bf16-drafter
+    label: Int4, BF16 Drafter
+    description: Int4 main model with BF16 speculative drafter

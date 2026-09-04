@@ -1,0 +1,25 @@
+# SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: LicenseRef-NvidiaProprietary
+#
+# NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
+# property and proprietary rights in and to this material, related
+# documentation and any modifications thereto. Any use, reproduction,
+# disclosure or distribution of this material and related documentation
+# is subject to the Apache 2.0 License
+#
+# Disclaimer: This Local AI Inference Recipes Repo and its recipes are
+# provided for informational purposes only and were created with AI
+# assistance. They must be independently reviewed and validated for
+# accuracy before use. NVIDIA assumes no liability for any use of these
+# recipes or reliance upon them.
+
+schema_version: 1
+id: deepseek/deepseek-v4-flash-0731
+display_name: DeepSeek-V4-Flash-0731
+builder: deepseek
+family: DeepSeek-V4
+summary: DeepSeek V4 Flash 0731 inference configurations.
+upstream: https://huggingface.co/deepseek-ai/DeepSeek-V4-Flash-0731
+modalities:
+  - text
+availability: available

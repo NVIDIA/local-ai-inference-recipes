@@ -1,0 +1,104 @@
+# SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: LicenseRef-NvidiaProprietary
+#
+# NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
+# property and proprietary rights in and to this material, related
+# documentation and any modifications thereto. Any use, reproduction,
+# disclosure or distribution of this material and related documentation
+# is subject to the Apache 2.0 License
+#
+# Disclaimer: This Local AI Inference Recipes Repo and its recipes are
+# provided for informational purposes only and were created with AI
+# assistance. They must be independently reviewed and validated for
+# accuracy before use. NVIDIA assumes no liability for any use of these
+# recipes or reliance upon them.
+
+schema_version: 3
+title: <Model> · <Hardware> · <Backend>
+model: <builder>/<model>
+hardware: <hardware>             # must match the path
+platform:
+  os: linux                     # must match the path
+  execution: container
+backend: <backend>               # must match the path
+backend_version: <exact backend release or build, e.g. v0.24.0 or b10505>
+status: experimental
+# variant: <sub-variant-slug>   # optional; set when multiple sub-variants share the same precision
+#                                # (e.g. mtp, dflash). Requires precision.label.
+#                                # Also add a <precision_slug>/<variant>/ folder in the path.
+
+# Everything a user must have in place before running setup_command.
+prerequisites:
+  - <exact precondition, e.g. Hugging Face access to the checkpoint repository>
+
+# Known caveats. Say what the recipe was not validated for, not only what breaks.
+limitations:
+  - <exact limitation, e.g. Validated for single-turn chat workloads only>
+
+# Required to reach `status: optimized`; omit entirely while experimental.
+# Reaching optimized also requires a sibling performance.yaml with measured results.
+# validation:
+#   validated_at: <YYYY-MM-DD>
+#   validated_by: perflab
+#   evidence: <optional; internal link is fine; never shown on the site>
+#   tested_stack:
+#     driver: <NVIDIA driver version>     # required for NVIDIA hardware
+#     cuda: "<CUDA version>"              # required for NVIDIA hardware
+#     os_version: <exact OS build>
+#     python: <python version>
+
+precision:
+  label: <exact precision label>    # display string, e.g. NVFP4 or Q4_K_M
+  # slug: <override>                # omit to auto-derive from label via slugify
+
+checkpoint:
+  target: https://huggingface.co/<org>/<checkpoint>
+  target_label: <org/checkpoint>
+  draft: null
+  draft_label: null
+
+mtp: null
+concurrency: null
+topology:
+  summary: 1× <hardware>
+  gpu_count: 1
+  node_count: 1
+  tensor_parallel_size: null
+
+sampling: null
+security: Evaluation configuration only. Host networking exposes vLLM on host interfaces; use a firewall or reverse proxy, a scoped read-only HF token, and an isolated cache. For production, pin tested image, model, and code revisions.
+
+# Required for vLLM. Use templates/recipe-noncontainer.yaml for llama.cpp.
+runtime:
+  kind: container
+  label: Container
+  image: vllm/vllm-openai:v0.24.0-ubuntu2404
+  image_url: https://hub.docker.com/r/vllm/vllm-openai/tags?name=v0.24.0-ubuntu2404
+  setup_label: Start container
+  setup_target: single-node
+  setup_instructions: Set `HF_TOKEN` in the host environment.
+  setup_command: |
+    docker run --rm -it \
+      --gpus all \
+      --ipc host \
+      --network host \
+      --shm-size=16g \
+      --ulimit memlock=-1 \
+      --ulimit stack=67108864 \
+      -e HF_TOKEN=$HF_TOKEN \
+      -v ~/.cache/huggingface:/root/.cache/huggingface \
+      --entrypoint /bin/bash \
+      vllm/vllm-openai:v0.24.0-ubuntu2404
+
+serve:
+  label: Launch
+  target: single-node
+  instructions: null
+  command: |
+    <exact, copyable launch command; preserve every flag and value>
+  port: null                    # set only when the command explicitly sets it
+  api_model: null
+
+# Multi-node workers belong in serve.additional_commands.
+# Source-supplied container/command alternatives belong in launch.alternatives.
+notes: null

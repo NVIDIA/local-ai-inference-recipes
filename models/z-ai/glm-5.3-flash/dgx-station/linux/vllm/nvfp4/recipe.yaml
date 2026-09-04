@@ -1,0 +1,80 @@
+# SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: LicenseRef-NvidiaProprietary
+#
+# NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
+# property and proprietary rights in and to this material, related
+# documentation and any modifications thereto. Any use, reproduction,
+# disclosure or distribution of this material and related documentation
+# is subject to the Apache 2.0 License
+#
+# Disclaimer: This Local AI Inference Recipes Repo and its recipes are
+# provided for informational purposes only and were created with AI
+# assistance. They must be independently reviewed and validated for
+# accuracy before use. NVIDIA assumes no liability for any use of these
+# recipes or reliance upon them.
+
+schema_version: 3
+title: GLM-5.3-Flash · DGX Station · vLLM
+model: z-ai/glm-5.3-flash
+hardware: dgx-station
+platform:
+  os: linux
+  execution: container
+backend: vllm
+status: experimental
+variant: mtp
+precision:
+  label: NVFP4
+checkpoint:
+  target: https://huggingface.co/RedHatAI/GLM-5.3-Flash-NVFP4
+  target_label: RedHatAI/GLM-5.3-Flash-NVFP4
+  draft: null
+  draft_label: null
+mtp: MTP=5
+concurrency: 32
+topology:
+  summary: 1× DGX Station; tensor parallel 1
+  gpu_count: 1
+  node_count: 1
+  tensor_parallel_size: 1
+sampling: null
+security: Evaluation configuration only. Host networking exposes vLLM on host interfaces; use a firewall or reverse proxy, a scoped read-only HF token, and an isolated cache. For production, pin tested image, model, and code revisions.
+runtime:
+  kind: container
+  label: Container
+  image: vllm/vllm-openai:glm53-flash
+  image_url: https://hub.docker.com/r/vllm/vllm-openai/tags?name=glm53-flash
+  setup_label: Start container
+  setup_target: single-node
+  setup_instructions: Set `HF_TOKEN` in the host environment.
+  setup_command: |
+    docker run --privileged --rm -it \
+      --gpus all \
+      --ipc host \
+      --network host \
+      --shm-size=16g \
+      --ulimit memlock=-1 \
+      --ulimit stack=67108864 \
+      -e HF_TOKEN=$HF_TOKEN \
+      -v ~/.cache/huggingface:/root/.cache/huggingface \
+      --entrypoint /bin/bash \
+      vllm/vllm-openai:glm53-flash
+serve:
+  label: Launch
+  target: single-node
+  instructions: null
+  command: |
+    export HF_HUB_OFFLINE=1
+
+    vllm serve RedHatAI/GLM-5.3-Flash-NVFP4 \
+      --tensor-parallel-size 1 \
+      --max-num-seqs 32 \
+      --max-num-batched-tokens 8192 \
+      --kv-cache-dtype fp8 \
+      --tool-call-parser glm47 \
+      --enable-auto-tool-choice \
+      --reasoning-parser glm45 \
+      --speculative-config '{"method":"mtp","num_speculative_tokens":5}'
+  port: 8000
+  api_model: RedHatAI/GLM-5.3-Flash-NVFP4
+notes: null

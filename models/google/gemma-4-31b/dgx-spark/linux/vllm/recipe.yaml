@@ -1,0 +1,91 @@
+# SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: LicenseRef-NvidiaProprietary
+#
+# NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
+# property and proprietary rights in and to this material, related
+# documentation and any modifications thereto. Any use, reproduction,
+# disclosure or distribution of this material and related documentation
+# is subject to the Apache 2.0 License
+#
+# Disclaimer: This Local AI Inference Recipes Repo and its recipes are
+# provided for informational purposes only and were created with AI
+# assistance. They must be independently reviewed and validated for
+# accuracy before use. NVIDIA assumes no liability for any use of these
+# recipes or reliance upon them.
+
+schema_version: 3
+title: Gemma-4-31B · DGX Spark · vLLM
+model: google/gemma-4-31b
+hardware: dgx-spark
+platform:
+  os: linux
+  execution: container
+backend: vllm
+backend_version: "0.23.1rc1.dev790+g85d955ed5.d20260705"
+status: optimized
+
+validation:
+  validated_at: 2026-08-31
+  validated_by: Perf-Sweep
+  tested_stack:
+    os_version: "Ubuntu 24.04.4 LTS"
+    driver: "580.159.03"
+    cuda: "13.0"
+
+precision:
+  label: NVFP4
+checkpoint:
+  target: https://huggingface.co/nvidia/Gemma-4-31B-IT-NVFP4
+  target_label: nvidia/Gemma-4-31B-IT-NVFP4
+  draft: https://huggingface.co/google/gemma-4-31B-it-assistant
+  draft_label: google/gemma-4-31B-it-assistant
+mtp: null
+concurrency: 8
+topology:
+  summary: 1× DGX Spark
+  gpu_count: 1
+  node_count: 1
+  tensor_parallel_size: null
+sampling: null
+security: Evaluation configuration only. Host networking exposes vLLM on host interfaces; use a firewall or reverse proxy, a scoped read-only HF token, and an isolated cache. For production, pin tested image, model, and code revisions.
+runtime:
+  kind: container
+  label: Container (community, ARM64)
+  image: eugr/spark-vllm:nightly-20260704
+  image_url: https://hub.docker.com/r/eugr/spark-vllm/tags?name=nightly-20260704
+  setup_label: Start container
+  setup_target: single-node
+  setup_instructions: Set `HF_TOKEN` in the host environment.
+  setup_command: |
+    docker run --rm -it \
+      --gpus all \
+      --ipc host \
+      --network host \
+      --shm-size=16g \
+      --ulimit memlock=-1 \
+      --ulimit stack=67108864 \
+      -e HF_TOKEN=$HF_TOKEN \
+      -v ~/.cache/huggingface:/root/.cache/huggingface \
+      --entrypoint /bin/bash \
+      eugr/spark-vllm:nightly-20260704
+serve:
+  label: Launch
+  target: single-node
+  instructions: null
+  command: |
+    vllm serve nvidia/Gemma-4-31B-IT-NVFP4 \
+      --gpu-memory-utilization 0.80 \
+      --max-model-len 262144 \
+      --max-num-seqs 8 \
+      --host 0.0.0.0 \
+      --port 8000 \
+      --enable-prefix-caching \
+      --max-num-batched-tokens 8192 \
+      --reasoning-parser gemma4 \
+      --enable-auto-tool-choice \
+      --tool-call-parser gemma4 \
+      --load-format fastsafetensors \
+      --speculative-config '{"model": "google/gemma-4-31B-it-assistant", "num_speculative_tokens": 4}'
+  port: 8000
+  api_model: nvidia/Gemma-4-31B-IT-NVFP4
+notes: null

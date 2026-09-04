@@ -1,0 +1,81 @@
+# SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: LicenseRef-NvidiaProprietary
+#
+# NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
+# property and proprietary rights in and to this material, related
+# documentation and any modifications thereto. Any use, reproduction,
+# disclosure or distribution of this material and related documentation
+# is subject to the Apache 2.0 License
+#
+# Disclaimer: This Local AI Inference Recipes Repo and its recipes are
+# provided for informational purposes only and were created with AI
+# assistance. They must be independently reviewed and validated for
+# accuracy before use. NVIDIA assumes no liability for any use of these
+# recipes or reliance upon them.
+
+schema_version: 3
+title: "Qwen3.8-27B · NVIDIA RTX PRO 6000 Blackwell · llama.cpp · Q4_K_M"
+model: qwen/qwen3.8-27b
+hardware: rtx-pro
+platform:
+  os: windows
+  execution: native
+backend: llama-cpp
+backend_version: "b10746"
+backend_min_version: "b10746"
+min_vidmem_gb: 25.0
+variant: dflash
+status: optimized
+selection:
+  default: true
+  summary: "Fastest measured Qwen3.8 llama.cpp recipe on RTX PRO 6000 in the 8K throughput sweep."
+prerequisites:
+  - A Windows build of llama.cpp commit d11b3cc7ed2b146a6045d55db30f46d511e25011 providing llama-server.exe.
+limitations:
+  - Validated with SPEED-Bench-Throughput-8K, concurrency 1, 256 generated tokens, and 15 measured requests.
+
+validation:
+  validated_at: 2026-09-03
+  validated_by: Perf-Sweep
+  tested_stack:
+    os_version: "Windows 10.0.26200"
+    driver: "610.88"
+    cuda: "13.3"
+precision:
+  label: Q4_K_M
+checkpoint:
+  target: https://huggingface.co/unsloth/Qwen3.8-27B-GGUF/blob/4ca720788d1e01f1bff70c033e0d0028fd02e502/Qwen3.8-27B-UD-Q4_K_M.gguf
+  target_label: unsloth/Qwen3.8-27B-GGUF
+  draft: https://huggingface.co/z-lab/Qwen3.8-27B-DFlash2-GGUF/blob/2d9571f8ce46e151f61c6499c99dee6079e1d610/Qwen3.8-27B-DFlash2-Q4_K_M.gguf
+  draft_label: z-lab/Qwen3.8-27B-DFlash2-GGUF/Qwen3.8-27B-DFlash2-Q4_K_M.gguf
+mtp: null
+concurrency: 1
+topology: null
+sampling: "Target backend sampling: OFF; speculative draft backend sampling: ON"
+security: null
+runtime: null
+serve:
+  label: "Launch DFlash2 · n=7"
+  target: single-node
+  instructions: "Run in PowerShell. llama-server downloads and caches the target and DFlash2 GGUF files from Hugging Face."
+  command: |
+    llama-server.exe -hf "unsloth/Qwen3.8-27B-GGUF" `
+      -hff "Qwen3.8-27B-UD-Q4_K_M.gguf" `
+      -hfrd "z-lab/Qwen3.8-27B-DFlash2-GGUF" `
+      --spec-draft-model "Qwen3.8-27B-DFlash2-Q4_K_M.gguf" `
+      --no-mmproj `
+      --host 127.0.0.1 `
+      --port 9931 `
+      --batch-size 4096 `
+      --ubatch-size 1024 `
+      --ctx-size 65536 `
+      --parallel 1 `
+      -ngl 999 `
+      --jinja `
+      --chat-template-kwargs '{"preserve_thinking":true}' `
+      --spec-type draft-dflash `
+      --spec-draft-n-max 7 `
+      --spec-draft-backend-sampling
+  port: 9931
+  api_model: unsloth/Qwen3.8-27B-GGUF
+notes: "The pinned [Q4_K_M target](https://huggingface.co/unsloth/Qwen3.8-27B-GGUF/blob/4ca720788d1e01f1bff70c033e0d0028fd02e502/Qwen3.8-27B-UD-Q4_K_M.gguf) and [DFlash2 draft](https://huggingface.co/z-lab/Qwen3.8-27B-DFlash2-GGUF/blob/2d9571f8ce46e151f61c6499c99dee6079e1d610/Qwen3.8-27B-DFlash2-Q4_K_M.gguf) are the checkpoints used for selection. DFlash2 depth 7 and the batch settings are the Pareto-balanced RTX PRO 6000 choice."

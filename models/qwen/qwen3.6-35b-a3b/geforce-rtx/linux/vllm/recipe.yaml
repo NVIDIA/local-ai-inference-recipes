@@ -1,0 +1,94 @@
+# SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: LicenseRef-NvidiaProprietary
+#
+# NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
+# property and proprietary rights in and to this material, related
+# documentation and any modifications thereto. Any use, reproduction,
+# disclosure or distribution of this material and related documentation
+# is subject to the Apache 2.0 License
+#
+# Disclaimer: This Local AI Inference Recipes Repo and its recipes are
+# provided for informational purposes only and were created with AI
+# assistance. They must be independently reviewed and validated for
+# accuracy before use. NVIDIA assumes no liability for any use of these
+# recipes or reliance upon them.
+
+schema_version: 3
+title: Qwen3.6-35B-A3B · GeForce RTX GPUs · vLLM
+model: qwen/qwen3.6-35b-a3b
+hardware: geforce-rtx
+platform:
+  os: linux
+  execution: container
+backend: vllm
+status: experimental
+variant: mtp
+precision:
+  label: NVFP4-W4A16
+checkpoint:
+  target: https://huggingface.co/nvidia/Qwen3.6-35B-A3B-NVFP4
+  target_label: nvidia/Qwen3.6-35B-A3B-NVFP4
+  draft: null
+  draft_label: null
+mtp: MTP=4
+concurrency: 8
+topology:
+  summary: 1× GeForce RTX GPUs
+  gpu_count: 1
+  node_count: 1
+  tensor_parallel_size: 1
+sampling: null
+security: Evaluation configuration only. Host networking exposes vLLM on host interfaces; use a firewall or reverse proxy, a scoped read-only HF token, and an isolated cache. For production, pin tested image, model, and code revisions.
+runtime:
+  kind: container
+  label: Container
+  image: vllm/vllm-openai:v0.28.0
+  image_url: https://hub.docker.com/r/vllm/vllm-openai/tags?name=v0.28.0
+  setup_label: Start container
+  setup_target: single-node
+  setup_instructions: Set `HF_TOKEN` in the host environment.
+  setup_command: |
+    docker run --rm -it \
+      --gpus all \
+      --ipc host \
+      --network host \
+      --shm-size=16g \
+      --ulimit memlock=-1 \
+      --ulimit stack=67108864 \
+      -e HF_TOKEN=$HF_TOKEN \
+      -v ~/.cache/huggingface:/root/.cache/huggingface \
+      --entrypoint /bin/bash \
+      vllm/vllm-openai:v0.28.0
+serve:
+  label: Launch
+  target: single-node
+  instructions: null
+  command: |
+    export VLLM_HAS_FLASHINFER_CUBIN=1
+
+    vllm serve nvidia/Qwen3.6-35B-A3B-NVFP4 \
+      --host 0.0.0.0 \
+      --port 8000 \
+      --tensor-parallel-size 1 \
+      --trust-remote-code \
+      --quantization modelopt_fp4 \
+      --kv-cache-dtype fp8 \
+      --block-size 128 \
+      --moe-backend marlin \
+      --attention-backend FLASHINFER \
+      --attention-config '{"use_trtllm_attention": true}' \
+      --gpu-memory-utilization 0.85 \
+      --max-model-len 65536 \
+      --max-num-seqs 8 \
+      --max-num-batched-tokens 8192 \
+      --enable-chunked-prefill \
+      --enable-prefix-caching \
+      --async-scheduling \
+      --skip-mm-profiling \
+      --speculative-config '{"method":"mtp","num_speculative_tokens":4,"moe_backend":"flashinfer_cutlass"}' \
+      --reasoning-parser qwen3 \
+      --tool-call-parser qwen3_xml \
+      --enable-auto-tool-choice
+  port: 8000
+  api_model: nvidia/Qwen3.6-35B-A3B-NVFP4
+notes: null
