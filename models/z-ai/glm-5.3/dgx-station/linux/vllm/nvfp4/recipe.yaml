@@ -1,0 +1,123 @@
+# SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: LicenseRef-NvidiaProprietary
+#
+# NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
+# property and proprietary rights in and to this material, related
+# documentation and any modifications thereto. Any use, reproduction,
+# disclosure or distribution of this material and related documentation
+# is subject to the Apache 2.0 License
+#
+# Disclaimer: This Local AI Inference Recipes Repo and its recipes are
+# provided for informational purposes only and were created with AI
+# assistance. They must be independently reviewed and validated for
+# accuracy before use. NVIDIA assumes no liability for any use of these
+# recipes or reliance upon them.
+
+schema_version: 4
+title: GLM-5.3 · DGX Station · vLLM
+model: z-ai/glm-5.3
+hardware: dgx-station
+platform:
+  os: linux
+  execution: container
+backend: vllm
+backend_version: v0.30.0
+status: experimental
+prerequisites:
+  - One DGX Station with one GB300, at least 500 GiB of free disk space, at least 250 GiB of free host memory, and no competing workload.
+  - Docker access with permission to run a privileged container and select the GB300 by UUID.
+limitations:
+  - Validated only on one DGX Station with one GB300 using the pinned ARM64 vLLM image and immutable checkpoint revision shown below.
+  - The checkpoint does not fit in one GB300; about 224 GiB of routed-expert weights stay in host memory and are read over C2C, so decode is bandwidth-bound (about 30 tokens/s for one user).
+  - Context is capped at 131,072 tokens.
+  - The container runs privileged so it can clear the host page cache before vLLM starts.
+precision:
+  label: NVFP4
+checkpoint:
+  target: https://huggingface.co/nvidia/GLM-5.3-NVFP4
+  target_label: nvidia/GLM-5.3-NVFP4
+  draft: null
+  draft_label: null
+spec_dec: mtp
+concurrency: 16
+topology:
+  summary: 1× DGX Station with 1× GB300; tensor parallel 1; UVA offload of routed-expert weights
+  gpu_count: 1
+  node_count: 1
+  tensor_parallel_size: 1
+sampling: null
+security: Evaluation configuration only. Host networking exposes vLLM on host interfaces; use a firewall or reverse proxy, a scoped read-only HF token, and an isolated cache. The container runs privileged and writes to `/proc/sys/vm/drop_caches`; review this requirement before use. For production, pin tested image, model, and code revisions.
+runtime:
+  kind: container
+  label: Container (ARM64)
+  image: vllm/vllm-openai:v0.30.0-aarch64
+  image_url: https://hub.docker.com/r/vllm/vllm-openai/tags?name=v0.30.0-aarch64
+  setup_label: Download checkpoint
+  setup_target: single-node
+  setup_instructions: Use Bash and replace the host-path placeholders. The checkpoint download is pinned to the validated immutable revision.
+  setup_command: |
+    set -euo pipefail
+
+    IMG=vllm/vllm-openai:v0.30.0-aarch64
+    MODEL_REPO=nvidia/GLM-5.3-NVFP4
+    MODEL_REV=e3b8f9f2fad29727dfa95e766c5cac18ea1414bf
+    MODEL_HOST="<model-host-path>"
+    CACHE_HOST="<cache-host-path>"
+
+    mkdir -p "$MODEL_HOST" "$CACHE_HOST"
+    docker run --rm --network host \
+      -v "$MODEL_HOST:/model" --entrypoint bash "$IMG" -lc \
+      "exec hf download '$MODEL_REPO' --revision '$MODEL_REV' --local-dir /model"
+
+    test "$(find "$MODEL_HOST" -maxdepth 1 \
+      -name 'model-*-of-00050.safetensors' | wc -l)" = 50
+serve:
+  label: Start TP=1 with UVA expert offload and MTP
+  target: single-node
+  instructions: Use Bash, replace the host-path placeholders with the same values used during setup, and run on an otherwise idle station. Startup takes about 6 minutes; the first requests compile kernels and run slowly.
+  command: |
+    set -euo pipefail
+
+    IMG=vllm/vllm-openai:v0.30.0-aarch64
+    MODEL_REPO=nvidia/GLM-5.3-NVFP4
+    MODEL_HOST="<model-host-path>"
+    CACHE_HOST="<cache-host-path>"
+    CONTAINER=glm53-single
+    PORT=8000
+
+    GPU_UUID=$(nvidia-smi --query-gpu=uuid,name --format=csv,noheader | \
+      awk -F, '$2 ~ /GB300/ {gsub(/ /,"",$1); print $1; exit}')
+    test -n "$GPU_UUID"
+
+    docker rm -f "$CONTAINER" >/dev/null 2>&1 || true
+    docker run -d --name "$CONTAINER" \
+      --gpus device="$GPU_UUID" --network host --ipc host --shm-size 32g \
+      --privileged --ulimit memlock=-1 --ulimit stack=67108864 \
+      -v "$MODEL_HOST:/model:ro" -v "$CACHE_HOST:/root/.cache" \
+      -e MODEL_REPO="$MODEL_REPO" -e PORT="$PORT" \
+      -e SPEC_CONFIG='{"method":"mtp","num_speculative_tokens":4}' \
+      -e KERNEL_CONFIG='{"enable_flashinfer_autotune":false,"moe_backend":"flashinfer_cutlass"}' \
+      -e COMPILE_CONFIG='{"cudagraph_mode":"FULL_DECODE_ONLY","cudagraph_capture_sizes":[5,10,20,40,80]}' \
+      -e VLLM_USE_V2_MODEL_RUNNER=1 \
+      -e VLLM_WEIGHT_OFFLOADING_DISABLE_PIN_MEMORY=1 \
+      -e VLLM_EXECUTE_MODEL_TIMEOUT_SECONDS=3600 \
+      -e HF_HUB_OFFLINE=1 -e TRANSFORMERS_OFFLINE=1 \
+      --entrypoint bash "$IMG" -lc '
+        set -euo pipefail
+        sync
+        echo 3 > /proc/sys/vm/drop_caches
+        exec vllm serve /model \
+          --served-model-name "$MODEL_REPO" --host 0.0.0.0 --port "$PORT" \
+          --tensor-parallel-size 1 --trust-remote-code \
+          --gpu-memory-utilization 0.95 --kv-cache-dtype fp8_e4m3 \
+          --max-model-len 131072 --max-num-batched-tokens 8192 --max-num-seqs 16 \
+          --enable-prefix-caching \
+          --offload-backend uva --cpu-offload-gb 222 \
+          --cpu-offload-params w13_weight w2_weight \
+          --speculative-config "$SPEC_CONFIG" --max-cudagraph-capture-size 80 \
+          --reasoning-parser glm47 --tool-call-parser glm47 --enable-auto-tool-choice \
+          --kernel-config "$KERNEL_CONFIG" --compilation-config "$COMPILE_CONFIG"
+      '
+  port: 8000
+  api_model: nvidia/GLM-5.3-NVFP4
+notes: 'Keep `cudagraph_mode: FULL_DECODE_ONLY` and the `flashinfer_cutlass` MoE backend: with the vLLM defaults (piecewise graphs, autotuned MoE kernel, V1 model runner) this checkpoint produced repeated-comma output on this image. GLM-5.3 always thinks; clients set the budget with `"chat_template_kwargs": {"reasoning_effort": "low" | "high" | "max"}`.'

@@ -1,0 +1,109 @@
+# SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: LicenseRef-NvidiaProprietary
+#
+# NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
+# property and proprietary rights in and to this material, related
+# documentation and any modifications thereto. Any use, reproduction,
+# disclosure or distribution of this material and related documentation
+# is subject to the Apache 2.0 License
+#
+# Disclaimer: This Local AI Inference Recipes Repo and its recipes are
+# provided for informational purposes only and were created with AI
+# assistance. They must be independently reviewed and validated for
+# accuracy before use. NVIDIA assumes no liability for any use of these
+# recipes or reliance upon them.
+
+# Create this file only for measured results.
+#
+# schema_version: 2 additionally allows a profile below to declare
+# profiles[].harnesses when its one, reconciled result was produced by
+# running more than one benchmark tool together. The site auto-generates a
+# "Steps to reproduce" disclosure per harness in the list when it recognizes
+# the pairing -- e.g. prefill/decode throughput from AIPerf against
+# SPEED-Bench's `qualitative` dataset config, and E2E latency from
+# agentperf-local (github.com/ArtificialAnalysis/aa-agentperf-local):
+#
+# profiles:
+#   - id: agentic-e2e
+#     harnesses:
+#       - name: aiperf
+#         version: <exact aiperf version>
+#       - name: agentperf-local
+#         version: <exact agentperf-local commit/tag>
+#     workload:
+#       dataset: nvidia/SPEED-Bench
+#       profile: qualitative
+#       output_tokens: <integer>
+#       concurrency: <integer>
+#       requests: <integer>
+#       warmup_requests: <integer>
+#     results:
+#       prefill_tokens_per_second_mean: <from the AIPerf qualitative run>
+#       decode_tokens_per_second_mean: <from the AIPerf qualitative run>
+#       e2e_latency_ms_mean: <from agentperf-local's summary.json>
+#
+# Every profile without `harnesses` (the only shape schema_version 1 allows)
+# still uses the single harness declared below.
+schema_version: 1
+status: optimized             # omit for measured qualitative/coding results on an experimental recipe
+recipe_sha256: <sha256 of sibling recipe.yaml text normalized to LF line endings>
+launch_id: default             # or a launch.id / launch.alternatives[].id from recipe.yaml
+measured_at: <YYYY-MM-DD>
+# evidence: <optional for any status; if supplied it must be public; never shown on the site>
+
+harness:
+  name: <benchmark tool>
+  version: <exact version>    # use "not recorded (manual run)" only if that is all the source records
+
+system:
+  label: <exact measured system>
+  accelerator: <exact GPU or SoC>
+  accelerator_count: <integer>
+  operating_system: <linux | windows>
+  # os_version: <exact operating-system version/build, or exact recorded OS/architecture if the build was not emitted>
+  # driver_version: <exact accelerator driver version>
+  # cuda_version: <exact CUDA toolkit version>
+
+software:
+  model_revision: <40- or 64-character checkpoint commit>
+  # backend_version: <exact backend release or build matching recipe.yaml; required for llama.cpp, e.g. b10505>
+  runtime_revision: <container sha256 digest or 40-/64-character backend commit>
+
+profiles:
+  - id: interactive
+    workload:
+      input_tokens: <nominal configured input-token length, or null for variable input>
+      # Record the context used by the measured run, especially when the
+      # current recipe advertises a different supported context.
+      # context_tokens: <measured context size>
+      # For mixed-length workloads, identify the source/profile and record the
+      # observed token distribution without replacing nominal input_tokens.
+      # Include all three observed token fields together or omit all three:
+      # dataset: <exact dataset identifier>
+      # profile: <exact dataset or harness profile>
+      # category: <exact selected category; required with dataset/profile when input_tokens is null>
+      # Native SPEED-Bench qualitative/coding summaries average conversation
+      # rates. Preserve that basis, and distinguish conversations from HTTP turns:
+      # conversations: <measured conversation count>
+      # throughput_aggregation: conversation
+      # input_tokens_min: <minimum observed input tokens>
+      # input_tokens_max: <maximum observed input tokens>
+      # input_tokens_total: <total observed input tokens>
+      output_tokens: <integer>
+      concurrency: <integer>
+      requests: <measured HTTP request/turn count>
+      # For a qualitative/coding conversation summary only, use requests: null
+      # if its HTTP turn count was not recorded. Never substitute conversations.
+      warmup_requests: <integer>
+    results:
+      # Retain only metrics produced by the evidence. Never estimate values.
+      ttft_ms_p50: <number>
+      decode_tokens_per_second_p50: <number>
+      # Optional result fields; uncomment only when measured:
+      # ttft_ms_p95: <number>
+      # prefill_tokens_per_second_mean: <number>
+      # decode_tokens_per_second_mean: <number>
+      # aggregate_output_tokens_per_second: <number>
+      # e2e_latency_ms_mean: <number, or null when not measured; coding E2E awaits AA>
+      # e2e_latency_ms_p50: <number>
+      # peak_gpu_memory_gb_max: <number>

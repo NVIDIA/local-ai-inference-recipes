@@ -1,0 +1,71 @@
+# SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: LicenseRef-NvidiaProprietary
+#
+# NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
+# property and proprietary rights in and to this material, related
+# documentation and any modifications thereto. Any use, reproduction,
+# disclosure or distribution of this material and related documentation
+# is subject to the Apache 2.0 License
+#
+# Disclaimer: This Local AI Inference Recipes Repo and its recipes are
+# provided for informational purposes only and were created with AI
+# assistance. They must be independently reviewed and validated for
+# accuracy before use. NVIDIA assumes no liability for any use of these
+# recipes or reliance upon them.
+
+schema_version: 4
+title: "Muse Glimmer 30B (Vision) · RTX Spark · 24GB · Q4_K_M · DFlash"
+model: meta/muse-glimmer-30b
+hardware: rtx-spark
+platform:
+  os: windows
+  execution: native
+backend: llama-cpp
+backend_version: "b11236"
+backend_min_version: "b11236"
+min_vidmem_gb: 24
+variant: vision-dflash
+spec_dec: dflash
+status: experimental
+prerequisites:
+  - "A CUDA-enabled Windows ARM64 llama.cpp build b11236, source commit f1ea206218210afb913ae2f5d2c51faed35915da, with llama-server.exe on PATH."
+  - "Network access for llama-server to download and cache the named Hugging Face checkpoint files."
+limitations: null
+precision:
+  label: Q4_K_M
+checkpoint:
+  target: https://huggingface.co/meta-models/Muse-Glimmer-30B-GGUF/blob/main/Muse-Glimmer-30B-KQuant-17GB-Q4_K_M.gguf
+  target_label: "meta-models/Muse-Glimmer-30B-GGUF/Muse-Glimmer-30B-KQuant-17GB-Q4_K_M.gguf"
+  draft: https://huggingface.co/meta-models/Muse-Glimmer-30B-GGUF/blob/main/dflash-Muse-Glimmer-30B-Q4_K_M.gguf
+  draft_label: "meta-models/Muse-Glimmer-30B-GGUF/dflash-Muse-Glimmer-30B-Q4_K_M.gguf"
+concurrency: 1
+topology: null
+sampling: "Target backend sampling: OFF; speculative draft backend sampling: OFF; --temp=1.0; --top-p=0.95; --top-k=64"
+security: null
+runtime: null
+serve:
+  label: "Launch DFlash · n=15"
+  target: single-node
+  instructions: "Run in PowerShell with llama-server.exe on PATH. llama-server downloads and caches the named target and draft files from Hugging Face. The omitted load-mode flag retains default mmap behavior."
+  command: |
+    llama-server.exe -hf "meta-models/Muse-Glimmer-30B-GGUF" `
+      -hff "Muse-Glimmer-30B-KQuant-17GB-Q4_K_M.gguf" `
+      --mmproj-url "https://huggingface.co/meta-models/Muse-Glimmer-30B-GGUF/resolve/70bf1b61ac09f91b24d39038091b41c582bc5d7a/mmproj-Muse-Glimmer-30B-Q4_K_M.gguf" `
+      --host 127.0.0.1 `
+      --port 9931 `
+      --batch-size 2048 `
+      --ubatch-size 512 `
+      --ctx-size 131072 `
+      --parallel 1 `
+      -ngl 999 `
+      --spec-type draft-dflash `
+      --spec-draft-n-max 15 `
+      -hfrd "meta-models/Muse-Glimmer-30B-GGUF" `
+      --spec-draft-model "dflash-Muse-Glimmer-30B-Q4_K_M.gguf" `
+      --no-spec-draft-backend-sampling `
+      --temp 1.0 `
+      --top-p 0.95 `
+      --top-k 64
+  port: 9931
+  api_model: meta-models/Muse-Glimmer-30B-GGUF
+notes: "Projector: [mmproj-Muse-Glimmer-30B-Q4_K_M.gguf](https://huggingface.co/meta-models/Muse-Glimmer-30B-GGUF/blob/70bf1b61ac09f91b24d39038091b41c582bc5d7a/mmproj-Muse-Glimmer-30B-Q4_K_M.gguf)."

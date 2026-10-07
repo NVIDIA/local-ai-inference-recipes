@@ -1,0 +1,91 @@
+# SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: LicenseRef-NvidiaProprietary
+#
+# NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
+# property and proprietary rights in and to this material, related
+# documentation and any modifications thereto. Any use, reproduction,
+# disclosure or distribution of this material and related documentation
+# is subject to the Apache 2.0 License
+#
+# Disclaimer: This Local AI Inference Recipes Repo and its recipes are
+# provided for informational purposes only and were created with AI
+# assistance. They must be independently reviewed and validated for
+# accuracy before use. NVIDIA assumes no liability for any use of these
+# recipes or reliance upon them.
+
+schema_version: 4
+title: GLM-5.3-Flash · DGX Station · vLLM
+model: z-ai/glm-5.3-flash
+hardware: dgx-station
+platform:
+  os: linux
+  execution: container
+backend: vllm
+backend_version: v0.30.0
+status: experimental
+variant: mtp
+spec_dec: mtp
+prerequisites:
+  - One DGX Station with a GB300 and about 200 GB of free disk for the checkpoint.
+  - Docker with the NVIDIA container runtime and permission to select the GB300 by UUID.
+limitations:
+  - Validated with the RedHatAI checkpoint only. On this image, nvidia/GLM-5.3-Flash-NVFP4 fails to load its MTP draft layer (MoE weight shape mismatch) and serves only without `--speculative-config`.
+precision:
+  label: NVFP4
+checkpoint:
+  target: https://huggingface.co/RedHatAI/GLM-5.3-Flash-NVFP4
+  target_label: RedHatAI/GLM-5.3-Flash-NVFP4
+  draft: null
+  draft_label: null
+concurrency: 32
+topology:
+  summary: 1× DGX Station; tensor parallel 1
+  gpu_count: 1
+  node_count: 1
+  tensor_parallel_size: 1
+sampling: null
+security: Evaluation configuration only. Host networking exposes vLLM on host interfaces; use a firewall or reverse proxy, a scoped read-only HF token, and an isolated cache. For production, pin tested image, model, and code revisions.
+runtime:
+  kind: container
+  label: Container (ARM64)
+  image: vllm/vllm-openai:v0.30.0-aarch64
+  image_url: https://hub.docker.com/r/vllm/vllm-openai/tags?name=v0.30.0-aarch64
+  setup_label: Start container
+  setup_target: single-node
+  setup_instructions: Set `HF_TOKEN` in the host environment (optional; the checkpoint is public). The DGX Station also carries an auxiliary display GPU, so the container is pinned to the GB300 by UUID.
+  setup_command: |
+    GPU_UUID=$(nvidia-smi --query-gpu=uuid,name --format=csv,noheader | \
+      awk -F, '$2 ~ /GB300/ {gsub(/ /,"",$1); print $1; exit}')
+    test -n "$GPU_UUID"
+
+    docker run --privileged --rm -it \
+      --gpus device="$GPU_UUID" \
+      --ipc host \
+      --network host \
+      --shm-size=16g \
+      --ulimit memlock=-1 \
+      --ulimit stack=67108864 \
+      -e HF_TOKEN=$HF_TOKEN \
+      -v ~/.cache/huggingface:/root/.cache/huggingface \
+      --entrypoint /bin/bash \
+      vllm/vllm-openai:v0.30.0-aarch64
+serve:
+  label: Launch
+  target: single-node
+  instructions: First launch downloads 198 GB to ~/.cache/huggingface.
+  command: |
+    hf download RedHatAI/GLM-5.3-Flash-NVFP4 --revision 18d55bfd5a2194887738da73753975c9d3842f46 --local-dir /root/.cache/huggingface/GLM-5.3-Flash-NVFP4
+    export HF_HUB_OFFLINE=1
+
+    vllm serve /root/.cache/huggingface/GLM-5.3-Flash-NVFP4 \
+      --served-model-name RedHatAI/GLM-5.3-Flash-NVFP4 \
+      --tensor-parallel-size 1 \
+      --max-num-seqs 32 \
+      --max-num-batched-tokens 8192 \
+      --tool-call-parser glm47 \
+      --enable-auto-tool-choice \
+      --reasoning-parser glm45 \
+      --speculative-config '{"method":"mtp","num_speculative_tokens":5}'
+  port: 8000
+  api_model: RedHatAI/GLM-5.3-Flash-NVFP4
+notes: 'Serves the full 1,048,576-token context with the default GPU memory utilization and BF16 KV cache (about 1.9M KV tokens on a GB300). Thinking is on by default; send `"chat_template_kwargs": {"enable_thinking": false}` to disable it. With MTP, at most 23 requests run concurrently at `--max-num-seqs 32`; above about 20 users, drop `--speculative-config` and raise `--max-num-seqs`. Startup takes about 6 minutes with the weights cached.'

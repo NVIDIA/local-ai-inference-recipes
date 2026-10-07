@@ -1,0 +1,81 @@
+# SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: LicenseRef-NvidiaProprietary
+#
+# NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
+# property and proprietary rights in and to this material, related
+# documentation and any modifications thereto. Any use, reproduction,
+# disclosure or distribution of this material and related documentation
+# is subject to the Apache 2.0 License
+#
+# Disclaimer: This Local AI Inference Recipes Repo and its recipes are
+# provided for informational purposes only and were created with AI
+# assistance. They must be independently reviewed and validated for
+# accuracy before use. NVIDIA assumes no liability for any use of these
+# recipes or reliance upon them.
+
+schema_version: 4
+title: "Qwen3.8-27B (Vision) · RTX PRO 6000 · 48GB · Q4_K_M · DFlash"
+model: qwen/qwen3.8-27b
+hardware: rtx-pro
+platform:
+  os: windows
+  execution: native
+backend: llama-cpp
+backend_version: "b11425"
+backend_min_version: "b10746"
+min_vidmem_gb: 38
+variant: vision-dflash2
+spec_dec: dflash2
+status: optimized
+prerequisites:
+  - "A CUDA-enabled Windows x86-64 llama.cpp build b11425, source commit e117148a41d8e9bedb72e4c6c3f003ab0fe7f857, with llama-server.exe on PATH."
+  - "Network access for llama-server to download and cache the named Hugging Face checkpoint files."
+limitations: null
+validation:
+  validated_at: 2026-10-05
+  validated_by: jagrits
+  tested_stack:
+    os_version: "Windows x86_64"
+    driver: "610.88"
+    cuda: "13.3"
+precision:
+  label: Q4_K_M
+checkpoint:
+  target: https://huggingface.co/unsloth/Qwen3.8-27B-GGUF/blob/main/Qwen3.8-27B-UD-Q4_K_M.gguf
+  target_label: "unsloth/Qwen3.8-27B-GGUF/Qwen3.8-27B-UD-Q4_K_M.gguf"
+  draft: https://huggingface.co/incoai/Qwen3.8-27B-DFlash2-GGUF/blob/main/Qwen3.8-27B-DFlash2-Q4_K_M.gguf
+  draft_label: "incoai/Qwen3.8-27B-DFlash2-GGUF/Qwen3.8-27B-DFlash2-Q4_K_M.gguf"
+concurrency: 1
+topology: null
+sampling: "Target backend sampling: OFF; speculative draft backend sampling: ON; --temp=1.0; --top-p=0.95; --top-k=20; --min-p=0.0; --presence-penalty=0.0; --repeat-penalty=1.0"
+security: null
+runtime: null
+serve:
+  label: "Launch DFlash · n=7"
+  target: single-node
+  instructions: "Run in PowerShell with llama-server.exe on PATH. llama-server downloads and caches the named target, draft, and projector files from Hugging Face. The omitted load-mode flag retains default mmap behavior."
+  command: |
+    llama-server.exe -hf "unsloth/Qwen3.8-27B-GGUF" `
+      -hff "Qwen3.8-27B-UD-Q4_K_M.gguf" `
+      --mmproj-url "https://huggingface.co/unsloth/Qwen3.8-27B-GGUF/resolve/4ca720788d1e01f1bff70c033e0d0028fd02e502/mmproj-F16.gguf" `
+      --host 127.0.0.1 `
+      --port 9931 `
+      --batch-size 4096 `
+      --ubatch-size 1024 `
+      --ctx-size 262144 `
+      --parallel 1 `
+      -ngl 999 `
+      --spec-type draft-dflash `
+      --spec-draft-n-max 7 `
+      -hfrd "incoai/Qwen3.8-27B-DFlash2-GGUF" `
+      --spec-draft-model "Qwen3.8-27B-DFlash2-Q4_K_M.gguf" `
+      --spec-draft-backend-sampling `
+      --temp 1.0 `
+      --top-p 0.95 `
+      --top-k 20 `
+      --min-p 0.0 `
+      --presence-penalty 0.0 `
+      --repeat-penalty 1.0
+  port: 9931
+  api_model: unsloth/Qwen3.8-27B-GGUF
+notes: "Projector: [mmproj-F16.gguf](https://huggingface.co/unsloth/Qwen3.8-27B-GGUF/blob/4ca720788d1e01f1bff70c033e0d0028fd02e502/mmproj-F16.gguf)."

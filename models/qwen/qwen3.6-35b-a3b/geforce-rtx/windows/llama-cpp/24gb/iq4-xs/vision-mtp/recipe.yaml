@@ -1,0 +1,79 @@
+# SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: LicenseRef-NvidiaProprietary
+#
+# NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
+# property and proprietary rights in and to this material, related
+# documentation and any modifications thereto. Any use, reproduction,
+# disclosure or distribution of this material and related documentation
+# is subject to the Apache 2.0 License
+#
+# Disclaimer: This Local AI Inference Recipes Repo and its recipes are
+# provided for informational purposes only and were created with AI
+# assistance. They must be independently reviewed and validated for
+# accuracy before use. NVIDIA assumes no liability for any use of these
+# recipes or reliance upon them.
+
+schema_version: 4
+title: "Qwen3.6-35B-A3B (Vision) · NVIDIA GeForce RTX 5090 · 24GB · IQ4_XS · MTP"
+model: qwen/qwen3.6-35b-a3b
+hardware: geforce-rtx
+platform:
+  os: windows
+  execution: native
+backend: llama-cpp
+backend_version: "b11425"
+backend_min_version: "b11256"
+min_vidmem_gb: 24
+variant: vision-mtp
+spec_dec: mtp
+status: optimized
+prerequisites:
+  - "A CUDA-enabled Windows x86-64 llama.cpp build b11425, source commit e117148a41d8e9bedb72e4c6c3f003ab0fe7f857, with llama-server.exe on PATH."
+  - "Network access for llama-server to download and cache the named Hugging Face checkpoint and projector."
+limitations: null
+validation:
+  validated_at: 2026-10-05
+  validated_by: jagrits
+  tested_stack:
+    os_version: "Windows x86_64"
+    driver: "610.88"
+    cuda: "13.3"
+precision:
+  label: IQ4_XS
+checkpoint:
+  target: https://huggingface.co/unsloth/Qwen3.6-35B-A3B-MTP-GGUF/blob/main/Qwen3.6-35B-A3B-UD-IQ4_XS.gguf
+  target_label: "unsloth/Qwen3.6-35B-A3B-MTP-GGUF/Qwen3.6-35B-A3B-UD-IQ4_XS.gguf"
+  draft: null
+  draft_label: null
+concurrency: 1
+topology: null
+sampling: "Target backend sampling: OFF; speculative draft backend sampling: ON; --temp=1.0; --top-p=0.95; --top-k=20; --min-p=0.0; --presence-penalty=0.0; --repeat-penalty=1.0"
+security: null
+runtime: null
+serve:
+  label: "Launch MTP · n=2"
+  target: single-node
+  instructions: "Run in PowerShell with llama-server.exe on PATH. llama-server downloads and caches the named target and projector GGUFs from Hugging Face."
+  command: |
+    llama-server.exe -hf "unsloth/Qwen3.6-35B-A3B-MTP-GGUF" `
+      -hff "Qwen3.6-35B-A3B-UD-IQ4_XS.gguf" `
+      --mmproj-url "https://huggingface.co/unsloth/Qwen3.6-35B-A3B-MTP-GGUF/resolve/5bc3e238d916f48a861bac2f8a1990a0e9b7e98d/mmproj-F16.gguf" `
+      --host 127.0.0.1 `
+      --port 9931 `
+      --batch-size 4096 `
+      --ubatch-size 1024 `
+      --ctx-size 164864 `
+      --parallel 1 `
+      -ngl 999 `
+      --spec-type draft-mtp `
+      --spec-draft-n-max 2 `
+      --spec-draft-backend-sampling `
+      --temp 1.0 `
+      --top-p 0.95 `
+      --top-k 20 `
+      --min-p 0.0 `
+      --presence-penalty 0.0 `
+      --repeat-penalty 1.0
+  port: 9931
+  api_model: unsloth/Qwen3.6-35B-A3B-MTP-GGUF
+notes: "Projector: [mmproj-F16.gguf](https://huggingface.co/unsloth/Qwen3.6-35B-A3B-MTP-GGUF/blob/5bc3e238d916f48a861bac2f8a1990a0e9b7e98d/mmproj-F16.gguf)."

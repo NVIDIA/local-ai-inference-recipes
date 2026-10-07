@@ -1,0 +1,202 @@
+# SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: LicenseRef-NvidiaProprietary
+#
+# NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
+# property and proprietary rights in and to this material, related
+# documentation and any modifications thereto. Any use, reproduction,
+# disclosure or distribution of this material and related documentation
+# is subject to the Apache 2.0 License
+#
+# Disclaimer: This Local AI Inference Recipes Repo and its recipes are
+# provided for informational purposes only and were created with AI
+# assistance. They must be independently reviewed and validated for
+# accuracy before use. NVIDIA assumes no liability for any use of these
+# recipes or reliance upon them.
+
+schema_version: 4
+title: NVIDIA Nemotron 3 Ultra 550B A55B · 2× DGX Station · vLLM · PP2
+model: nvidia/nemotron-3-ultra-550b-a55b
+hardware: dgx-station-2gpu
+platform:
+  os: linux
+  execution: container
+backend: vllm
+backend_version: v0.25.1
+backend_min_version: v0.25.1
+variant: pp2
+status: experimental
+prerequisites:
+  - Two DGX Stations with one NVIDIA GB300 each and ConnectX-8 RDMA connectivity.
+  - The target checkpoint is pre-downloaded under MODEL_ROOT on both nodes.
+  - Docker, curl, registry, PyPI, and GitHub access are available during setup.
+  - Set ROLE, HEAD_IP, WORKER_IP, NCCL_SOCKET_IFACE, GPU_UUID, and MODEL_ROOT on each node.
+limitations:
+  - Configured for pipeline parallel 2 and tensor parallel 1 across exactly two nodes.
+  - Requires Ray 2.56.0 and the pinned vLLM warmup backport downloaded during setup on both nodes.
+  - No measured performance manifest is published for this exact configuration.
+precision:
+  label: NVFP4
+checkpoint:
+  target: https://huggingface.co/nvidia/NVIDIA-Nemotron-3-Ultra-550B-A55B-NVFP4
+  target_label: nvidia/NVIDIA-Nemotron-3-Ultra-550B-A55B-NVFP4
+  draft: null
+  draft_label: null
+concurrency: 256
+topology:
+  summary: 2× DGX Station; pipeline parallel 2, tensor parallel 1
+  gpu_count: 2
+  node_count: 2
+  tensor_parallel_size: 1
+  pipeline_parallel_size: 2
+sampling: null
+security: Evaluation configuration only. Host networking exposes vLLM on host interfaces; use a firewall or reverse proxy, a scoped read-only HF token, and an isolated cache. For production, pin tested image, model, and code revisions.
+runtime:
+  kind: container
+  label: ARM64 container with pinned warmup backport
+  image: vllm/vllm-openai:v0.25.1-aarch64
+  image_url: https://hub.docker.com/r/vllm/vllm-openai/tags?name=v0.25.1-aarch64
+  setup_label: Prepare both nodes
+  setup_target: all-nodes
+  setup_instructions: Run in Bash on both nodes after exporting the required role-specific variables. MODEL_ROOT must be the local Hugging Face cache root containing the checkpoint. Setup downloads and checksum-verifies the pinned warmup patch from GitHub.
+  setup_command: |
+    set -euo pipefail
+
+    : "${ROLE:?set ROLE to head or worker}"
+    : "${HEAD_IP:?set HEAD_IP to the head-node ConnectX-8 address}"
+    : "${WORKER_IP:?set WORKER_IP to the worker-node ConnectX-8 address}"
+    : "${NCCL_SOCKET_IFACE:?set NCCL_SOCKET_IFACE to the bootstrap interface}"
+    : "${GPU_UUID:?set GPU_UUID to the local GB300 UUID}"
+    : "${MODEL_ROOT:?set MODEL_ROOT to the local Hugging Face cache root}"
+
+    CTR=nemo-ray
+    IMG=vllm/vllm-openai:v0.25.1-aarch64
+    MODEL=nvidia/NVIDIA-Nemotron-3-Ultra-550B-A55B-NVFP4
+    RAY_VERSION=2.56.0
+    AIPERF_VERSION=0.11.0
+    VLLM_WARMUP_PATCH_SHA256=e9f181d3b6957fccad0f92c270caa0e6a32277de6a0b62ec43788aafe4f6c701
+
+    PATCH=$(mktemp /tmp/vllm-pr48363.XXXXXX)
+    trap 'rm -f "$PATCH"' EXIT
+    curl -fL --retry 3 --connect-timeout 15 --max-time 120 \
+      https://github.com/vllm-project/vllm/commit/c65ba6aa8ffe9fa6719c5dcdda747b59d7d32520.patch \
+      -o "$PATCH"
+    printf '%s  %s\n' "$VLLM_WARMUP_PATCH_SHA256" "$PATCH" | sha256sum -c -
+
+    case "$ROLE" in
+      head) VLLM_HOST_IP=$HEAD_IP ;;
+      worker) VLLM_HOST_IP=$WORKER_IP ;;
+      *) echo 'ROLE must be head or worker' >&2; exit 1 ;;
+    esac
+
+    test -d "$MODEL_ROOT/hub/models--nvidia--NVIDIA-Nemotron-3-Ultra-550B-A55B-NVFP4"
+    nvidia-smi --query-gpu=name,uuid --format=csv,noheader | grep -F 'NVIDIA GB300'
+    for HCA in mlx5_0 mlx5_1; do
+      NDEV=$(cat "/sys/class/infiniband/$HCA/ports/1/gid_attrs/ndevs/3")
+      echo "$HCA -> $NDEV"
+    done
+
+    docker run -d --name "$CTR" --network host --shm-size 16g \
+      --gpus device="$GPU_UUID" \
+      --device=/dev/infiniband/uverbs0 --device=/dev/infiniband/uverbs1 --ulimit memlock=-1 \
+      -e VLLM_HOST_IP="$VLLM_HOST_IP" \
+      -e VLLM_USE_RAY_V2_EXECUTOR_BACKEND=1 \
+      -e NCCL_IB_HCA=mlx5_0,mlx5_1 -e NCCL_IB_GID_INDEX=3 -e NCCL_IB_TC=106 \
+      -e NCCL_NET_GDR_LEVEL=PHB -e NCCL_SOCKET_IFNAME="$NCCL_SOCKET_IFACE" \
+      -e NCCL_IB_QPS_PER_CONNECTION=4 -e NCCL_IB_PCI_RELAXED_ORDERING=1 \
+      -e HF_HOME=/models/huggingface \
+      -e HF_HUB_OFFLINE=1 -e TRANSFORMERS_OFFLINE=1 \
+      -v "$MODEL_ROOT:/models/huggingface" \
+      --entrypoint sleep "$IMG" infinity
+
+    docker exec "$CTR" pip install --break-system-packages "ray==$RAY_VERSION"
+    docker exec "$CTR" python3 -c \
+      "import ray; assert ray.__version__ == '$RAY_VERSION'; print('ray', ray.__version__)"
+
+    if test "$ROLE" = head; then
+      docker exec "$CTR" pip install --break-system-packages --ignore-installed \
+        'blinker==1.9.0' "aiperf==$AIPERF_VERSION"
+      docker exec "$CTR" python3 -c \
+        "import importlib.metadata as m; assert m.version('aiperf') == '$AIPERF_VERSION'; print('aiperf='+m.version('aiperf'))"
+    fi
+
+    docker cp "$PATCH" "$CTR":/tmp/vllm-pr48363.patch
+    docker exec "$CTR" bash -c '
+      set -euo pipefail
+      SITE=/usr/local/lib/python3.12/dist-packages
+      patch --batch --forward --fuzz=0 --dry-run -d "$SITE" -p1 \
+        < /tmp/vllm-pr48363.patch
+      patch --batch --forward --fuzz=0 -d "$SITE" -p1 \
+        < /tmp/vllm-pr48363.patch
+    '
+    docker exec "$CTR" python3 -c \
+      "from vllm.model_executor.warmup.hybrid_mamba_warmup import hybrid_mamba_triton_warmup; print('PR48363_READY')"
+serve:
+  label: Start PP2 head
+  target: head
+  instructions: Start this head command and then run the worker command on the second node. The head waits for both Ray GPUs before launching vLLM.
+  command: |
+    set -euo pipefail
+
+    : "${HEAD_IP:?set HEAD_IP to the head-node ConnectX-8 address}"
+    CTR=nemo-ray
+    MODEL=nvidia/NVIDIA-Nemotron-3-Ultra-550B-A55B-NVFP4
+
+    docker exec -d "$CTR" ray start --head \
+      --node-ip-address="$HEAD_IP" --port=6379 --num-gpus=1 --block
+
+    for _ in $(seq 1 120); do
+      docker exec "$CTR" ray status 2>/dev/null | grep -F '2.0 GPU' && break
+      sleep 2
+    done
+    docker exec "$CTR" ray status | grep -F '2.0 GPU'
+
+    docker exec -d "$CTR" bash -c "
+      exec env VLLM_EXECUTE_MODEL_TIMEOUT_SECONDS=3600 \
+        vllm serve '$MODEL' \
+        --served-model-name nemotron-ultra --host 0.0.0.0 --port 8000 --trust-remote-code \
+        --tensor-parallel-size 1 --pipeline-parallel-size 2 --distributed-executor-backend ray \
+        --kv-cache-dtype fp8 --max-model-len 40960 --enable-prefix-caching \
+        --gpu-memory-utilization 0.9 --max-num-seqs 256 \
+        --distributed-timeout-seconds 600 \
+        > /tmp/vllm_serve.log 2>&1
+    "
+
+    HEALTHY=0
+    for _ in $(seq 1 120); do
+      if docker exec "$CTR" curl -fsS --max-time 3 http://127.0.0.1:8000/health \
+          >/dev/null 2>&1; then
+        echo 'vLLM READY'
+        HEALTHY=1
+        break
+      fi
+      if ! docker exec "$CTR" pgrep -f '[v]llm serve' >/dev/null 2>&1; then
+        docker exec "$CTR" tail -n 100 /tmp/vllm_serve.log
+        echo 'vLLM exited during startup' >&2
+        exit 1
+      fi
+      sleep 10
+    done
+    if test "$HEALTHY" != 1; then
+      docker exec "$CTR" tail -n 100 /tmp/vllm_serve.log
+      echo 'vLLM health check timed out' >&2
+      exit 1
+    fi
+  additional_commands:
+    - id: worker
+      label: Join PP2 worker
+      target: workers
+      instructions: Run after the head Ray process has started.
+      command: |
+        set -euo pipefail
+
+        : "${HEAD_IP:?set HEAD_IP to the head-node ConnectX-8 address}"
+        : "${WORKER_IP:?set WORKER_IP to the worker-node ConnectX-8 address}"
+        CTR=nemo-ray
+
+        docker exec -d "$CTR" ray start --address="$HEAD_IP:6379" \
+          --node-ip-address="$WORKER_IP" --num-gpus=1 \
+          --object-store-memory=8589934592 --block
+  port: 8000
+  api_model: nemotron-ultra
+  api_base: http://127.0.0.1:8000
+notes: NCCL_SOCKET_IFACE is the bootstrap interface; RDMA traffic uses mlx5_0 and mlx5_1 with RoCE v2 GID index 3. Do not install ray[cgraph] for this PP2 recipe because that extra installs CUDA libraries not used by RayExecutorV2.

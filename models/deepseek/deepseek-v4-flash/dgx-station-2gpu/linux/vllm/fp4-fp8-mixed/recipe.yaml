@@ -1,0 +1,177 @@
+# SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: LicenseRef-NvidiaProprietary
+#
+# NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
+# property and proprietary rights in and to this material, related
+# documentation and any modifications thereto. Any use, reproduction,
+# disclosure or distribution of this material and related documentation
+# is subject to the Apache 2.0 License
+#
+# Disclaimer: This Local AI Inference Recipes Repo and its recipes are
+# provided for informational purposes only and were created with AI
+# assistance. They must be independently reviewed and validated for
+# accuracy before use. NVIDIA assumes no liability for any use of these
+# recipes or reliance upon them.
+
+schema_version: 4
+title: DeepSeek-V4-Flash · 2× DGX Station · vLLM
+model: deepseek/deepseek-v4-flash
+hardware: dgx-station-2gpu
+platform:
+  os: linux
+  execution: container
+backend: vllm
+backend_version: v0.27.1
+status: experimental
+prerequisites:
+  - Two DGX Stations with one GB300 each and both ConnectX-8 RoCE links configured between the nodes.
+  - A local copy of deepseek-ai/DeepSeek-V4-Flash at the configured checkpoint path on both nodes.
+  - Docker configured for NVIDIA GPU and InfiniBand device passthrough on both nodes.
+limitations:
+  - Validated only on two DGX Stations with one GB300 per node using both ConnectX-8 RoCE links.
+  - MTP K=3 was faster than no MTP only at BS1 on the synthetic 2K-input/1K-output workload; for maximum throughput at BS4 or higher, remove `--speculative-config` and remeasure on the target corpus.
+precision:
+  label: FP4 + FP8 Mixed
+checkpoint:
+  target: https://huggingface.co/deepseek-ai/DeepSeek-V4-Flash
+  target_label: deepseek-ai/DeepSeek-V4-Flash
+  draft: null
+  draft_label: null
+spec_dec: mtp
+concurrency: 16
+topology:
+  summary: 2× DGX Station; one GB300 and one node rank per station; tensor parallel 2
+  gpu_count: 2
+  node_count: 2
+  tensor_parallel_size: 2
+  pipeline_parallel_size: 1
+sampling: null
+security: Evaluation configuration only. Host networking exposes vLLM on host interfaces; use a firewall or reverse proxy, a scoped read-only HF token, and an isolated cache. For production, pin tested image, model, and code revisions.
+runtime:
+  kind: container
+  label: Stock vLLM container
+  image: vllm/vllm-openai:v0.27.1
+  image_url: https://hub.docker.com/r/vllm/vllm-openai/tags?name=v0.27.1
+  setup_label: Verify nodes and start container
+  setup_target: all-nodes
+  setup_instructions: Run in Bash on both nodes. Replace every angle-bracketed value; set `NODE_ROLE` to `head` on the head and `worker` on the worker. The checkpoint and cache directories must already exist on both nodes.
+  setup_command: |
+    set -euo pipefail
+
+    HEAD_IP="<head-rdma-ip>"
+    WORKER_IP="<worker-rdma-ip>"
+    RDMA_IFACE="<rdma-interface>"
+    GID_INDEX=3
+    IMG=vllm/vllm-openai:v0.27.1
+    MODEL_HOST="<local-checkpoint-path>"
+    VLLM_CACHE_HOST="<vllm-cache-path>"
+    FLASHINFER_CACHE_HOST="<flashinfer-cache-path>"
+    TRITON_CACHE_HOST="<triton-cache-path>"
+    NODE_ROLE="<head-or-worker>"
+
+    GPU_UUID=$(nvidia-smi --query-gpu=uuid,name --format=csv,noheader | \
+      awk -F, '$2 ~ /GB300/ {gsub(/ /,"",$1); print $1; exit}')
+    test -n "$GPU_UUID"
+    test -f "$MODEL_HOST/config.json"
+
+    for HCA in mlx5_0 mlx5_1; do
+      test "$(cat /sys/class/infiniband/$HCA/ports/1/gid_attrs/types/$GID_INDEX)" = 'RoCE v2'
+      cat /sys/class/infiniband/$HCA/ports/1/gid_attrs/ndevs/$GID_INDEX
+    done
+
+    case "$NODE_ROLE" in
+      head)
+        NODE_IP=$HEAD_IP
+        PEER_IP=$WORKER_IP
+        ;;
+      worker)
+        NODE_IP=$WORKER_IP
+        PEER_IP=$HEAD_IP
+        ;;
+      *)
+        echo "Set NODE_ROLE to head or worker" >&2
+        exit 1
+        ;;
+    esac
+
+    ip -4 -br addr show dev "$RDMA_IFACE"
+    ping -c 2 -W 2 "$PEER_IP"
+
+    docker run -d --name dsv4-vllm \
+      --ipc=host --network host --shm-size 64g \
+      --gpus device="$GPU_UUID" \
+      --device=/dev/infiniband:/dev/infiniband --ulimit memlock=-1 \
+      -e VLLM_HOST_IP="$NODE_IP" \
+      -e VLLM_USE_BREAKABLE_CUDAGRAPH=1 -e VLLM_DISABLE_PYNCCL=0 \
+      -e GLOO_SOCKET_IFNAME="$RDMA_IFACE" -e TP_SOCKET_IFNAME="$RDMA_IFACE" \
+      -e NCCL_SOCKET_IFNAME="$RDMA_IFACE" -e NCCL_IB_HCA=mlx5_0,mlx5_1 \
+      -e NCCL_IB_GID_INDEX="$GID_INDEX" -e NCCL_IB_TC=106 \
+      -e NCCL_NET_GDR_LEVEL=PHB -e NCCL_IB_QPS_PER_CONNECTION=4 \
+      -e NCCL_IB_PCI_RELAXED_ORDERING=1 -e NCCL_DEBUG=INFO \
+      -e NCCL_ASYNC_ERROR_HANDLING=1 -e TORCH_NCCL_ASYNC_ERROR_HANDLING=1 \
+      -e TORCH_NCCL_HEARTBEAT_TIMEOUT_SEC=600 -e TORCH_NCCL_BLOCKING_WAIT=0 \
+      -e VLLM_EXECUTE_MODEL_TIMEOUT_SECONDS=3600 \
+      -e HF_HUB_OFFLINE=1 -e TRANSFORMERS_OFFLINE=1 \
+      -v "$MODEL_HOST":/workspace/model:ro \
+      -v "$VLLM_CACHE_HOST":/root/.cache/vllm \
+      -v "$FLASHINFER_CACHE_HOST":/root/.cache/flashinfer \
+      -v "$TRITON_CACHE_HOST":/root/.triton \
+      --entrypoint sleep "$IMG" infinity
+
+    docker exec dsv4-vllm nvidia-smi -L
+serve:
+  label: Launch head
+  target: head
+  instructions: Start the worker command first. Then launch the head and wait for the health endpoint before sending requests.
+  command: |
+    HEAD_IP="<head-rdma-ip>"
+
+    docker exec -d dsv4-vllm bash -lc "
+    exec vllm serve /workspace/model \
+      --served-model-name deepseek-v4-flash \
+      --host 0.0.0.0 --port 8000 --disable-uvicorn-access-log \
+      --tokenizer-mode deepseek_v4 --trust-remote-code \
+      --enable-auto-tool-choice --tool-call-parser deepseek_v4 --reasoning-parser deepseek_v4 \
+      --tensor-parallel-size 2 --pipeline-parallel-size 1 \
+      --distributed-executor-backend mp \
+      --nnodes 2 --node-rank 0 --master-addr $HEAD_IP --master-port 29502 \
+      --distributed-timeout-seconds 600 \
+      --kv-cache-dtype fp8 --block-size 256 \
+      --max-model-len 65536 --enable-prefix-caching \
+      --gpu-memory-utilization 0.92 --max-num-batched-tokens 8192 --max-num-seqs 16 \
+      --speculative-config '{\"method\":\"mtp\",\"num_speculative_tokens\":3}' \
+      --compilation-config '{\"cudagraph_mode\":\"FULL_AND_PIECEWISE\",\"custom_ops\":[\"all\"]}' \
+      --attention-config '{\"use_fp4_indexer_cache\":true,\"indexer_kv_dtype\":\"bf16\"}' \
+      --max-cudagraph-capture-size 128 \
+      > /tmp/vllm_serve.log 2>&1
+    "
+  port: 8000
+  api_model: deepseek-v4-flash
+  additional_commands:
+    - id: worker
+      label: Launch worker first
+      target: workers
+      instructions: Replace the head IP placeholder with the same value used on both nodes, then run this command before launching the head.
+      command: |
+        HEAD_IP="<head-rdma-ip>"
+
+        docker exec -d dsv4-vllm bash -lc "
+        exec vllm serve /workspace/model \
+          --served-model-name deepseek-v4-flash \
+          --host 0.0.0.0 --port 8000 --disable-uvicorn-access-log \
+          --tokenizer-mode deepseek_v4 --trust-remote-code \
+          --enable-auto-tool-choice --tool-call-parser deepseek_v4 --reasoning-parser deepseek_v4 \
+          --tensor-parallel-size 2 --pipeline-parallel-size 1 \
+          --distributed-executor-backend mp \
+          --nnodes 2 --node-rank 1 --master-addr $HEAD_IP --master-port 29502 --headless \
+          --distributed-timeout-seconds 600 \
+          --kv-cache-dtype fp8 --block-size 256 \
+          --max-model-len 65536 --enable-prefix-caching \
+          --gpu-memory-utilization 0.92 --max-num-batched-tokens 8192 --max-num-seqs 16 \
+          --speculative-config '{\"method\":\"mtp\",\"num_speculative_tokens\":3}' \
+          --compilation-config '{\"cudagraph_mode\":\"FULL_AND_PIECEWISE\",\"custom_ops\":[\"all\"]}' \
+          --attention-config '{\"use_fp4_indexer_cache\":true,\"indexer_kv_dtype\":\"bf16\"}' \
+          --max-cudagraph-capture-size 128 \
+          > /tmp/vllm_serve.log 2>&1
+        "
+notes: "Use both ConnectX-8 RoCE links and start the worker before the head. No vLLM patch is required; do not apply PR #48877 for this model."

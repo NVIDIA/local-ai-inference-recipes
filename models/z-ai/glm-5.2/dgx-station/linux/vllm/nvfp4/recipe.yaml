@@ -1,0 +1,122 @@
+# SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: LicenseRef-NvidiaProprietary
+#
+# NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
+# property and proprietary rights in and to this material, related
+# documentation and any modifications thereto. Any use, reproduction,
+# disclosure or distribution of this material and related documentation
+# is subject to the Apache 2.0 License
+#
+# Disclaimer: This Local AI Inference Recipes Repo and its recipes are
+# provided for informational purposes only and were created with AI
+# assistance. They must be independently reviewed and validated for
+# accuracy before use. NVIDIA assumes no liability for any use of these
+# recipes or reliance upon them.
+
+schema_version: 4
+title: GLM-5.2 · DGX Station · vLLM
+model: z-ai/glm-5.2
+hardware: dgx-station
+platform:
+  os: linux
+  execution: container
+backend: vllm
+backend_version: v0.25.1
+status: experimental
+prerequisites:
+  - One DGX Station with one GB300, at least 500 GiB of free disk space, and no competing workload.
+  - Docker access with permission to run a privileged container and select the GB300 by UUID.
+limitations:
+  - Validated only on one DGX Station with one GB300 using the pinned ARM64 vLLM image and immutable checkpoint revision shown below.
+  - The container runs privileged so it can clear the host page cache before vLLM starts.
+precision:
+  label: NVFP4
+checkpoint:
+  target: https://huggingface.co/nvidia/GLM-5.2-NVFP4
+  target_label: nvidia/GLM-5.2-NVFP4
+  draft: null
+  draft_label: null
+spec_dec: mtp
+concurrency: 16
+topology:
+  summary: 1× DGX Station with 1× GB300; tensor parallel 1; UVA parameter offload
+  gpu_count: 1
+  node_count: 1
+  tensor_parallel_size: 1
+sampling: null
+security: Evaluation configuration only. Host networking exposes vLLM on host interfaces; use a firewall or reverse proxy, a scoped read-only HF token, and an isolated cache. The container runs privileged and writes to `/proc/sys/vm/drop_caches`; review this requirement before use. For production, pin tested image, model, and code revisions.
+runtime:
+  kind: container
+  label: Container (ARM64)
+  image: vllm/vllm-openai:v0.25.1-aarch64
+  image_url: https://hub.docker.com/r/vllm/vllm-openai/tags?name=v0.25.1-aarch64
+  setup_label: Download checkpoint
+  setup_target: single-node
+  setup_instructions: Use Bash and replace the host-path placeholders. The checkpoint download is pinned to the validated immutable revision.
+  setup_command: |
+    set -euo pipefail
+
+    IMG=vllm/vllm-openai:v0.25.1-aarch64
+    MODEL_REPO=nvidia/GLM-5.2-NVFP4
+    MODEL_REV=aec724e8c7b8ee9db3b48c01c320f63f9cdaf8aa
+    MODEL_HOST="<model-host-path>"
+    CACHE_HOST="<cache-host-path>"
+
+    mkdir -p "$MODEL_HOST" "$CACHE_HOST"
+    docker run --rm --network host \
+      -v "$MODEL_HOST:/model" --entrypoint bash "$IMG" -lc \
+      "exec hf download '$MODEL_REPO' --revision '$MODEL_REV' --local-dir /model"
+
+    test "$(find "$MODEL_HOST" -maxdepth 1 \
+      -name 'model-*-of-00047.safetensors' | wc -l)" = 47
+serve:
+  label: Start TP=1 with UVA offload and MTP
+  target: single-node
+  instructions: Use Bash, replace the host-path placeholders with the same values used during setup, and run on an otherwise idle station.
+  command: |
+    set -euo pipefail
+
+    IMG=vllm/vllm-openai:v0.25.1-aarch64
+    MODEL_REPO=nvidia/GLM-5.2-NVFP4
+    SERVED=glm52
+    MODEL_REV=aec724e8c7b8ee9db3b48c01c320f63f9cdaf8aa
+    MODEL_HOST="<model-host-path>"
+    CACHE_HOST="<cache-host-path>"
+    CONTAINER=glm52-single
+    PORT=8000
+
+    GPU_UUID=$(nvidia-smi --query-gpu=uuid,name --format=csv,noheader | \
+      awk -F, '$2 ~ /GB300/ {gsub(/ /,"",$1); print $1; exit}')
+    test -n "$GPU_UUID"
+
+    docker rm -f "$CONTAINER" >/dev/null 2>&1 || true
+    docker run -d --name "$CONTAINER" \
+      --gpus device="$GPU_UUID" --network host --ipc host --shm-size 32g \
+      --privileged --ulimit memlock=-1 --ulimit stack=67108864 \
+      -v "$MODEL_HOST:/model:ro" -v "$CACHE_HOST:/root/.cache" \
+      -e SERVED="$SERVED" -e PORT="$PORT" \
+      -e SPEC_CONFIG='{"method":"mtp","num_speculative_tokens":4}' \
+      -e VLLM_USE_V2_MODEL_RUNNER=0 \
+      -e VLLM_WEIGHT_OFFLOADING_DISABLE_PIN_MEMORY=1 \
+      -e VLLM_FLASHINFER_AUTOTUNE_CACHE_DIR=/root/.cache/glm52-autotune \
+      -e VLLM_EXECUTE_MODEL_TIMEOUT_SECONDS=3600 \
+      -e HF_HUB_OFFLINE=1 -e TRANSFORMERS_OFFLINE=1 \
+      --entrypoint bash "$IMG" -lc '
+        set -euo pipefail
+        sync
+        echo 3 > /proc/sys/vm/drop_caches
+        exec vllm serve /model \
+          --served-model-name "$SERVED" --host 0.0.0.0 --port "$PORT" \
+          --tensor-parallel-size 1 --trust-remote-code \
+          --gpu-memory-utilization 0.97 --kv-cache-dtype fp8_e4m3 \
+          --max-model-len 262144 --max-num-seqs 16 \
+          --max-cudagraph-capture-size 80 --enable-prefix-caching \
+          --offload-backend uva --cpu-offload-gb 222 \
+          --cpu-offload-params w13_weight w2_weight \
+          --speculative-config "$SPEC_CONFIG" \
+          --reasoning-parser glm45 --tool-call-parser glm47 \
+          --enable-auto-tool-choice
+      '
+  port: 8000
+  api_model: glm52
+notes: Cold startup takes about 38 minutes.

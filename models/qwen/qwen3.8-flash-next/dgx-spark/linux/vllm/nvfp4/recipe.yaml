@@ -1,0 +1,120 @@
+# SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: LicenseRef-NvidiaProprietary
+#
+# NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
+# property and proprietary rights in and to this material, related
+# documentation and any modifications thereto. Any use, reproduction,
+# disclosure or distribution of this material and related documentation
+# is subject to the Apache 2.0 License
+#
+# Disclaimer: This Local AI Inference Recipes Repo and its recipes are
+# provided for informational purposes only and were created with AI
+# assistance. They must be independently reviewed and validated for
+# accuracy before use. NVIDIA assumes no liability for any use of these
+# recipes or reliance upon them.
+
+schema_version: 4
+title: Qwen3.8-Flash-Next · DGX Spark · vLLM
+model: qwen/qwen3.8-flash-next
+hardware: dgx-spark
+platform:
+  os: linux
+  execution: container
+backend: vllm
+min_vidmem_gb: 128
+status: experimental
+
+limitations:
+  - The source requires the custom B12x container image.
+
+precision:
+  label: NVFP4
+checkpoint:
+  target: https://huggingface.co/local-inference-lab/Qwen3.8-Flash-Next-NVFP4
+  target_label: local-inference-lab/Qwen3.8-Flash-Next-NVFP4
+  draft: null
+  draft_label: null
+spec_dec: mtp
+concurrency: 8
+topology:
+  summary: 1× DGX Spark
+  gpu_count: 1
+  node_count: 1
+  tensor_parallel_size: 1
+sampling: null
+security: Evaluation configuration only. Host networking exposes vLLM on host interfaces; use a firewall or reverse proxy, a scoped read-only HF token, and an isolated cache. For production, pin tested image, model, and code revisions.
+runtime:
+  kind: container
+  label: Container (community, mutable, ARM64, custom B12x)
+  image: eugr/spark-vllm-b12x:latest
+  image_url: https://hub.docker.com/r/eugr/spark-vllm-b12x/tags?name=latest
+  setup_label: Start container
+  setup_target: single-node
+  setup_instructions: Set `HF_TOKEN` in the host environment.
+  setup_command: |
+    mkdir -p $HOME/.cache/huggingface $HOME/.cache/vllm $HOME/.cache/flashinfer $HOME/.triton $HOME/.cache/b12x
+
+    docker run --rm -it \
+      --gpus all \
+      --ipc host \
+      --network host \
+      --shm-size=16g \
+      --ulimit memlock=-1 \
+      --ulimit stack=67108864 \
+      --security-opt seccomp=unconfined \
+      --security-opt apparmor=unconfined \
+      -e HF_TOKEN=$HF_TOKEN \
+      -v ~/.cache/huggingface:/root/.cache/huggingface \
+      -v $HOME/.cache/vllm:/root/.cache/vllm \
+      -v $HOME/.cache/flashinfer:/root/.cache/flashinfer \
+      -v $HOME/.triton:/root/.triton \
+      -v $HOME/.cache/b12x:/root/.cache/b12x \
+      --entrypoint /bin/bash \
+      eugr/spark-vllm-b12x:latest
+serve:
+  label: Launch
+  target: single-node
+  instructions: null
+  command: |
+    export VLLM_PLE_TABLE_MEMORY="disk"
+    export CUTE_DSL_ARCH="sm_121a"
+    export SAFETENSORS_FAST_GPU="1"
+    export VLLM_WORKER_MULTIPROC_METHOD="spawn"
+    export VLLM_SSM_CONV_STATE_LAYOUT="DS"
+    export VLLM_USE_AOT_COMPILE="1"
+    export VLLM_USE_MEGA_AOT_ARTIFACT="1"
+    export VLLM_USE_V2_MODEL_RUNNER="1"
+    export B12X_POLICY_MODE="auto"
+    export VLLM_MXFP8_LM_HEAD="1"
+    export VLLM_B12X_MOE_FP4_LAYER_MAX_INPUT_SCALE="w13"
+
+    vllm serve local-inference-lab/Qwen3.8-Flash-Next-NVFP4 \
+      --host 0.0.0.0 \
+      --port 8000 \
+      --tensor-parallel-size 1 \
+      --pipeline-parallel-size 1 \
+      --mamba-cache-mode align \
+      --enable-prefix-caching \
+      --enable-chunked-prefill \
+      --dtype bfloat16 \
+      --kv-cache-dtype fp8 \
+      --quantization modelopt_mixed \
+      --block-size 16 \
+      --load-format b12x \
+      --max-model-len 262144 \
+      --max-num-seqs 8 \
+      --max-num-batched-tokens 4096 \
+      --speculative-config '{"method":"mtp","num_speculative_tokens":4}' \
+      --gdn-decode-kernel b12x \
+      --linear-backend b12x \
+      --moe-backend b12x \
+      --no-enable-flashinfer-autotune \
+      --mm-encoder-tp-mode data \
+      --reasoning-parser qwen3 \
+      --tool-call-parser qwen3_xml \
+      --enable-auto-tool-choice \
+      --compilation-config '{"pass_config":{"fuse_act_quant":true}}' \
+      --gpu-memory-utilization 0.8
+  port: 8000
+  api_model: local-inference-lab/Qwen3.8-Flash-Next-NVFP4
+notes: null

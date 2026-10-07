@@ -1,0 +1,24 @@
+# SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: LicenseRef-NvidiaProprietary
+#
+# NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
+# property and proprietary rights in and to this material, related
+# documentation and any modifications thereto. Any use, reproduction,
+# disclosure or distribution of this material and related documentation
+# is subject to the Apache 2.0 License
+#
+# Disclaimer: This Local AI Inference Recipes Repo and its recipes are
+# provided for informational purposes only and were created with AI
+# assistance. They must be independently reviewed and validated for
+# accuracy before use. NVIDIA assumes no liability for any use of these
+# recipes or reliance upon them.
+
+schema_version: 1
+id: llama-cpp
+display_name: llama.cpp
+protocol: openai-compatible
+upstream: https://github.com/ggml-org/llama.cpp
+notes: >
+  Served with llama-server, which exposes an OpenAI-compatible API. Recipes use GGUF
+  checkpoints and name the exact GGUF file; split checkpoints point to the first shard.
+  Native launch recipes are supported on Linux and Windows.

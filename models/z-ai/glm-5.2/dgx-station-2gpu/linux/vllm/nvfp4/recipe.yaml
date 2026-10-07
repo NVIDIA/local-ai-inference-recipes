@@ -1,0 +1,315 @@
+# SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: LicenseRef-NvidiaProprietary
+#
+# NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
+# property and proprietary rights in and to this material, related
+# documentation and any modifications thereto. Any use, reproduction,
+# disclosure or distribution of this material and related documentation
+# is subject to the Apache 2.0 License
+#
+# Disclaimer: This Local AI Inference Recipes Repo and its recipes are
+# provided for informational purposes only and were created with AI
+# assistance. They must be independently reviewed and validated for
+# accuracy before use. NVIDIA assumes no liability for any use of these
+# recipes or reliance upon them.
+
+schema_version: 4
+title: GLM-5.2 · 2× DGX Station · vLLM
+model: z-ai/glm-5.2
+hardware: dgx-station-2gpu
+platform:
+  os: linux
+  execution: container
+backend: vllm
+backend_version: v0.25.1
+status: experimental
+prerequisites:
+  - Two DGX Stations with one GB300 each connected over one 400 Gb/s ConnectX-8 RoCE v2 rail.
+  - Docker access on both nodes with permission to select the GB300 by UUID and expose `/dev/infiniband`.
+  - NetworkManager, ethtool, show_gids, rsync, and passwordless SSH from the head to the worker RoCE address.
+limitations:
+  - Validated only on two DGX Stations with one GB300 per node over one 400 Gb/s ConnectX-8 RoCE v2 rail.
+  - The setup configures a persistent NetworkManager profile named `cx8-rail1` and requires jumbo frames with MTU 9000.
+precision:
+  label: NVFP4
+checkpoint:
+  target: https://huggingface.co/nvidia/GLM-5.2-NVFP4
+  target_label: nvidia/GLM-5.2-NVFP4
+  draft: null
+  draft_label: null
+spec_dec: mtp
+concurrency: 16
+topology:
+  summary: 2× DGX Station with 1× GB300 each; one node rank per station; tensor parallel 2 over one 400 Gb/s ConnectX-8 RoCE v2 rail
+  gpu_count: 2
+  node_count: 2
+  tensor_parallel_size: 2
+  pipeline_parallel_size: 1
+sampling: null
+security: Evaluation configuration only. Host networking exposes vLLM on host interfaces; use a firewall or reverse proxy, a scoped read-only HF token, and isolated model storage. The launch exposes `/dev/infiniband`, installs a pinned NCCL wheel when each container starts, and modifies persistent host networking with sudo; review these requirements before use. For production, pin tested image, model, and code revisions.
+runtime:
+  kind: container
+  label: Container (ARM64)
+  image: vllm/vllm-openai:v0.25.1-aarch64
+  image_url: https://hub.docker.com/r/vllm/vllm-openai/tags?name=v0.25.1-aarch64
+  setup_label: Configure nodes and replicate checkpoint
+  setup_target: all-nodes
+  setup_instructions: Use Bash and replace every placeholder. Set `NTP_HOST` only when the NTP route needs correction. Start it on the worker with `NODE_ROLE=worker`; the worker waits up to six hours for the replicated checkpoint unless `MODEL_WAIT_TIMEOUT_SECONDS` is overridden. Then run it on the head with `NODE_ROLE=head`; the head downloads and replicates the checkpoint. Passwordless SSH to the worker RoCE address is required.
+  setup_command: |
+    set -euo pipefail
+
+    HEAD_IP="<head-roce-ip>"
+    WORKER_IP="<worker-roce-ip>"
+    RAIL_IFACE="<roce-interface>"
+    RAIL_HCA="<roce-hca>"
+
+    IMG=vllm/vllm-openai:v0.25.1-aarch64
+    MODEL_REPO=nvidia/GLM-5.2-NVFP4
+    MODEL_REV=aec724e8c7b8ee9db3b48c01c320f63f9cdaf8aa
+    MODEL_HOST="<model-host-path>"
+    CONTAINER=glm52-full
+    PORT=8000
+
+    NODE_ROLE="<head-or-worker>"
+    case "$NODE_ROLE" in
+      head)
+        NODE_IP=$HEAD_IP
+        PEER_IP=$WORKER_IP
+        ;;
+      worker)
+        NODE_IP=$WORKER_IP
+        PEER_IP=$HEAD_IP
+        ;;
+      *)
+        echo "NODE_ROLE must be head or worker" >&2
+        exit 1
+        ;;
+    esac
+
+    if nmcli -t -f NAME connection show | grep -Fxq cx8-rail1; then
+      sudo nmcli connection modify cx8-rail1 \
+        connection.interface-name "$RAIL_IFACE" connection.autoconnect yes \
+        ipv4.method manual ipv4.addresses "$NODE_IP/24" ipv4.never-default yes \
+        ipv6.method disabled 802-3-ethernet.mtu 9000
+    else
+      sudo nmcli connection add type ethernet ifname "$RAIL_IFACE" con-name cx8-rail1 \
+        connection.autoconnect yes ipv4.method manual ipv4.addresses "$NODE_IP/24" \
+        ipv4.never-default yes ipv6.method disabled 802-3-ethernet.mtu 9000
+    fi
+    sudo nmcli connection up cx8-rail1
+
+    test "$(cat /sys/class/net/$RAIL_IFACE/mtu)" = 9000
+    ethtool "$RAIL_IFACE" | grep -q 'Speed: 400000Mb/s'
+    ethtool "$RAIL_IFACE" | grep -q 'Link detected: yes'
+    ping -I "$RAIL_IFACE" -M do -s 8972 -c 3 "$PEER_IP"
+
+    GID_INDEX=$(/usr/sbin/show_gids 2>/dev/null | \
+      awk -v d="$RAIL_HCA" -v ip="$NODE_IP" \
+        '$1==d && $5==ip && $6=="v2" {gid=$3} END {if (gid!="") print gid}')
+    test -n "$GID_INDEX"
+    echo "$RAIL_HCA $NODE_IP GID_INDEX=$GID_INDEX"
+
+    for c in port_rcv_errors port_xmit_discards symbol_error link_error_recovery link_downed; do
+      test "$(cat /sys/class/infiniband/$RAIL_HCA/ports/1/counters/$c)" = 0
+    done
+
+    NTP_HOST=${NTP_HOST:-}
+    if [ -n "$NTP_HOST" ] && \
+       NTP_IP=$(getent ahostsv4 "$NTP_HOST" 2>/dev/null | awk 'NR==1 {print $1}') && \
+       [ -n "$NTP_IP" ] && \
+       ip route get "$NTP_IP" | head -1 | grep -q 'dev docker0'; then
+      MGMT_IFACE=$(ip route show default | awk 'NR==1 {print $5}')
+      MGMT_GW=$(ip route show default | awk 'NR==1 {print $3}')
+      MGMT_CON=$(nmcli -g GENERAL.CONNECTION device show "$MGMT_IFACE")
+      sudo ip route replace "$NTP_IP/32" via "$MGMT_GW" dev "$MGMT_IFACE"
+      nmcli -g ipv4.routes connection show "$MGMT_CON" | grep -q "$NTP_IP/32" || \
+        sudo nmcli connection modify "$MGMT_CON" +ipv4.routes "$NTP_IP/32 $MGMT_GW"
+      sudo systemctl restart systemd-timesyncd
+    fi
+    test "$(timedatectl show -p NTPSynchronized --value)" = yes
+
+    if [ "$NODE_ROLE" = head ]; then
+      mkdir -p "$MODEL_HOST"
+      docker run --rm --network host \
+        -v "$MODEL_HOST:/model" --entrypoint bash "$IMG" -lc \
+        "exec hf download '$MODEL_REPO' --revision '$MODEL_REV' --local-dir /model"
+
+      ssh "$WORKER_IP" "mkdir -p '$MODEL_HOST'"
+      rsync -aH --info=progress2 --exclude '.cache/' \
+        "$MODEL_HOST/" "$WORKER_IP:$MODEL_HOST/"
+
+      LOCAL_MANIFEST=$(find "$MODEL_HOST" -path '*/.cache' -prune -o \
+        -type f -printf '%P %s\n' | sort | sha256sum | awk '{print $1}')
+      REMOTE_MANIFEST=$(ssh "$WORKER_IP" "find '$MODEL_HOST' -path '*/.cache' -prune -o \
+        -type f -printf '%P %s\\n' | sort | sha256sum" | awk '{print $1}')
+      test "$LOCAL_MANIFEST" = "$REMOTE_MANIFEST"
+      test "$(find "$MODEL_HOST" -maxdepth 1 -name 'model-*-of-00047.safetensors' | wc -l)" = 47
+      echo "MODEL_READY $LOCAL_MANIFEST"
+    else
+      mkdir -p "$MODEL_HOST"
+      MODEL_WAIT_TIMEOUT_SECONDS=${MODEL_WAIT_TIMEOUT_SECONDS:-21600}
+      test "$MODEL_WAIT_TIMEOUT_SECONDS" -gt 0
+      MODEL_WAIT_DEADLINE=$((SECONDS + MODEL_WAIT_TIMEOUT_SECONDS))
+      NEXT_PROGRESS=$SECONDS
+      while :; do
+        SHARD_COUNT=$(find "$MODEL_HOST" -maxdepth 1 \
+          -name 'model-*-of-00047.safetensors' | wc -l)
+        if test "$SHARD_COUNT" = 47; then
+          break
+        fi
+        if (( SECONDS >= MODEL_WAIT_DEADLINE )); then
+          echo "Timed out after ${MODEL_WAIT_TIMEOUT_SECONDS} seconds waiting for model replication; found $SHARD_COUNT/47 shards in $MODEL_HOST" >&2
+          find "$MODEL_HOST" -maxdepth 1 -name 'model-*.safetensors' \
+            -printf '  %f\n' | sort >&2
+          exit 1
+        fi
+        if (( SECONDS >= NEXT_PROGRESS )); then
+          echo "Waiting for model replication: $SHARD_COUNT/47 shards"
+          NEXT_PROGRESS=$((SECONDS + 60))
+        fi
+        sleep 10
+      done
+      test "$(find "$MODEL_HOST" -maxdepth 1 -name 'model-*-of-00047.safetensors' | wc -l)" = 47
+      echo "MODEL_READY"
+    fi
+serve:
+  label: Launch head
+  target: head
+  instructions: Run after the worker launch reports its container ID. Replace the RoCE, HCA, and model-path placeholders with the same values used during setup.
+  command: |
+    set -euo pipefail
+
+    HEAD_IP="<head-roce-ip>"
+    RAIL_IFACE="<roce-interface>"
+    RAIL_HCA="<roce-hca>"
+    IMG=vllm/vllm-openai:v0.25.1-aarch64
+    SERVED=glm52
+    MODEL_HOST="<model-host-path>"
+    CONTAINER=glm52-full
+    PORT=8000
+
+    GPU_UUID=$(nvidia-smi --query-gpu=uuid,name --format=csv,noheader | \
+      awk -F, '$2 ~ /GB300/ {gsub(/ /,"",$1); print $1; exit}')
+    test -n "$GPU_UUID"
+
+    RANK=0
+    NODE_IP=$HEAD_IP
+
+    GID_INDEX=$(/usr/sbin/show_gids 2>/dev/null | \
+      awk -v d="$RAIL_HCA" -v ip="$NODE_IP" \
+        '$1==d && $5==ip && $6=="v2" {gid=$3} END {if (gid!="") print gid}')
+    test -n "$GID_INDEX"
+
+    SPEC_CONFIG='{"method":"mtp","num_speculative_tokens":4}'
+    KERNEL_CONFIG='{"enable_flashinfer_autotune":false,"moe_backend":"flashinfer_cutlass"}'
+    COMPILE_CONFIG='{"cudagraph_mode":"FULL_DECODE_ONLY","cudagraph_capture_sizes":[5,10,20,40,80],"pass_config":{"fuse_allreduce_rms":false}}'
+
+    docker rm -f "$CONTAINER" >/dev/null 2>&1 || true
+    docker run -d --name "$CONTAINER" \
+      --gpus device="$GPU_UUID" --network host --ipc host --shm-size 32g \
+      --device /dev/infiniband --cap-add IPC_LOCK \
+      --ulimit memlock=-1 --ulimit stack=67108864 \
+      -v "$MODEL_HOST:/model:ro" \
+      -e RANK="$RANK" \
+      -e MASTER_ADDR="$HEAD_IP" -e SERVED="$SERVED" -e PORT="$PORT" \
+      -e SPEC_CONFIG="$SPEC_CONFIG" -e KERNEL_CONFIG="$KERNEL_CONFIG" \
+      -e COMPILE_CONFIG="$COMPILE_CONFIG" \
+      -e NCCL_CUMEM_ENABLE=1 -e NCCL_IB_HCA="$RAIL_HCA" \
+      -e NCCL_IB_GID_INDEX="$GID_INDEX" \
+      -e NCCL_SOCKET_IFNAME="$RAIL_IFACE" -e GLOO_SOCKET_IFNAME="$RAIL_IFACE" \
+      -e NCCL_NET_GDR_LEVEL=5 -e NCCL_DEBUG=INFO -e NCCL_DEBUG_SUBSYS=INIT,NET \
+      -e NCCL_DEBUG_FILE='/tmp/nccl_%h_%p.log' -e VLLM_HOST_IP="$NODE_IP" \
+      -e VLLM_EXECUTE_MODEL_TIMEOUT_SECONDS=1800 \
+      -e PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True \
+      -e VLLM_ALLOW_LONG_MAX_MODEL_LEN=1 -e FLASHINFER_DISABLE_VERSION_CHECK=1 \
+      --entrypoint bash "$IMG" -lc '
+        set -euo pipefail
+        pip install -q --no-deps --force-reinstall nvidia-nccl-cu13==2.30.7
+        export VLLM_NCCL_SO_PATH=$(python3 -c "import nvidia.nccl,os; print(os.path.join(list(nvidia.nccl.__path__)[0], \"lib\", \"libnccl.so.2\"))")
+        test -f "$VLLM_NCCL_SO_PATH"
+        exec vllm serve /model --served-model-name "$SERVED" \
+          --host 0.0.0.0 --port "$PORT" \
+          --nnodes 2 --node-rank "$RANK" --master-addr "$MASTER_ADDR" --master-port 29501 \
+          --tensor-parallel-size 2 \
+          --speculative-config "$SPEC_CONFIG" \
+          --max-model-len 350000 --block-size 128 --max-num-seqs 16 \
+          --trust-remote-code --disable-custom-all-reduce \
+          --kv-cache-dtype fp8 --enable-prefix-caching \
+          --gpu-memory-utilization 0.98 --cpu-offload-gb 0 \
+          --kernel-config "$KERNEL_CONFIG" --compilation-config "$COMPILE_CONFIG" \
+          --enable-auto-tool-choice --tool-call-parser glm47 --reasoning-parser glm47
+      '
+  port: 8000
+  api_model: glm52
+  additional_commands:
+    -
+      id: worker
+      label: Launch worker
+      target: workers
+      instructions: Run first on the worker. Replace the RoCE, HCA, and model-path placeholders with the same values used during setup.
+      command: |
+        set -euo pipefail
+
+        HEAD_IP="<head-roce-ip>"
+        WORKER_IP="<worker-roce-ip>"
+        RAIL_IFACE="<roce-interface>"
+        RAIL_HCA="<roce-hca>"
+        IMG=vllm/vllm-openai:v0.25.1-aarch64
+        SERVED=glm52
+        MODEL_HOST="<model-host-path>"
+        CONTAINER=glm52-full
+        PORT=8000
+
+        GPU_UUID=$(nvidia-smi --query-gpu=uuid,name --format=csv,noheader | \
+          awk -F, '$2 ~ /GB300/ {gsub(/ /,"",$1); print $1; exit}')
+        test -n "$GPU_UUID"
+
+        RANK=1
+        NODE_IP=$WORKER_IP
+
+        GID_INDEX=$(/usr/sbin/show_gids 2>/dev/null | \
+          awk -v d="$RAIL_HCA" -v ip="$NODE_IP" \
+            '$1==d && $5==ip && $6=="v2" {gid=$3} END {if (gid!="") print gid}')
+        test -n "$GID_INDEX"
+
+        SPEC_CONFIG='{"method":"mtp","num_speculative_tokens":4}'
+        KERNEL_CONFIG='{"enable_flashinfer_autotune":false,"moe_backend":"flashinfer_cutlass"}'
+        COMPILE_CONFIG='{"cudagraph_mode":"FULL_DECODE_ONLY","cudagraph_capture_sizes":[5,10,20,40,80],"pass_config":{"fuse_allreduce_rms":false}}'
+
+        docker rm -f "$CONTAINER" >/dev/null 2>&1 || true
+        docker run -d --name "$CONTAINER" \
+          --gpus device="$GPU_UUID" --network host --ipc host --shm-size 32g \
+          --device /dev/infiniband --cap-add IPC_LOCK \
+          --ulimit memlock=-1 --ulimit stack=67108864 \
+          -v "$MODEL_HOST:/model:ro" \
+          -e RANK="$RANK" \
+          -e MASTER_ADDR="$HEAD_IP" -e SERVED="$SERVED" -e PORT="$PORT" \
+          -e SPEC_CONFIG="$SPEC_CONFIG" -e KERNEL_CONFIG="$KERNEL_CONFIG" \
+          -e COMPILE_CONFIG="$COMPILE_CONFIG" \
+          -e NCCL_CUMEM_ENABLE=1 -e NCCL_IB_HCA="$RAIL_HCA" \
+          -e NCCL_IB_GID_INDEX="$GID_INDEX" \
+          -e NCCL_SOCKET_IFNAME="$RAIL_IFACE" -e GLOO_SOCKET_IFNAME="$RAIL_IFACE" \
+          -e NCCL_NET_GDR_LEVEL=5 -e NCCL_DEBUG=INFO -e NCCL_DEBUG_SUBSYS=INIT,NET \
+          -e NCCL_DEBUG_FILE='/tmp/nccl_%h_%p.log' -e VLLM_HOST_IP="$NODE_IP" \
+          -e VLLM_EXECUTE_MODEL_TIMEOUT_SECONDS=1800 \
+          -e PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True \
+          -e VLLM_ALLOW_LONG_MAX_MODEL_LEN=1 -e FLASHINFER_DISABLE_VERSION_CHECK=1 \
+          --entrypoint bash "$IMG" -lc '
+            set -euo pipefail
+            pip install -q --no-deps --force-reinstall nvidia-nccl-cu13==2.30.7
+            export VLLM_NCCL_SO_PATH=$(python3 -c "import nvidia.nccl,os; print(os.path.join(list(nvidia.nccl.__path__)[0], \"lib\", \"libnccl.so.2\"))")
+            test -f "$VLLM_NCCL_SO_PATH"
+            exec vllm serve /model --served-model-name "$SERVED" \
+              --host 0.0.0.0 --port "$PORT" \
+              --nnodes 2 --node-rank "$RANK" --master-addr "$MASTER_ADDR" --master-port 29501 \
+              --tensor-parallel-size 2 \
+              --speculative-config "$SPEC_CONFIG" \
+              --max-model-len 350000 --block-size 128 --max-num-seqs 16 \
+              --trust-remote-code --disable-custom-all-reduce \
+              --kv-cache-dtype fp8 --enable-prefix-caching \
+              --gpu-memory-utilization 0.98 --cpu-offload-gb 0 \
+              --kernel-config "$KERNEL_CONFIG" --compilation-config "$COMPILE_CONFIG" \
+              --enable-auto-tool-choice --tool-call-parser glm47 --reasoning-parser glm47 \
+              --headless
+          '
+notes: Start the worker before the head. The setup requires the same model path on both nodes. Verify both NCCL logs show `NET/IB` or `GDRDMA`, contain the selected HCA, show no `NET/Socket` fallback, and contain no `NCCL WARN` or `NCCL ERROR` entries.

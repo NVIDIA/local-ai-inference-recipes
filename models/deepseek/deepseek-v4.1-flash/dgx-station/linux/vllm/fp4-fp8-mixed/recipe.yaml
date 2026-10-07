@@ -1,0 +1,107 @@
+# SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: LicenseRef-NvidiaProprietary
+#
+# NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
+# property and proprietary rights in and to this material, related
+# documentation and any modifications thereto. Any use, reproduction,
+# disclosure or distribution of this material and related documentation
+# is subject to the Apache 2.0 License
+#
+# Disclaimer: This Local AI Inference Recipes Repo and its recipes are
+# provided for informational purposes only and were created with AI
+# assistance. They must be independently reviewed and validated for
+# accuracy before use. NVIDIA assumes no liability for any use of these
+# recipes or reliance upon them.
+
+schema_version: 4
+title: DeepSeek-V4.1-Flash · DGX Station · vLLM
+model: deepseek/deepseek-v4.1-flash
+hardware: dgx-station
+platform:
+  os: linux
+  execution: container
+backend: vllm
+backend_version: v0.31.0
+status: experimental
+prerequisites:
+  - DGX Station GB300 with 494 GiB host memory and swap enabled; measured startup and serving used up to about 107 GiB of swap (193 GiB configured).
+  - Space for 510 GB (475 GiB) of weights under ~/.cache/huggingface, plus container and compilation caches.
+  - Docker with NVIDIA GPU passthrough; sudo for drop_caches before each start.
+limitations:
+  - Selected for decode throughput at 1 to 4 users with --max-num-seqs 8 and --max-model-len 40960, text only. KV cache is 6.08 GiB (361730 tokens, 8.8 full-length contexts); eight concurrent full-length contexts were not tested.
+  - Coding TTFT p50 is 0.65 s at 1 user and 0.35 s at 4 users. One run per point; no repeated-run variance study.
+  - DSpark speculative decoding was not validated on this image. On the earlier 2026-09-16 nightly, DSpark at 80 GiB offload with 4096 batched tokens reached 89.7 tok/s per user on coding and 68.2 on the 32K-prefix shape at 1 user.
+  - Startup took about 9 minutes with weights on local disk, with MemAvailable at least 83 GiB and swap peaking at about 107 GiB. Cold and warm startup were not isolated; the Docker and drop_caches setup was not exercised verbatim. Earlier builds encountered nvidia_uvm kernel Oops under offload; this run recorded none.
+  - Arithmetic, reasoning/content separation and a tool call passed. Chunked prefill, structured outputs and task-level accuracy parity were not tested.
+  - Throughput includes reasoning tokens; 37 of 64 coding requests reached the 1024-token limit. The 32K-prefix workload uses synthetic tokens and a fixed 256-token output, not an accuracy workload.
+  - Measured 2026-10-05 on one DGX Station with the v0.31.0 ARM64 image and autotune disabled, using Docker. Against the previously pinned 2026-09-16 nightly on the same station, per-user decode ranged from 7% lower (32K prefix, 1 user) to 11% higher (32K prefix, 4 users) and the KV pool is 51% larger.
+precision:
+  label: FP4 + FP8 Mixed
+checkpoint:
+  target: https://huggingface.co/deepseek-ai/DeepSeek-V4.1-Flash
+  target_label: deepseek-ai/DeepSeek-V4.1-Flash
+  draft: null
+  draft_label: null
+concurrency: 8
+topology:
+  summary: 1× DGX Station; tensor parallel 1
+  gpu_count: 1
+  node_count: 1
+  tensor_parallel_size: 1
+sampling: null
+security: Evaluation configuration only. Host networking exposes vLLM on host interfaces; use a firewall or reverse proxy, a scoped read-only HF token, and an isolated cache. The setup step writes to /proc/sys/vm/drop_caches via sudo; review before use. For production, pin tested image, model, and code revisions.
+runtime:
+  kind: container
+  label: Container (ARM64)
+  image: vllm/vllm-openai:v0.31.0-aarch64
+  image_url: https://hub.docker.com/r/vllm/vllm-openai/tags?name=v0.31.0-aarch64
+  setup_label: Start container
+  setup_target: single-node
+  setup_instructions: Run in Bash on a DGX Station GB300 with 494 GiB host memory; startup used about 186 GiB of swap. Allow 510 GB for weights plus container and compilation caches; sudo is required to drop the page cache before launch.
+  setup_command: |
+    GPU_UUID=$(nvidia-smi --query-gpu=uuid,name --format=csv,noheader | \
+      awk -F, '$2 ~ /GB300/ {gsub(/ /,"",$1); print $1; exit}')
+    : "${GPU_UUID:?no GB300 found}"
+
+    docker run --rm \
+      -v ~/.cache/huggingface:/root/.cache/huggingface \
+      --entrypoint hf \
+      vllm/vllm-openai:v0.31.0-aarch64 \
+      download deepseek-ai/DeepSeek-V4.1-Flash --revision dba1be0a40aa45a94ad051997016db3960a90277 --local-dir /root/.cache/huggingface/DeepSeek-V4.1-Flash &&
+    sudo sh -c 'sync; echo 3 > /proc/sys/vm/drop_caches' &&
+
+    docker run --rm -it \
+      --gpus device="${GPU_UUID:?no GB300 found}" \
+      --ipc host \
+      --network host \
+      --shm-size=16g \
+      --ulimit memlock=-1 \
+      --ulimit stack=67108864 \
+      -e VLLM_ENGINE_READY_TIMEOUT_S=3600 \
+      -e VLLM_USE_RUST_FRONTEND=1 \
+      -v ~/.cache/huggingface:/root/.cache/huggingface \
+      -v ~/.cache/vllm:/root/.cache/vllm \
+      -v ~/.cache/flashinfer:/root/.cache/flashinfer \
+      -v ~/.triton:/root/.triton \
+      --entrypoint /bin/bash \
+      vllm/vllm-openai:v0.31.0-aarch64
+serve:
+  label: Launch
+  target: single-node
+  instructions: Measured at 1 to 4 users. The 361730-token KV pool holds about 8.8 full 40960-token contexts.
+  command: |
+    vllm serve /root/.cache/huggingface/DeepSeek-V4.1-Flash \
+      --served-model-name deepseek-v4.1-flash \
+      --host 0.0.0.0 --port 8000 \
+      --tokenizer-mode deepseek_v41 \
+      --max-model-len 40960 \
+      --max-num-seqs 8 \
+      --gpu-memory-utilization 0.97 \
+      --language-model-only \
+      --reasoning-parser deepseek_v41 \
+      --tool-call-parser deepseek_v41 --enable-auto-tool-choice \
+      --cpu-offload-gb 48 \
+      --kernel-config '{"enable_flashinfer_autotune": false}'
+  port: 8000
+  api_model: deepseek-v4.1-flash
+notes: Per-user decode at 1/4 users is 64.5/35.0 tok/s on coding prompts and 67.3/42.2 tok/s on a 32K shared prefix plus 2K unique input and 256 output tokens, temperature 0. Raw logs show 134 measured requests with no errors or preemptions for this configuration.

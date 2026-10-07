@@ -1,0 +1,131 @@
+# SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: LicenseRef-NvidiaProprietary
+#
+# NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
+# property and proprietary rights in and to this material, related
+# documentation and any modifications thereto. Any use, reproduction,
+# disclosure or distribution of this material and related documentation
+# is subject to the Apache 2.0 License
+#
+# Disclaimer: This Local AI Inference Recipes Repo and its recipes are
+# provided for informational purposes only and were created with AI
+# assistance. They must be independently reviewed and validated for
+# accuracy before use. NVIDIA assumes no liability for any use of these
+# recipes or reliance upon them.
+
+schema_version: 4
+title: DeepSeek-V4-Flash-0731 · 2× RTX PRO 6000 · vLLM
+model: deepseek/deepseek-v4-flash-0731
+hardware: rtx-pro-2gpu
+platform:
+  os: linux
+  execution: container
+backend: vllm
+status: experimental
+min_vidmem_gb: 96
+precision:
+  label: FP4 + FP8 Mixed
+checkpoint:
+  target: https://huggingface.co/deepseek-ai/DeepSeek-V4-Flash-0731
+  target_label: deepseek-ai/DeepSeek-V4-Flash-0731
+  draft: null
+  draft_label: null
+concurrency: 8
+topology:
+  summary: 2× RTX PRO 6000; tensor parallel 2
+  gpu_count: 2
+  node_count: 1
+  tensor_parallel_size: 2
+sampling: null
+security: Evaluation configuration only. Host networking exposes vLLM on host interfaces; use a firewall or reverse proxy, a scoped read-only HF token, and an isolated cache. For production, pin tested image, model, and code revisions.
+runtime:
+  kind: container
+  label: Container
+  image: ghcr.io/local-inference-lab/vllm:karmic-kraken-beta
+  image_url: https://github.com/local-inference-lab/blackwell-llm-docker/pkgs/container/vllm
+  setup_label: Start container
+  setup_target: single-node
+  setup_instructions: Set HF_TOKEN in the host environment
+  setup_command: |
+    docker run --rm -it \
+      --gpus all \
+      --ipc host \
+      --network host \
+      --shm-size=16g \
+      --ulimit memlock=-1 \
+      --ulimit stack=67108864 \
+      -e HF_TOKEN=$HF_TOKEN \
+      -v ~/.cache/huggingface:/root/.cache/huggingface \
+      --entrypoint /bin/bash \
+      ghcr.io/local-inference-lab/vllm:karmic-kraken-beta
+serve:
+  label: Launch
+  target: single-node
+  instructions: null
+  command: |
+    export CUDA_DEVICE_ORDER=PCI_BUS_ID
+    export CUTE_DSL_ARCH=sm_120a
+    export HF_HOME=/root/.cache/huggingface
+    export INSTANTTENSOR_BACKEND=URING,AIO
+    export NCCL_BUFFSIZE=2097152
+    export NCCL_IB_DISABLE=1
+    export NCCL_MAX_NCHANNELS=16
+    export NCCL_MIN_NCHANNELS=16
+    export NCCL_NET_PLUGIN=spcx
+    export NCCL_P2P_LEVEL=SYS
+    export NCCL_PROTO=LL,LL128,Simple
+    export OMP_NUM_THREADS=2
+    export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
+    export SAFETENSORS_FAST_GPU=1
+    export VLLM_B12X_MOE_FP4_FORCE_A16=0
+    export VLLM_ENABLE_PCIE_ALLREDUCE=1
+    export VLLM_MEMORY_PROFILER_ESTIMATE_CUDAGRAPHS=1
+    export VLLM_MULTI_STREAM_GEMM_TOKEN_THRESHOLD=1024
+    export VLLM_PCIE_ALLREDUCE_BACKEND=b12x
+    export VLLM_PCIE_ONESHOT_ALLREDUCE_MAX_SIZE=64KB
+    export VLLM_USE_AOT_COMPILE=1
+    export VLLM_USE_BREAKABLE_CUDAGRAPH=0
+    export VLLM_USE_FLASHINFER_SAMPLER=1
+    export VLLM_USE_MEGA_AOT_ARTIFACT=1
+    export VLLM_USE_V2_MODEL_RUNNER=1
+    export VLLM_WORKER_MULTIPROC_METHOD=spawn
+    vllm serve deepseek-ai/DeepSeek-V4-Flash-0731 \
+      --async-scheduling \
+      --attention-backend B12X \
+      --block-size 256 \
+      --revision 9e165c30e2704aec5d9d593cce3eebd58bbef1cb \
+      --code-revision 9e165c30e2704aec5d9d593cce3eebd58bbef1cb \
+      --compilation-config '{"cudagraph_mode":"FULL_AND_PIECEWISE","custom_ops":["all"]}' \
+      --tensor-parallel-size 2 \
+      --decode-context-parallel-size 1 \
+      --default-chat-template-kwargs '{"thinking":true,"reasoning_effort":"high"}' \
+      --dtype bfloat16 \
+      --enable-auto-tool-choice \
+      --enable-chunked-prefill \
+      --enable-flashinfer-autotune \
+      --enable-force-include-usage \
+      --enable-prefix-caching \
+      --enable-prompt-tokens-details \
+      --enable-request-id-headers \
+      --gpu-memory-utilization 0.975 \
+      --host 0.0.0.0 \
+      --kv-cache-dtype fp8 \
+      --load-format instanttensor \
+      --max-cudagraph-capture-size 48 \
+      --max-model-len auto \
+      --max-num-batched-tokens 4096 \
+      --max-num-seqs 8 \
+      --moe-backend b12x \
+      --override-generation-config '{"temperature":1.0,"top_p":0.95}' \
+      --pipeline-parallel-size 1 \
+      --port 8000 \
+      --prefix-cache-retention-interval 4096 \
+      --reasoning-parser deepseek_v4 \
+      --no-scheduler-reserve-full-isl \
+      --tokenizer-mode deepseek_v4 \
+      --tool-call-parser deepseek_v4 \
+      --trust-remote-code \
+      --speculative-config '{"method":"dspark","draft_sample_method":"probabilistic","rejection_sample_method":"standard","num_speculative_tokens":5,"model":"deepseek-ai/DeepSeek-V4-Flash-0731","revision":"9e165c30e2704aec5d9d593cce3eebd58bbef1cb"}'
+  port: 8000
+  api_model: deepseek-ai/DeepSeek-V4-Flash-0731
+notes: null
