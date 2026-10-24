@@ -1,0 +1,112 @@
+# SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: LicenseRef-NvidiaProprietary
+#
+# NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
+# property and proprietary rights in and to this material, related
+# documentation and any modifications thereto. Any use, reproduction,
+# disclosure or distribution of this material and related documentation
+# is subject to the Apache 2.0 License
+#
+# Disclaimer: This Local AI Inference Recipes Repo and its recipes are
+# provided for informational purposes only and were created with AI
+# assistance. They must be independently reviewed and validated for
+# accuracy before use. NVIDIA assumes no liability for any use of these
+# recipes or reliance upon them.
+
+schema_version: 3
+title: NVIDIA Nemotron 3.5 Super VL 120B A12B · DGX Spark · 128GB · vLLM · LiLiCorr
+model: nvidia/nemotron-3.5-super-vl-120b-a12b
+hardware: dgx-spark
+platform:
+  os: linux
+  execution: container
+backend: vllm
+backend_version: 0.32.0rc1.dev227+g1336955f3.d20261015
+status: optimized
+validation:
+  validated_at: '2026-10-15'
+  validated_by: erakhmatulin
+  tested_stack:
+    os_version: Ubuntu 24.04.4 LTS
+    driver: '580.159.03'
+    cuda: '13.0.88'
+min_vidmem_gb: 128
+prerequisites:
+  - A single DGX Spark with 128 GB of memory.
+  - Docker with NVIDIA GPU support and access to the target and draft checkpoints.
+limitations:
+  - Text performance was measured; image and video workloads were not benchmarked.
+precision:
+  label: NVFP4
+checkpoint:
+  target: https://huggingface.co/nvidia/NVIDIA-Nemotron-3.5-Super-VL-120B-A12B-NVFP4
+  target_label: nvidia/NVIDIA-Nemotron-3.5-Super-VL-120B-A12B-NVFP4
+  draft: https://huggingface.co/nvidia/NVIDIA-Nemotron-3.5-Super-VL-120B-A12B-NVFP4-LiLiCorr
+  draft_label: nvidia/NVIDIA-Nemotron-3.5-Super-VL-120B-A12B-NVFP4-LiLiCorr
+spec_dec: lilicorr
+concurrency: 8
+topology:
+  summary: 1× DGX Spark
+  gpu_count: 1
+  node_count: 1
+  tensor_parallel_size: null
+sampling: null
+security: Evaluation configuration only. Host networking exposes vLLM on host interfaces; use a firewall or reverse proxy, a scoped read-only HF token, and an isolated cache. For production, pin tested image, model, and code revisions.
+runtime:
+  kind: container
+  label: Container (community, mutable, ARM64)
+  image: eugr/spark-vllm:latest
+  image_url: https://hub.docker.com/r/eugr/spark-vllm/tags?name=latest
+  setup_label: Start container
+  setup_target: single-node
+  setup_instructions: Set `HF_TOKEN` in the host environment. Host cache directories are created and mounted to persist Hugging Face, vLLM, FlashInfer, and Triton caches across container runs.
+  setup_command: |
+    mkdir -p "$HOME/.cache/huggingface" "$HOME/.cache/vllm" "$HOME/.cache/flashinfer" "$HOME/.triton"
+
+    docker run --rm -it \
+      --gpus all \
+      --ipc host \
+      --network host \
+      --shm-size=16g \
+      --ulimit memlock=-1 \
+      --ulimit stack=67108864 \
+      -e HF_TOKEN=$HF_TOKEN \
+      -v "$HOME/.cache/huggingface:/root/.cache/huggingface" \
+      -v "$HOME/.cache/vllm:/root/.cache/vllm" \
+      -v "$HOME/.cache/flashinfer:/root/.cache/flashinfer" \
+      -v "$HOME/.triton:/root/.triton" \
+      --entrypoint /bin/bash \
+      eugr/spark-vllm:latest
+serve:
+  label: Launch
+  target: single-node
+  instructions: Run inside the container started above.
+  command: |
+    vllm serve nvidia/NVIDIA-Nemotron-3.5-Super-VL-120B-A12B-NVFP4 \
+      --kv-cache-dtype fp8 \
+      --max-num-seqs 8 \
+      --trust-remote-code \
+      --max-model-len auto \
+      --gpu-memory-utilization 0.8 \
+      --max-num-batched-tokens 8192 \
+      --speculative_config.model nvidia/NVIDIA-Nemotron-3.5-Super-VL-120B-A12B-NVFP4-LiLiCorr \
+      --speculative_config.method dflash \
+      --speculative_config.num_speculative_tokens 7 \
+      --mamba-backend flashinfer \
+      --mamba-ssm-cache-dtype float16 \
+      --enable-mamba-cache-stochastic-rounding \
+      --mamba-cache-philox-rounds 5 \
+      --enable-mamba-shared-prefix-checkpoint \
+      --prefix-match-unit 64 \
+      --block-size 64 \
+      --enable-auto-tool-choice \
+      --tool-call-parser qwen3_coder \
+      --reasoning-parser nemotron_v3 \
+      --mm-processor-cache-gb 0 \
+      --limit-mm-per-prompt '{"video": 1, "image": 1}' \
+      --video-pruning-rate 0.5 \
+      --media-io-kwargs '{"video": {"fps": 2, "num_frames": 256}}' \
+      --load-format instanttensor
+  port: null
+  api_model: nvidia/NVIDIA-Nemotron-3.5-Super-VL-120B-A12B-NVFP4
+notes: null

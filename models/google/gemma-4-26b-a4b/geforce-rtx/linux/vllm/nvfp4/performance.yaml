@@ -1,0 +1,60 @@
+# SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: LicenseRef-NvidiaProprietary
+#
+# NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
+# property and proprietary rights in and to this material, related
+# documentation and any modifications thereto. Any use, reproduction,
+# disclosure or distribution of this material and related documentation
+# is subject to the Apache 2.0 License
+#
+# Disclaimer: This Local AI Inference Recipes Repo and its recipes are
+# provided for informational purposes only and were created with AI
+# assistance. They must be independently reviewed and validated for
+# accuracy before use. NVIDIA assumes no liability for any use of these
+# recipes or reliance upon them.
+
+# Measured with AIPerf 0.12.0 on 2026-10-15.
+schema_version: 2
+recipe_sha256: 9b93272b90b6da6e88adc6852686717bd81311a83f7d53279a08ad5a8e12a7f8
+launch_id: default
+measured_at: 2026-10-15
+
+harness:
+  name: aiperf
+  version: 0.12.0
+
+system:
+  label: NVIDIA GeForce RTX
+  accelerator: NVIDIA GeForce RTX 5090
+  accelerator_count: 1
+  operating_system: linux
+  os_version: Ubuntu 24.04.4 LTS
+  driver_version: 615.71.09
+  cuda_version: "13.0"
+
+software:
+  model_revision: a19cfe00be84568a6867111c9a68c9c44fdcffe6
+  runtime_revision: sha256:8a69ffad015f138d7170c4ddc429e230a3bc1c1719f67e14324749df200a4b90
+
+profiles:
+  - id: coding
+    harnesses:
+      - name: aiperf
+        version: 0.12.0
+      - name: agentperf-local
+        version: v0.3.2
+    workload:
+      input_tokens: null
+      dataset: nvidia/SPEED-Bench
+      profile: qualitative
+      category: coding
+      output_tokens: 8192
+      concurrency: 1
+      requests: 10
+      warmup_requests: 3
+    results:
+      decode_tokens_per_second_mean: 355.5
+      e2e_latency_ms_mean: 173600
+    result_harness:
+      decode_tokens_per_second_mean: aiperf
+      e2e_latency_ms_mean: agentperf-local

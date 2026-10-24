@@ -1,0 +1,62 @@
+# SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: LicenseRef-NvidiaProprietary
+#
+# NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
+# property and proprietary rights in and to this material, related
+# documentation and any modifications thereto. Any use, reproduction,
+# disclosure or distribution of this material and related documentation
+# is subject to the Apache 2.0 License
+#
+# Disclaimer: This Local AI Inference Recipes Repo and its recipes are
+# provided for informational purposes only and were created with AI
+# assistance. They must be independently reviewed and validated for
+# accuracy before use. NVIDIA assumes no liability for any use of these
+# recipes or reliance upon them.
+
+# Source: vLLM_Recipe_Perf_Local_AI_Inference_Repo.xlsx, llm data!AB507:AB508.
+# Coding measurements at concurrency 8; DGX Station AgentPerf results are blank.
+# Measurement date and latest registry revisions follow maintainer guidance.
+# Workload counts: https://nvidia.slack.com/archives/C08PF7D71G8/p1792008466124239
+# OS metadata: https://nvidia.slack.com/archives/C08PF7D71G8/p1792085509741299
+# Driver 610.43.03 is recorded in the workbook's DGX Station header (AB9).
+# Checkpoint: https://huggingface.co/Inferact/Qwen3.8-Flash-Next-NVFP4/commit/103a7608316173ca6edd49929544244de7ffda70
+# Runtime revision is the Docker Hub tag manifest index; raw run logs were not inspected.
+schema_version: 2
+recipe_sha256: e9e532b5876d63782f492914b956cc5d678b4af25d0e623f603d7304f9860d99
+launch_id: default
+measured_at: 2026-10-14
+
+harness:
+  name: aiperf
+  version: 0.12.0
+
+system:
+  label: NVIDIA DGX Station
+  accelerator: NVIDIA DGX Station (GB300)
+  accelerator_count: 1
+  operating_system: linux
+  os_version: Ubuntu 24.04.4 LTS
+  driver_version: 610.43.03
+
+software:
+  model_revision: 103a7608316173ca6edd49929544244de7ffda70
+  runtime_revision: sha256:fc120ece0a388cc0aa1caad4a9f1cd92113484ab7ec2fd0efadd62585be05bf8
+
+profiles:
+  - id: coding
+    harnesses:
+      - name: aiperf
+        version: 0.12.0
+    workload:
+      input_tokens: null
+      dataset: nvidia/SPEED-Bench
+      profile: qualitative
+      category: coding
+      output_tokens: 8192
+      concurrency: 16
+      requests: 160
+      warmup_requests: 48
+    results:
+      decode_tokens_per_second_mean: 1511.8
+    result_harness:
+      decode_tokens_per_second_mean: aiperf

@@ -1,0 +1,97 @@
+# SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: LicenseRef-NvidiaProprietary
+#
+# NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
+# property and proprietary rights in and to this material, related
+# documentation and any modifications thereto. Any use, reproduction,
+# disclosure or distribution of this material and related documentation
+# is subject to the Apache 2.0 License
+#
+# Disclaimer: This Local AI Inference Recipes Repo and its recipes are
+# provided for informational purposes only and were created with AI
+# assistance. They must be independently reviewed and validated for
+# accuracy before use. NVIDIA assumes no liability for any use of these
+# recipes or reliance upon them.
+
+schema_version: 4
+title: Qwen3.8-27B · DGX Spark · vLLM
+model: qwen/qwen3.8-27b
+hardware: dgx-spark
+platform:
+  os: linux
+  execution: container
+backend: vllm
+backend_version: "0.31.0+88641915.nv26.10.73893335"
+status: optimized
+spec_dec: dflash
+min_vidmem_gb: 128
+validation:
+  validated_at: '2026-10-19'
+  validated_by: scastagnetta
+  tested_stack:
+    os_version: Ubuntu 24.04.4 LTS
+    driver: '580.126.20'
+    cuda: '13.4'
+limitations:
+  - The image is the public NGC vLLM 26.10.pre1 release (vLLM 0.31.0 with NVIDIA patches). It includes the SM12x NVFP4 dynamic linear backend (`nvfp4_dynamic`, vllm#54614), `unquantized_linear_backend` (vllm#59021), the cuDNN BF16 GEMM backend and its warmup (vllm#59025, vllm#59244) and the DFlash sliding-window draft block fix (vllm#60252), plus prebuilt kernel and autotune caches under `/root/.cache` (mount only `~/.cache/huggingface` as shown; mounting over all of `/root/.cache` hides them).
+  - Prefix caching (on by default) depends on vllm#60252. Without it, every prefix-cache hit with the DFlash2 drafter returns corrupted text (vllm#60174), so do not run this command on an image that lacks the fix.
+  - Validated with image input enabled on SPEED-Bench coding (concurrency 1, 8K output), the Artificial Analysis AgentPerf-Local default replay (168 multi-turn agentic turns, prefix caching on), a prefix-cache-hit correctness check and a single-image chat request.
+  - "`--gpu-memory-utilization` is 0.60 on purpose: at 0.85 the node hung during startup autotune, and 0.70 took nodes down on some runs."
+precision:
+  label: NVFP4
+checkpoint:
+  target: https://huggingface.co/nvidia/Qwen3.8-27B-NVFP4
+  target_label: nvidia/Qwen3.8-27B-NVFP4
+  draft: https://huggingface.co/z-lab/Qwen3.8-27B-DFlash2
+  draft_label: z-lab/Qwen3.8-27B-DFlash2
+concurrency: 8
+topology:
+  summary: 1× DGX Spark
+  gpu_count: 1
+  node_count: 1
+  tensor_parallel_size: null
+sampling: null
+security: Evaluation configuration only. Host networking exposes vLLM on host interfaces; use a firewall or reverse proxy, a scoped read-only HF token, and an isolated cache. For production, pin tested image, model, and code revisions.
+runtime:
+  kind: container
+  label: Container (NGC)
+  image: nvcr.io/nvidia/vllm:26.10.pre1-py3
+  image_url: https://catalog.ngc.nvidia.com/orgs/nvidia/containers/vllm
+  setup_label: Start container
+  setup_target: single-node
+  setup_instructions: Set `HF_TOKEN` in the host environment. The image is public on NGC, so no registry login is needed; if `docker pull` fails with `unauthorized`, clear a stale login with `docker logout nvcr.io`.
+  setup_command: |
+    docker run --rm -it \
+      --gpus all \
+      --ipc host \
+      --network host \
+      --shm-size=16g \
+      --ulimit memlock=-1 \
+      --ulimit stack=67108864 \
+      -e HF_TOKEN=$HF_TOKEN \
+      -v ~/.cache/huggingface:/root/.cache/huggingface \
+      --entrypoint /bin/bash \
+      nvcr.io/nvidia/vllm:26.10.pre1-py3
+serve:
+  label: Launch
+  target: single-node
+  instructions: null
+  command: |
+    vllm serve nvidia/Qwen3.8-27B-NVFP4 \
+      --host 0.0.0.0 \
+      --port 8000 \
+      --kv-cache-dtype fp8 \
+      --max-model-len 262144 \
+      --max-num-seqs 8 \
+      --async-scheduling \
+      --enable-flashinfer-autotune \
+      --gpu-memory-utilization 0.60 \
+      --kernel-config '{"linear_backend":"nvfp4_dynamic","nvfp4_dynamic_max_tokens":16,"unquantized_linear_backend":"flashinfer_cudnn","linear_backend_per_quant":{"fp8_w8a8":"cutlass"}}' \
+      --speculative-config '{"method":"dflash","model":"z-lab/Qwen3.8-27B-DFlash2","num_speculative_tokens":7,"draft_sample_method":"probabilistic","rejection_sample_method":"standard"}' \
+      --compilation-config '{"pass_config":{"fuse_act_quant":true},"max_cudagraph_capture_size":64}' \
+      --reasoning-parser qwen3 \
+      --tool-call-parser qwen3_xml \
+      --enable-auto-tool-choice
+  port: 8000
+  api_model: nvidia/Qwen3.8-27B-NVFP4
+notes: null

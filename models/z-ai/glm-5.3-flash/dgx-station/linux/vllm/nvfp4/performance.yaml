@@ -1,0 +1,56 @@
+# SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: LicenseRef-NvidiaProprietary
+#
+# NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
+# property and proprietary rights in and to this material, related
+# documentation and any modifications thereto. Any use, reproduction,
+# disclosure or distribution of this material and related documentation
+# is subject to the Apache 2.0 License
+#
+# Disclaimer: This Local AI Inference Recipes Repo and its recipes are
+# provided for informational purposes only and were created with AI
+# assistance. They must be independently reviewed and validated for
+# accuracy before use. NVIDIA assumes no liability for any use of these
+# recipes or reliance upon them.
+
+# Measured with AIPerf 0.12.0 on 2026-10-15. Do not add status: until promoted.
+schema_version: 2
+recipe_sha256: 22e1036bbab650a322b4146af8b00311b62927c27a47b4211015d5f25e0fb29f
+launch_id: default
+measured_at: 2026-10-15
+
+harness:
+  name: aiperf
+  version: 0.12.0
+
+system:
+  label: NVIDIA DGX Station
+  accelerator: NVIDIA DGX Station (GB300)
+  accelerator_count: 1
+  operating_system: linux
+  os_version: Ubuntu 24.04.4 LTS
+  driver_version: 610.47.04
+  cuda_version: "13.0.2"
+
+software:
+  model_revision: 18d55bfd5a2194887738da73753975c9d3842f46
+  runtime_revision: sha256:3f7dd5b777d34d1724456ce71f87385dca288c3bb23029ab27dee358f5d2b971
+
+profiles:
+  - id: coding
+    harnesses:
+      - name: aiperf
+        version: 0.12.0
+    workload:
+      input_tokens: null
+      dataset: nvidia/SPEED-Bench
+      profile: qualitative
+      category: coding
+      output_tokens: 8192
+      concurrency: 16
+      requests: 160
+      warmup_requests: 48
+    results:
+      decode_tokens_per_second_mean: 1351.85
+    result_harness:
+      decode_tokens_per_second_mean: aiperf

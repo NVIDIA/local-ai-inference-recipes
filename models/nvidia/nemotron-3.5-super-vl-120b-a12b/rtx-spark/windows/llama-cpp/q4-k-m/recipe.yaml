@@ -1,0 +1,81 @@
+# SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: LicenseRef-NvidiaProprietary
+#
+# NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
+# property and proprietary rights in and to this material, related
+# documentation and any modifications thereto. Any use, reproduction,
+# disclosure or distribution of this material and related documentation
+# is subject to the Apache 2.0 License
+#
+# Disclaimer: This Local AI Inference Recipes Repo and its recipes are
+# provided for informational purposes only and were created with AI
+# assistance. They must be independently reviewed and validated for
+# accuracy before use. NVIDIA assumes no liability for any use of these
+# recipes or reliance upon them.
+
+schema_version: 3
+title: NVIDIA Nemotron 3.5 Super VL 120B A12B (Vision) · RTX Spark · llama.cpp · Q4_K_M · LiLiCorr
+model: nvidia/nemotron-3.5-super-vl-120b-a12b
+hardware: rtx-spark
+platform:
+  os: windows
+  execution: native
+backend: llama-cpp
+backend_version: b11669
+backend_build:
+  kind: manual
+  revision: 620d2225cc436ab0b001e3200e590e3b286ef9ab
+variant: vision-lilicorr
+status: experimental
+# Observed peak 84.030783488 decimal GB = 78.26 GiB; round up for the SKU selector.
+min_vidmem_gb: 79
+prerequisites:
+  - An RTX Spark running Windows ARM64.
+  - Native llama.cpp b11669 CUDA 13.4 with the matching Windows ARM64 runtime DLLs linked in Notes.
+  - Both Q4_K_M target shards, their BF16 vision projector, and the linked NVFP4 LiLiCorr draft.
+limitations:
+  - Text-only coding and AA replay were measured with the projector loaded; image/video throughput and output quality were not measured.
+  - The 79 GiB memory threshold is based on observed peak use; the true minimum, exact Windows build, and GPU driver version were not recorded.
+precision:
+  label: Q4_K_M
+checkpoint:
+  target: https://huggingface.co/lmstudio-community/NVIDIA-Nemotron-3.5-Super-VL-120B-A12B-GGUF/blob/main/NVIDIA-Nemotron-3.5-Super-VL-120B-A12B-Q4_K_M-00001-of-00002.gguf
+  target_label: lmstudio-community/NVIDIA-Nemotron-3.5-Super-VL-120B-A12B-GGUF/NVIDIA-Nemotron-3.5-Super-VL-120B-A12B-Q4_K_M-00001-of-00002.gguf
+  draft: https://huggingface.co/unsloth/NVIDIA-Nemotron-3.5-Super-VL-120B-A12B-GGUF/blob/75a5829055f69a0359085ae6bbd0a81b60bc05c6/LiLiCorr/lilicorr-NVIDIA-Nemotron-3.5-Super-VL-120B-A12B-NVFP4.gguf
+  draft_label: unsloth/NVIDIA-Nemotron-3.5-Super-VL-120B-A12B-GGUF/LiLiCorr/lilicorr-NVIDIA-Nemotron-3.5-Super-VL-120B-A12B-NVFP4.gguf
+spec_dec: lilicorr
+concurrency: 1
+topology: null
+sampling: "--temp 1.0; --top-p 0.95"
+security: null
+runtime: null
+serve:
+  label: Launch LiLiCorr · n=5
+  target: single-node
+  instructions: Run in PowerShell from the directory containing the extracted llama-server.exe and CUDA DLLs.
+  command: |-
+    .\llama-server.exe -hf "lmstudio-community/NVIDIA-Nemotron-3.5-Super-VL-120B-A12B-GGUF" `
+      -hff "NVIDIA-Nemotron-3.5-Super-VL-120B-A12B-Q4_K_M-00001-of-00002.gguf" `
+      --mmproj-url "https://huggingface.co/unsloth/NVIDIA-Nemotron-3.5-Super-VL-120B-A12B-GGUF/resolve/main/mmproj-BF16.gguf" `
+      --batch-size 4096 `
+      --ubatch-size 4096 `
+      --ctx-size 262144 `
+      --parallel 1 `
+      -ngl 999 `
+      --spec-type draft-dflash `
+      --spec-draft-n-max 5 `
+      --temp 1.0 `
+      --top-p 0.95 `
+      --flash-attn on `
+      --jinja `
+      --fit off `
+      --host 127.0.0.1 `
+      --port 9931 `
+      -hfrd "unsloth/NVIDIA-Nemotron-3.5-Super-VL-120B-A12B-GGUF" `
+      --spec-draft-model "LiLiCorr/lilicorr-NVIDIA-Nemotron-3.5-Super-VL-120B-A12B-NVFP4.gguf" `
+      --spec-draft-ngl 999
+  port: 9931
+  api_model: lmstudio-community/NVIDIA-Nemotron-3.5-Super-VL-120B-A12B-GGUF
+notes: |-
+  Download the [llama.cpp b11669 Windows ARM64 CUDA 13.4 binaries](https://github.com/ggml-org/llama.cpp/releases/download/b11669/llama-b11669-bin-win-cuda-13.4-arm64.zip) and [matching CUDA 13.4 DLLs](https://github.com/ggml-org/llama.cpp/releases/download/b11669/cudart-llama-bin-win-cuda-13.4-arm64.zip).
+  Extract both ZIP files into the same directory so `llama-server.exe` and the CUDA DLLs are together. Open PowerShell in that directory before running the launch command.

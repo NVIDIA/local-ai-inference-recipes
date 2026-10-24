@@ -1,0 +1,94 @@
+# SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: LicenseRef-NvidiaProprietary
+#
+# NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
+# property and proprietary rights in and to this material, related
+# documentation and any modifications thereto. Any use, reproduction,
+# disclosure or distribution of this material and related documentation
+# is subject to the Apache 2.0 License
+#
+# Disclaimer: This Local AI Inference Recipes Repo and its recipes are
+# provided for informational purposes only and were created with AI
+# assistance. They must be independently reviewed and validated for
+# accuracy before use. NVIDIA assumes no liability for any use of these
+# recipes or reliance upon them.
+
+schema_version: 4
+title: MiniMax-M3.1-Flash · DGX Station · vLLM
+model: minimax/minimax-m3.1-flash
+hardware: dgx-station
+platform:
+  os: linux
+  execution: container
+backend: vllm
+backend_version: 0.1.dev23341+g8744dd2fb.d20261022.cu134
+status: experimental
+precision:
+  label: FP4 + FP8 Mixed
+spec_dec: dspark
+checkpoint:
+  target: https://huggingface.co/MiniMaxAI/MiniMax-M3.1-Flash
+  target_label: MiniMaxAI/MiniMax-M3.1-Flash
+  draft: https://huggingface.co/MiniMaxAI/MiniMax-M3.1-Flash
+  draft_label: MiniMaxAI/MiniMax-M3.1-Flash
+limitations:
+  - Only 1 user can run with 256k context length, but 4 can be run with 64k context each.
+concurrency: 4
+topology:
+  summary: 1× DGX Station
+  gpu_count: 1
+  node_count: 1
+  tensor_parallel_size: 1
+sampling: null
+security: Evaluation configuration only. Host networking exposes vLLM on host interfaces; use a firewall or reverse proxy, a scoped read-only HF token, and an isolated cache. For production, pin tested image, model, and code revisions.
+runtime:
+  kind: container
+  label: Container
+  image: vllm/vllm-openai:minimax-m31-flash
+  image_url: https://hub.docker.com/layers/vllm/vllm-openai/minimax-m31-flash
+  setup_label: Start container
+  setup_target: single-node
+  setup_instructions: Set `HF_TOKEN` in the host environment.
+  setup_command: |
+    docker run --rm -it \
+      --gpus all \
+      --ipc host \
+      --network host \
+      --shm-size=16g \
+      --ulimit memlock=-1 \
+      --ulimit stack=67108864 \
+      -e HF_TOKEN=$HF_TOKEN \
+      -v ~/.cache/huggingface:/root/.cache/huggingface \
+      --entrypoint /bin/bash \
+      vllm/vllm-openai:minimax-m31-flash
+serve:
+  label: Launch
+  target: single-node
+  instructions: null
+  command: |
+    VLLM_WEIGHT_OFFLOADING_DISABLE_PIN_MEMORY=1 \
+    PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True \
+    VLLM_FLOAT32_MATMUL_PRECISION=high \
+    vllm serve MiniMaxAI/MiniMax-M3.1-Flash \
+      --host 0.0.0.0 \
+      --port 8000 \
+      --trust-remote-code \
+      --max-model-len 262144 \
+      --max-num-seqs 4 \
+      --max-num-batched-tokens 2048 \
+      --block-size 128 \
+      --kv-cache-dtype nvfp4 \
+      --kv-cache-memory-bytes 11545482000 \
+      --attention-config '{"minimax_m3_msa_decode_backend":"cutlass","indexer_kv_dtype":"nvfp4"}' \
+      --speculative-config '{"method":"dspark","num_speculative_tokens":3,"attention_backend":"FLASH_ATTN","kv_cache_dtype":"fp8","draft_sample_method":"probabilistic","rejection_sample_method":"block"}' \
+      --enable-auto-tool-choice \
+      --tool-call-parser minimax_m3 \
+      --reasoning-parser minimax_m3 \
+      --cpu-offload-gb 25 \
+      --cpu-offload-params experts \
+      --offload-backend uva \
+      --limit-mm-per-prompt '{"image":{"count":1,"width":384,"height":384},"video":{"count":1,"num_frames":16,"width":384,"height":384}}' \
+      --media-io-kwargs '{"video":{"num_frames":16}}'
+  port: 8000
+  api_model: MiniMaxAI/MiniMax-M3.1-Flash
+notes: The model runs on a single DGX Station with 256k context length, speculative decoding and multimodal features with CPU offloading. Only 1 user can use the full context length, but 4 can be run with reduced context.

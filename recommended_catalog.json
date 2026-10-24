@@ -1,0 +1,1185 @@
+{
+  "schema_version": 1,
+  "generated": "DO NOT EDIT. Generated from catalog/recommended.yaml. Run: make recommended-catalog",
+  "hardware": [
+    {
+      "id": "dgx-spark",
+      "display_name": "DGX Spark",
+      "vendor": "nvidia",
+      "kind": "sku",
+      "architecture": "blackwell",
+      "gpu_count": 1
+    },
+    {
+      "id": "dgx-spark-2gpu",
+      "display_name": "2× DGX Spark",
+      "vendor": "nvidia",
+      "kind": "configuration",
+      "architecture": "blackwell",
+      "gpu_count": 2,
+      "base_hardware": "dgx-spark"
+    },
+    {
+      "id": "dgx-spark-4gpu",
+      "display_name": "4× DGX Spark",
+      "vendor": "nvidia",
+      "kind": "configuration",
+      "architecture": "blackwell",
+      "gpu_count": 4,
+      "base_hardware": "dgx-spark"
+    },
+    {
+      "id": "dgx-station",
+      "display_name": "DGX Station",
+      "vendor": "nvidia",
+      "kind": "sku",
+      "architecture": "blackwell",
+      "gpu_count": 1
+    },
+    {
+      "id": "geforce-rtx",
+      "display_name": "GeForce RTX GPUs",
+      "vendor": "nvidia",
+      "kind": "sku",
+      "architecture": "blackwell",
+      "gpu_count": 1
+    },
+    {
+      "id": "rtx-pro",
+      "display_name": "RTX PRO GPUs",
+      "vendor": "nvidia",
+      "kind": "sku",
+      "architecture": "blackwell",
+      "gpu_count": 1
+    },
+    {
+      "id": "rtx-pro-2gpu",
+      "display_name": "2× RTX PRO GPUs",
+      "vendor": "nvidia",
+      "kind": "configuration",
+      "architecture": "blackwell",
+      "gpu_count": 2,
+      "base_hardware": "rtx-pro"
+    },
+    {
+      "id": "rtx-pro-4gpu",
+      "display_name": "4× RTX PRO GPUs",
+      "vendor": "nvidia",
+      "kind": "configuration",
+      "architecture": "blackwell",
+      "gpu_count": 4,
+      "base_hardware": "rtx-pro"
+    },
+    {
+      "id": "rtx-spark",
+      "display_name": "RTX Spark",
+      "vendor": "nvidia",
+      "kind": "sku",
+      "architecture": "grace-blackwell",
+      "gpu_count": 1,
+      "notes": "GB10 Grace Blackwell Superchip. llama.cpp runs natively on Windows.\nLinux is supported only via WSL2 (not yet modeled as its own platform here)."
+    }
+  ],
+  "backends": [
+    {
+      "id": "llama-cpp",
+      "display_name": "llama.cpp",
+      "protocol": "openai-compatible",
+      "upstream": "https://github.com/ggml-org/llama.cpp",
+      "notes": "Served with llama-server, which exposes an OpenAI-compatible API. Recipes use GGUF checkpoints and name the exact GGUF file; split checkpoints point to the first shard. Native launch recipes are supported on Linux and Windows."
+    },
+    {
+      "id": "vllm",
+      "display_name": "vLLM",
+      "protocol": "openai-compatible",
+      "upstream": "https://github.com/vllm-project/vllm",
+      "container_default": "vllm/vllm-openai:v0.24.0-ubuntu2404",
+      "notes": "Recipes are self-contained: each declares its selected image and complete\nDocker startup and model-specific launch commands. Multi-node recipes include\nevery node role; source-supplied alternatives remain separate complete\noptions. Use the fallback default only when the source supplies neither an\nimage nor a startup command.\n\nKnown images: [vllm/vllm-openai:v0.24.0-ubuntu2404](https://hub.docker.com/r/vllm/vllm-openai/tags?name=v0.24.0-ubuntu2404)\n(fallback default); [vllm/vllm-openai:v0.25.1-ubuntu2404](https://hub.docker.com/r/vllm/vllm-openai/tags?name=v0.25.1-ubuntu2404);\n[vllm/vllm-openai:nightly](https://hub.docker.com/r/vllm/vllm-openai/tags?name=nightly)\n(mutable); [vllm/vllm-openai:nightly-311b3513af33bc29b4acb2fde2e9313e5e9966a0](https://hub.docker.com/r/vllm/vllm-openai/tags?name=nightly-311b3513af33bc29b4acb2fde2e9313e5e9966a0);\n[vllm/vllm-openai:nightly-aa9903490c616dc6871e5acc62cec7bb1e5e9434](https://hub.docker.com/r/vllm/vllm-openai/tags?name=nightly-aa9903490c616dc6871e5acc62cec7bb1e5e9434);\n[eugr/spark-vllm:latest](https://hub.docker.com/r/eugr/spark-vllm/tags?name=latest)\n(community, ARM64-only, mutable); [eugr/spark-vllm:nightly-20260704](https://hub.docker.com/r/eugr/spark-vllm/tags?name=nightly-20260704)\n(community, ARM64-only); [eugr/spark-vllm-b12x:latest](https://hub.docker.com/r/eugr/spark-vllm-b12x/tags?name=latest)\n(community, ARM64-only, mutable, custom B12x); [nvcr.io/nvidia/vllm:26.05.post1-py3](https://catalog.ngc.nvidia.com/orgs/nvidia/-/containers/vllm/-/tags)\n(NVIDIA, AMD64 and ARM64);\n\nEvaluation only: host networking exposes vLLM on host interfaces. Use a\nfirewall or reverse proxy, a scoped read-only HF token, and an isolated cache;\npin tested image, model, and code revisions for production."
+    }
+  ],
+  "models": [
+    {
+      "id": "deepseek/deepseek-v4-flash-0731",
+      "display_name": "DeepSeek-V4-Flash-0731",
+      "builder": "deepseek",
+      "family": "DeepSeek-V4",
+      "summary": "DeepSeek V4 Flash 0731 inference configurations.",
+      "upstream": "https://huggingface.co/deepseek-ai/DeepSeek-V4-Flash-0731",
+      "modalities": [
+        "text"
+      ],
+      "recipes": [
+        {
+          "id": "deepseek/deepseek-v4-flash-0731/dgx-station/linux/vllm/fp4-fp8-mixed",
+          "hardware": "dgx-station",
+          "platform": {
+            "os": "linux",
+            "execution": "container"
+          },
+          "backend": "vllm",
+          "backend_version": "v0.31.0",
+          "backend_min_version": "v0.25.1",
+          "min_vidmem_gb": null,
+          "precision": "fp4-fp8-mixed",
+          "variant": null,
+          "status": "optimized",
+          "prerequisites": [],
+          "limitations": [],
+          "checkpoint": {
+            "target": "https://huggingface.co/deepseek-ai/DeepSeek-V4-Flash-0731",
+            "target_label": "deepseek-ai/DeepSeek-V4-Flash-0731",
+            "draft": null,
+            "draft_label": null
+          },
+          "security": "Evaluation configuration only. Host networking exposes vLLM on host interfaces; use a firewall or reverse proxy, a scoped read-only HF token, and an isolated cache. For production, pin tested image, model, and code revisions.",
+          "topology": {
+            "summary": "1× DGX Station",
+            "gpu_count": 1,
+            "node_count": 1,
+            "tensor_parallel_size": 1
+          },
+          "runtime": {
+            "kind": "container",
+            "label": "Container",
+            "image": "vllm/vllm-openai:v0.31.0",
+            "image_url": "https://hub.docker.com/layers/vllm/vllm-openai/v0.31.0",
+            "setup_label": "Start container",
+            "setup_target": "single-node",
+            "setup_instructions": "Set HF_TOKEN in the host environment.",
+            "setup_command": "docker run --rm -it \\\n  --gpus all \\\n  --ipc host \\\n  --network host \\\n  --shm-size=16g \\\n  --ulimit memlock=-1 \\\n  --ulimit stack=67108864 \\\n  -e HF_TOKEN=$HF_TOKEN \\\n  -v ~/.cache/huggingface:/root/.cache/huggingface \\\n  --entrypoint /bin/bash \\\n  vllm/vllm-openai:v0.31.0"
+          },
+          "serve": {
+            "label": "Launch",
+            "target": "single-node",
+            "instructions": null,
+            "command": "vllm serve deepseek-ai/DeepSeek-V4-Flash-0731 \\\n  --served-model-name deepseek-v4-flash-0731 \\\n  --host 0.0.0.0 --port 8000 \\\n  --trust-remote-code \\\n  --tensor-parallel-size 1 \\\n  --kv-cache-dtype fp8_ds_mla \\\n  --block-size 256 \\\n  --max-model-len 1048576 \\\n  --max-num-seqs 64 \\\n  --max-num-batched-tokens 32768 \\\n  --max-cudagraph-capture-size 512 \\\n  --gpu-memory-utilization 0.88 \\\n  --enable-prefix-caching \\\n  --enable-prompt-tokens-details \\\n  --async-scheduling \\\n  --enable-chunked-prefill \\\n  --speculative-config '{\"method\":\"dspark\",\"num_speculative_tokens\":7,\"draft_sample_method\":\"probabilistic\"}' \\\n  --tokenizer-mode deepseek_v4 \\\n  --tool-call-parser deepseek_v4 --enable-auto-tool-choice \\\n  --reasoning-parser deepseek_v4 \\\n  --generation-config vllm \\\n  --compilation-config '{\"custom_ops\":[\"all\"]}'",
+            "port": 8000,
+            "api_model": "deepseek-v4-flash-0731"
+          },
+          "launch": null,
+          "sampling": null,
+          "notes": null,
+          "clients": {
+            "shell": "curl http://localhost:8000/v1/chat/completions \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\"model\": \"deepseek-v4-flash-0731\", \"messages\": [{\"role\": \"user\", \"content\": \"Hello\"}]}'",
+            "python": "from openai import OpenAI\n\nclient = OpenAI(base_url=\"http://localhost:8000/v1\", api_key=\"EMPTY\")\nresp = client.chat.completions.create(\n    model=\"deepseek-v4-flash-0731\",\n    messages=[{\"role\": \"user\", \"content\": \"Hello\"}],\n)\nprint(resp.choices[0].message.content)"
+          }
+        },
+        {
+          "id": "deepseek/deepseek-v4-flash-0731/rtx-pro-2gpu/linux/vllm/fp4-fp8-mixed",
+          "hardware": "rtx-pro-2gpu",
+          "platform": {
+            "os": "linux",
+            "execution": "container"
+          },
+          "backend": "vllm",
+          "backend_version": "0.1.dev21830+g8244d1c44.cu134",
+          "backend_min_version": null,
+          "min_vidmem_gb": 96,
+          "precision": "fp4-fp8-mixed",
+          "variant": null,
+          "status": "optimized",
+          "prerequisites": [],
+          "limitations": [],
+          "checkpoint": {
+            "target": "https://huggingface.co/deepseek-ai/DeepSeek-V4-Flash-0731",
+            "target_label": "deepseek-ai/DeepSeek-V4-Flash-0731",
+            "draft": "https://huggingface.co/deepseek-ai/DeepSeek-V4-Flash-0731",
+            "draft_label": "deepseek-ai/DeepSeek-V4-Flash-0731"
+          },
+          "security": "Evaluation configuration only. Host networking exposes vLLM on host interfaces; use a firewall or reverse proxy, a scoped read-only HF token, and an isolated cache. For production, pin tested image, model, and code revisions.",
+          "topology": {
+            "summary": "2× RTX Pro 6000",
+            "gpu_count": 2,
+            "node_count": 1,
+            "tensor_parallel_size": 2
+          },
+          "runtime": {
+            "kind": "container",
+            "label": "Container (community)",
+            "image": "ghcr.io/local-inference-lab/vllm:release-10152026",
+            "image_url": "https://github.com/local-inference-lab/blackwell-llm-docker/pkgs/container/vllm/1392689728?tag=release-10152026",
+            "setup_label": "Start container",
+            "setup_target": "single-node",
+            "setup_instructions": "Set HF_TOKEN in the host environment",
+            "setup_command": "docker run --rm -it \\\n  --gpus all \\\n  --ipc host \\\n  --network host \\\n  --shm-size=16g \\\n  --ulimit memlock=-1 \\\n  --ulimit stack=67108864 \\\n  -e HF_TOKEN=$HF_TOKEN \\\n  -v ~/.cache/huggingface:/root/.cache/huggingface \\\n  --entrypoint /bin/bash \\\n  ghcr.io/local-inference-lab/vllm:release-10152026"
+          },
+          "serve": {
+            "label": "Launch",
+            "target": "single-node",
+            "instructions": null,
+            "command": "export CUDA_DEVICE_ORDER=PCI_BUS_ID\nexport CUTE_DSL_ARCH=sm_120a\nexport HF_HOME=/root/.cache/huggingface\nexport INSTANTTENSOR_BACKEND=URING,AIO\nexport NCCL_BUFFSIZE=2097152\nexport NCCL_IB_DISABLE=1\nexport NCCL_MAX_NCHANNELS=16\nexport NCCL_MIN_NCHANNELS=16\nexport NCCL_NET_PLUGIN=spcx\nexport NCCL_P2P_LEVEL=SYS\nexport NCCL_PROTO=LL,LL128,Simple\nexport OMP_NUM_THREADS=2\nexport PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True\nexport SAFETENSORS_FAST_GPU=1\nexport VLLM_B12X_MOE_FP4_FORCE_A16=0\nexport VLLM_ENABLE_PCIE_ALLREDUCE=1\nexport VLLM_MEMORY_PROFILER_ESTIMATE_CUDAGRAPHS=1\nexport VLLM_MULTI_STREAM_GEMM_TOKEN_THRESHOLD=1024\nexport VLLM_PCIE_ALLREDUCE_BACKEND=b12x\nexport VLLM_PCIE_ONESHOT_ALLREDUCE_MAX_SIZE=64KB\nexport VLLM_USE_AOT_COMPILE=1\nexport VLLM_USE_BREAKABLE_CUDAGRAPH=0\nexport VLLM_USE_FLASHINFER_SAMPLER=1\nexport VLLM_USE_MEGA_AOT_ARTIFACT=1\nexport VLLM_USE_V2_MODEL_RUNNER=1\nexport VLLM_WORKER_MULTIPROC_METHOD=spawn\nvllm serve deepseek-ai/DeepSeek-V4-Flash-0731 \\\n  --host 0.0.0.0 \\\n  --port 8000 \\\n  --async-scheduling \\\n  --attention-backend B12X \\\n  --block-size 256 \\\n  --compilation-config '{\"cudagraph_mode\":\"FULL_AND_PIECEWISE\",\"custom_ops\":[\"all\"]}' \\\n  --tensor-parallel-size 2 \\\n  --decode-context-parallel-size 1 \\\n  --default-chat-template-kwargs '{\"thinking\":true,\"reasoning_effort\":\"high\"}' \\\n  --dtype bfloat16 \\\n  --enable-auto-tool-choice \\\n  --enable-chunked-prefill \\\n  --enable-flashinfer-autotune \\\n  --enable-force-include-usage \\\n  --enable-prefix-caching \\\n  --enable-prompt-tokens-details \\\n  --enable-request-id-headers \\\n  --gpu-memory-utilization 0.975 \\\n  --kv-cache-dtype fp8 \\\n  --load-format instanttensor \\\n  --max-cudagraph-capture-size 48 \\\n  --max-model-len auto \\\n  --max-num-batched-tokens 4096 \\\n  --max-num-seqs 8 \\\n  --moe-backend b12x \\\n  --override-generation-config '{\"temperature\":1.0,\"top_p\":0.95}' \\\n  --pipeline-parallel-size 1 \\\n  --prefix-cache-retention-interval 4096 \\\n  --reasoning-parser deepseek_v4 \\\n  --no-scheduler-reserve-full-isl \\\n  --tokenizer-mode deepseek_v4 \\\n  --tool-call-parser deepseek_v4 \\\n  --trust-remote-code \\\n  --speculative-config '{\"method\":\"dspark\",\"draft_sample_method\":\"probabilistic\",\"rejection_sample_method\":\"standard\",\"num_speculative_tokens\":5,\"model\":\"deepseek-ai/DeepSeek-V4-Flash-0731\"}'",
+            "port": 8000,
+            "api_model": "deepseek-ai/DeepSeek-V4-Flash-0731"
+          },
+          "launch": null,
+          "sampling": null,
+          "notes": null,
+          "clients": {
+            "shell": "curl http://localhost:8000/v1/chat/completions \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\"model\": \"deepseek-ai/DeepSeek-V4-Flash-0731\", \"messages\": [{\"role\": \"user\", \"content\": \"Hello\"}]}'",
+            "python": "from openai import OpenAI\n\nclient = OpenAI(base_url=\"http://localhost:8000/v1\", api_key=\"EMPTY\")\nresp = client.chat.completions.create(\n    model=\"deepseek-ai/DeepSeek-V4-Flash-0731\",\n    messages=[{\"role\": \"user\", \"content\": \"Hello\"}],\n)\nprint(resp.choices[0].message.content)"
+          }
+        }
+      ]
+    },
+    {
+      "id": "google/gemma-4-26b-a4b",
+      "display_name": "Gemma-4-26B-A4B",
+      "builder": "google",
+      "family": "Gemma 4",
+      "summary": "Google Gemma 4 (26B-A4B) text-generation model.",
+      "upstream": null,
+      "modalities": [
+        "text",
+        "image"
+      ],
+      "recipes": [
+        {
+          "id": "google/gemma-4-26b-a4b/geforce-rtx/linux/vllm/nvfp4/mtp",
+          "hardware": "geforce-rtx",
+          "platform": {
+            "os": "linux",
+            "execution": "container"
+          },
+          "backend": "vllm",
+          "backend_version": null,
+          "backend_min_version": null,
+          "min_vidmem_gb": 32,
+          "precision": "nvfp4",
+          "variant": "mtp",
+          "status": "experimental",
+          "prerequisites": [],
+          "limitations": [],
+          "checkpoint": {
+            "target": "https://huggingface.co/nvidia/Gemma-4-26B-A4B-NVFP4",
+            "target_label": "nvidia/Gemma-4-26B-A4B-NVFP4",
+            "draft": "https://huggingface.co/google/gemma-4-26B-A4B-it-assistant",
+            "draft_label": "google/gemma-4-26B-A4B-it-assistant"
+          },
+          "security": "Evaluation configuration only. Host networking exposes vLLM on host interfaces; use a firewall or reverse proxy, a scoped read-only HF token, and an isolated cache. For production, pin tested image, model, and code revisions.",
+          "topology": {
+            "summary": "1× GeForce RTX GPUs",
+            "gpu_count": 1,
+            "node_count": 1,
+            "tensor_parallel_size": null
+          },
+          "runtime": {
+            "kind": "container",
+            "label": "Container",
+            "image": "vllm/vllm-openai:v0.30.0",
+            "image_url": "https://hub.docker.com/layers/vllm/vllm-openai/v0.30.0",
+            "setup_label": "Start container",
+            "setup_target": "single-node",
+            "setup_instructions": "Set `HF_TOKEN` in the host environment.",
+            "setup_command": "docker run --rm -it \\\n  --gpus all \\\n  --ipc host \\\n  --network host \\\n  --shm-size=16g \\\n  --ulimit memlock=-1 \\\n  --ulimit stack=67108864 \\\n  -e HF_TOKEN=$HF_TOKEN \\\n  -v ~/.cache/huggingface:/root/.cache/huggingface \\\n  --entrypoint /bin/bash \\\n  vllm/vllm-openai:v0.30.0"
+          },
+          "serve": {
+            "label": "Launch",
+            "target": "single-node",
+            "instructions": null,
+            "command": "vllm serve nvidia/Gemma-4-26B-A4B-NVFP4 \\\n  --max-model-len 262144 \\\n  --gpu-memory-utilization 0.92 \\\n  --port 8000 \\\n  --host 0.0.0.0 \\\n  --max-num-seqs 1 \\\n  --enable-prefix-caching \\\n  --tool-call-parser gemma4 \\\n  --reasoning-parser gemma4 \\\n  --enable-auto-tool-choice \\\n  --max-num-batched-tokens 4096 \\\n  --speculative-config '{\"method\":\"mtp\",\"model\":\"google/gemma-4-26B-A4B-it-assistant\",\"num_speculative_tokens\":4, \"moe_backend\": \"triton\"}'",
+            "port": 8000,
+            "api_model": "nvidia/Gemma-4-26B-A4B-NVFP4"
+          },
+          "launch": null,
+          "sampling": null,
+          "notes": null,
+          "clients": {
+            "shell": "curl http://localhost:8000/v1/chat/completions \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\"model\": \"nvidia/Gemma-4-26B-A4B-NVFP4\", \"messages\": [{\"role\": \"user\", \"content\": \"Hello\"}]}'",
+            "python": "from openai import OpenAI\n\nclient = OpenAI(base_url=\"http://localhost:8000/v1\", api_key=\"EMPTY\")\nresp = client.chat.completions.create(\n    model=\"nvidia/Gemma-4-26B-A4B-NVFP4\",\n    messages=[{\"role\": \"user\", \"content\": \"Hello\"}],\n)\nprint(resp.choices[0].message.content)"
+          }
+        }
+      ]
+    },
+    {
+      "id": "minimax/minimax-m3",
+      "display_name": "MiniMax-M3",
+      "builder": "minimax",
+      "family": "MiniMax-M3",
+      "summary": "MiniMax-M3 inference configurations.",
+      "upstream": null,
+      "modalities": [
+        "text"
+      ],
+      "recipes": [
+        {
+          "id": "minimax/minimax-m3/dgx-spark-4gpu/linux/vllm/128gb/nvfp4",
+          "hardware": "dgx-spark-4gpu",
+          "platform": {
+            "os": "linux",
+            "execution": "container"
+          },
+          "backend": "vllm",
+          "backend_version": "0.1.dev21818+g3a947437c.d20261013",
+          "backend_min_version": null,
+          "min_vidmem_gb": 128,
+          "precision": "nvfp4",
+          "variant": null,
+          "status": "optimized",
+          "prerequisites": [],
+          "limitations": [
+            "The source reports this recipe currently runs out of memory with recent builds."
+          ],
+          "checkpoint": {
+            "target": "https://huggingface.co/nvidia/MiniMax-M3-NVFP4",
+            "target_label": "nvidia/MiniMax-M3-NVFP4",
+            "draft": "https://huggingface.co/Inferact/MiniMax-M3-EAGLE3",
+            "draft_label": "Inferact/MiniMax-M3-EAGLE3"
+          },
+          "security": "Evaluation configuration only. Host networking exposes vLLM on host interfaces; use a firewall or reverse proxy, a scoped read-only HF token, and an isolated cache. For production, pin tested image, model, and code revisions.",
+          "topology": {
+            "summary": "4× DGX Spark; one node rank per Spark; tensor parallel 4",
+            "gpu_count": 4,
+            "node_count": 4,
+            "tensor_parallel_size": 4
+          },
+          "runtime": {
+            "kind": "container",
+            "label": "Container (community, mutable, ARM64)",
+            "image": "eugr/spark-vllm:nightly-20261013",
+            "image_url": "https://hub.docker.com/r/eugr/spark-vllm/tags?name=nightly-20261013",
+            "setup_label": "Start container",
+            "setup_target": "all-nodes",
+            "setup_instructions": "Run on every node after setting `HF_TOKEN`; replace the node-specific placeholders.",
+            "setup_command": "# Example four-Spark values (adjust to your network):\n#   HEAD_IP=\"10.100.32.1\"        # head node IP on the ETH subnet\n#   ETH_IF=\"enp1s0f0np0\"        # ConnectX baseboard ethernet (socket/control)\n#   IB_IF=\"rocep1s0f0,roceP2p1s0f0\"   # RoCE HCA names (data plane) - use both \"twins\"!\nexport HEAD_IP=\"<head-connectx-ip>\"\nexport ETH_IF=\"<connectx-interface>\"\nexport IB_IF=\"<roce-interface-1>,<roce-interface-2>\"\nexport MASTER_PORT=29501\nexport NODE_RANK=\"<0-3>\"\nexport IMAGE=\"eugr/spark-vllm:nightly-20261013\"\nexport HF_CACHE_DIR=\"$HOME/.cache/huggingface\"\n\nmkdir -p \"$HF_CACHE_DIR\" \"$HOME/.cache/vllm\" \"$HOME/.cache/flashinfer\" \"$HOME/.triton\"\n\ndocker run --rm -it \\\n  --privileged \\\n  --gpus all \\\n  --ipc host \\\n  --network host \\\n  --shm-size=16g \\\n  --ulimit nofile=1048576:1048576 \\\n  --ulimit memlock=-1 \\\n  --ulimit stack=67108864 \\\n  -e HF_TOKEN=$HF_TOKEN \\\n  -e MN_IF_NAME=\"$ETH_IF\" \\\n  -e UCX_NET_DEVICES=\"$ETH_IF\" \\\n  -e NCCL_SOCKET_IFNAME=\"$ETH_IF\" \\\n  -e NCCL_IB_HCA=\"$IB_IF\" \\\n  -e NCCL_IB_DISABLE=0 \\\n  -e OMPI_MCA_btl_tcp_if_include=\"$ETH_IF\" \\\n  -e GLOO_SOCKET_IFNAME=\"$ETH_IF\" \\\n  -e TP_SOCKET_IFNAME=\"$ETH_IF\" \\\n  -e NCCL_IGNORE_CPU_AFFINITY=1 \\\n  -e VLLM_FLOAT32_MATMUL_PRECISION=high \\\n  -e NODE_RANK=\"$NODE_RANK\" \\\n  -e HEAD_IP=\"$HEAD_IP\" \\\n  -e MASTER_PORT=\"$MASTER_PORT\" \\\n  -v \"$HF_CACHE_DIR:/root/.cache/huggingface\" \\\n  -v \"$HOME/.cache/vllm:/root/.cache/vllm\" \\\n  -v \"$HOME/.cache/flashinfer:/root/.cache/flashinfer\" \\\n  -v \"$HOME/.triton:/root/.triton\" \\\n  --entrypoint /bin/bash \\\n  \"$IMAGE\""
+          },
+          "serve": {
+            "label": "Launch head",
+            "target": "head",
+            "instructions": null,
+            "command": "vllm serve nvidia/MiniMax-M3-NVFP4 \\\n  --tensor-parallel-size 4 \\\n  --max-num-seqs 8 \\\n  --max-num-batched-tokens 8192 \\\n  --gpu-memory-utilization 0.87 \\\n  --kv-cache-dtype fp8 \\\n  --moe-backend flashinfer_b12x \\\n  --load-format instanttensor \\\n  --block-size 128 \\\n  --max-model-len 262144 \\\n  --attention-backend triton_attn \\\n  --tool-call-parser minimax_m3 \\\n  --reasoning-parser minimax_m3 \\\n  --enable-auto-tool-choice \\\n  --default-chat-template-kwargs '{\"thinking_mode\":\"enabled\"}' \\\n  --speculative-config '{\"method\": \"eagle3\", \"model\": \"Inferact/MiniMax-M3-EAGLE3\", \"num_speculative_tokens\": 3, \"attention_backend\": \"TRITON_ATTN\"}' \\\n  --nnodes 4 \\\n  --node-rank 0 \\\n  --master-addr \"$HEAD_IP\" \\\n  --master-port \"$MASTER_PORT\"",
+            "port": null,
+            "api_model": "nvidia/MiniMax-M3-NVFP4",
+            "additional_commands": [
+              {
+                "id": "workers",
+                "label": "Launch workers",
+                "target": "workers",
+                "instructions": null,
+                "command": "vllm serve nvidia/MiniMax-M3-NVFP4 \\\n  --tensor-parallel-size 4 \\\n  --max-num-seqs 8 \\\n  --max-num-batched-tokens 8192 \\\n  --gpu-memory-utilization 0.87 \\\n  --kv-cache-dtype fp8 \\\n  --moe-backend flashinfer_b12x \\\n  --load-format instanttensor \\\n  --block-size 128 \\\n  --max-model-len 262144 \\\n  --attention-backend triton_attn \\\n  --tool-call-parser minimax_m3 \\\n  --reasoning-parser minimax_m3 \\\n  --enable-auto-tool-choice \\\n  --default-chat-template-kwargs '{\"thinking_mode\":\"enabled\"}' \\\n  --speculative-config '{\"method\": \"eagle3\", \"model\": \"Inferact/MiniMax-M3-EAGLE3\", \"num_speculative_tokens\": 3, \"attention_backend\": \"TRITON_ATTN\"}' \\\n  --nnodes 4 \\\n  --node-rank \"$NODE_RANK\" \\\n  --master-addr \"$HEAD_IP\" \\\n  --master-port \"$MASTER_PORT\" \\\n  --headless"
+              }
+            ]
+          },
+          "launch": null,
+          "sampling": null,
+          "notes": "Use the same CX7 port on every node; assign both port subinterfaces on separate subnets; cache the image and checkpoint on every node; start workers before the head. Docker runs privileged.",
+          "clients": null
+        }
+      ]
+    },
+    {
+      "id": "qwen/qwen3.8-27b",
+      "display_name": "Qwen3.8-27B",
+      "builder": "qwen",
+      "family": "Qwen3.8",
+      "summary": "Qwen 3.8 27B text-generation model.",
+      "upstream": null,
+      "modalities": [
+        "text",
+        "image"
+      ],
+      "recipes": [
+        {
+          "id": "qwen/qwen3.8-27b/dgx-spark/linux/vllm/64gb/nvfp4",
+          "hardware": "dgx-spark",
+          "platform": {
+            "os": "linux",
+            "execution": "container"
+          },
+          "backend": "vllm",
+          "backend_version": "0.28.0",
+          "backend_min_version": null,
+          "min_vidmem_gb": 64,
+          "precision": "nvfp4",
+          "variant": null,
+          "status": "optimized",
+          "prerequisites": [],
+          "limitations": [],
+          "checkpoint": {
+            "target": "https://huggingface.co/nvidia/Qwen3.8-27B-NVFP4",
+            "target_label": "nvidia/Qwen3.8-27B-NVFP4",
+            "draft": "https://huggingface.co/z-lab/Qwen3.8-27B-DFlash2",
+            "draft_label": "z-lab/Qwen3.8-27B-DFlash2"
+          },
+          "security": "Evaluation configuration only. Host networking exposes vLLM on host interfaces; use a firewall or reverse proxy, a scoped read-only HF token, and an isolated cache. For production, pin tested image, model, and code revisions.",
+          "topology": {
+            "summary": "1× DGX Spark",
+            "gpu_count": 1,
+            "node_count": 1,
+            "tensor_parallel_size": null
+          },
+          "runtime": {
+            "kind": "container",
+            "label": "Container",
+            "image": "vllm/vllm-openai:v0.28.0",
+            "image_url": "https://hub.docker.com/r/vllm/vllm-openai/tags?name=v0.28.0",
+            "setup_label": "Start container",
+            "setup_target": "single-node",
+            "setup_instructions": "Set `HF_TOKEN` in the host environment.",
+            "setup_command": "docker run --rm -it \\\n  --gpus all \\\n  --ipc host \\\n  --network host \\\n  --shm-size=16g \\\n  --ulimit memlock=-1 \\\n  --ulimit stack=67108864 \\\n  -e HF_TOKEN=$HF_TOKEN \\\n  -v ~/.cache/huggingface:/root/.cache/huggingface \\\n  --entrypoint /bin/bash \\\n  vllm/vllm-openai:v0.28.0"
+          },
+          "serve": {
+            "label": "Launch",
+            "target": "single-node",
+            "instructions": null,
+            "command": "vllm serve nvidia/Qwen3.8-27B-NVFP4 \\\n  --host 0.0.0.0 \\\n  --port 8000 \\\n  --trust-remote-code \\\n  --kv-cache-dtype fp8 \\\n  --gpu-memory-utilization 0.8 \\\n  --max-model-len 262144 \\\n  --max-num-seqs 8 \\\n  --max-num-batched-tokens 16384 \\\n  --enable-chunked-prefill \\\n  --async-scheduling \\\n  --enable-prefix-caching \\\n  --speculative-config '{\"method\":\"dflash\",\"model\": \"z-lab/Qwen3.8-27B-DFlash2\", \"num_speculative_tokens\":8}' \\\n  --load-format safetensors \\\n  --reasoning-parser qwen3 \\\n  --tool-call-parser qwen3_xml \\\n  --enable-auto-tool-choice",
+            "port": 8000,
+            "api_model": "nvidia/Qwen3.8-27B-NVFP4"
+          },
+          "launch": null,
+          "sampling": null,
+          "notes": null,
+          "clients": {
+            "shell": "curl http://localhost:8000/v1/chat/completions \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\"model\": \"nvidia/Qwen3.8-27B-NVFP4\", \"messages\": [{\"role\": \"user\", \"content\": \"Hello\"}]}'",
+            "python": "from openai import OpenAI\n\nclient = OpenAI(base_url=\"http://localhost:8000/v1\", api_key=\"EMPTY\")\nresp = client.chat.completions.create(\n    model=\"nvidia/Qwen3.8-27B-NVFP4\",\n    messages=[{\"role\": \"user\", \"content\": \"Hello\"}],\n)\nprint(resp.choices[0].message.content)"
+          }
+        },
+        {
+          "id": "qwen/qwen3.8-27b/geforce-rtx/windows/llama-cpp/24gb/iq4-xs/vision-mtp",
+          "hardware": "geforce-rtx",
+          "platform": {
+            "os": "windows",
+            "execution": "native"
+          },
+          "backend": "llama-cpp",
+          "backend_version": "b11574",
+          "backend_min_version": "b10746",
+          "min_vidmem_gb": 24,
+          "precision": "iq4-xs",
+          "variant": "vision-mtp",
+          "status": "optimized",
+          "prerequisites": [
+            "A CUDA-enabled Windows x86-64 llama.cpp build b10746, source commit d11b3cc7ed2b146a6045d55db30f46d511e25011, with llama-server.exe on PATH.",
+            "Network access for llama-server to download and cache the named Hugging Face checkpoint files."
+          ],
+          "limitations": [],
+          "checkpoint": {
+            "target": "https://huggingface.co/unsloth/Qwen3.8-27B-GGUF/blob/main/Qwen3.8-27B-UD-IQ4_XS.gguf",
+            "target_label": "unsloth/Qwen3.8-27B-GGUF/Qwen3.8-27B-UD-IQ4_XS.gguf",
+            "draft": null,
+            "draft_label": null
+          },
+          "security": null,
+          "topology": null,
+          "runtime": {
+            "setup_label": "Download llama.cpp",
+            "setup_instructions": "Pinned to b11574. Leaves you in the extracted folder with it added to PATH for this session. Optionally set $env:GITHUB_TOKEN = \"<PAT>\" first to raise GitHub's API rate limit.",
+            "setup_command": "&{\n  cd $HOME\n  $null = mkdir -Force llama-cuda\n  cd .\\llama-cuda\n\n  $headers = @{}\n  if ($env:GITHUB_TOKEN) { $headers['Authorization'] = \"Bearer $env:GITHUB_TOKEN\" }\n  try {\n    $release = Invoke-RestMethod -Uri \"https://api.github.com/repos/ggml-org/llama.cpp/releases/tags/b11574\" -Headers $headers\n  } catch {\n    throw \"Failed to query the GitHub Releases API: $($_.Exception.Message)\"\n  }\n\n  $cudaAsset  = $release.assets | Where-Object { $_.name -like \"cudart-llama-bin-win-cuda-*-x64.zip\" } | Select-Object -First 1\n  $llamaAsset = $release.assets | Where-Object { $_.name -like \"llama-*-bin-win-cuda-*-x64.zip\" }       | Select-Object -First 1\n  if (-not $cudaAsset -or -not $llamaAsset) {\n    throw \"No matching Windows CUDA release asset found for $($release.tag_name).\"\n  }\n\n  Invoke-WebRequest -Uri $cudaAsset.browser_download_url  -OutFile $cudaAsset.name\n  Invoke-WebRequest -Uri $llamaAsset.browser_download_url -OutFile $llamaAsset.name\n\n  Expand-Archive $cudaAsset.name  .\\llama -Force\n  Expand-Archive $llamaAsset.name .\\llama -Force\n\n  cd .\\llama\n  $env:PATH = \"$PWD;$env:PATH\"\n}"
+          },
+          "serve": {
+            "label": "Launch MTP · n=2",
+            "target": "single-node",
+            "instructions": "Run in PowerShell with llama-server.exe on PATH. llama-server downloads and caches the named target and projector files from Hugging Face. The omitted load-mode flag retains default mmap behavior.",
+            "command": "llama-server.exe -hf \"unsloth/Qwen3.8-27B-GGUF\" `\n  -hff \"Qwen3.8-27B-UD-IQ4_XS.gguf\" `\n  --mmproj-url \"https://huggingface.co/unsloth/Qwen3.8-27B-GGUF/resolve/4ca720788d1e01f1bff70c033e0d0028fd02e502/mmproj-F16.gguf\" `\n  --host 127.0.0.1 `\n  --port 9931 `\n  --backend-sampling `\n  --batch-size 4096 `\n  --ubatch-size 512 `\n  --ctx-size 113664 `\n  --parallel 1 `\n  -ngl 999 `\n  --spec-type draft-mtp `\n  --spec-draft-n-max 2 `\n  --spec-draft-backend-sampling `\n  --temp 1.0 `\n  --top-p 0.95 `\n  --top-k 20 `\n  --min-p 0.0 `\n  --presence-penalty 0.0 `\n  --repeat-penalty 1.0",
+            "port": 9931,
+            "api_model": "unsloth/Qwen3.8-27B-GGUF"
+          },
+          "launch": null,
+          "sampling": "Target backend sampling: ON; speculative draft backend sampling: ON; --temp=1.0; --top-p=0.95; --top-k=20; --min-p=0.0; --presence-penalty=0.0; --repeat-penalty=1.0",
+          "notes": "Projector: [mmproj-F16.gguf](https://huggingface.co/unsloth/Qwen3.8-27B-GGUF/blob/4ca720788d1e01f1bff70c033e0d0028fd02e502/mmproj-F16.gguf).",
+          "clients": {
+            "shell": "'{\"model\":\"unsloth/Qwen3.8-27B-GGUF\",\"messages\":[{\"role\":\"user\",\"content\":\"Hello\"}]}' | curl.exe 'http://127.0.0.1:9931/v1/chat/completions' -H 'Content-Type: application/json' --data-binary '@-'",
+            "python": "from openai import OpenAI\n\nclient = OpenAI(base_url=\"http://127.0.0.1:9931/v1\", api_key=\"EMPTY\")\nresp = client.chat.completions.create(\n    model=\"unsloth/Qwen3.8-27B-GGUF\",\n    messages=[{\"role\": \"user\", \"content\": \"Hello\"}],\n)\nprint(resp.choices[0].message.content)"
+          }
+        },
+        {
+          "id": "qwen/qwen3.8-27b/geforce-rtx/windows/llama-cpp/30gb/q4-k-m/vision-dflash2",
+          "hardware": "geforce-rtx",
+          "platform": {
+            "os": "windows",
+            "execution": "native"
+          },
+          "backend": "llama-cpp",
+          "backend_version": "b11574",
+          "backend_min_version": "b10746",
+          "min_vidmem_gb": 30,
+          "precision": "q4-k-m",
+          "variant": "vision-dflash2",
+          "status": "optimized",
+          "prerequisites": [
+            "A CUDA-enabled Windows x86-64 llama.cpp build b10746, source commit d11b3cc7ed2b146a6045d55db30f46d511e25011, with llama-server.exe on PATH.",
+            "Network access for llama-server to download and cache the named Hugging Face checkpoint files."
+          ],
+          "limitations": [],
+          "checkpoint": {
+            "target": "https://huggingface.co/unsloth/Qwen3.8-27B-GGUF/blob/main/Qwen3.8-27B-UD-Q4_K_M.gguf",
+            "target_label": "unsloth/Qwen3.8-27B-GGUF/Qwen3.8-27B-UD-Q4_K_M.gguf",
+            "draft": "https://huggingface.co/incoai/Qwen3.8-27B-DFlash2-GGUF/blob/main/Qwen3.8-27B-DFlash2-Q4_K_M.gguf",
+            "draft_label": "incoai/Qwen3.8-27B-DFlash2-GGUF/Qwen3.8-27B-DFlash2-Q4_K_M.gguf"
+          },
+          "security": null,
+          "topology": null,
+          "runtime": {
+            "setup_label": "Download llama.cpp",
+            "setup_instructions": "Pinned to b11574. Leaves you in the extracted folder with it added to PATH for this session. Optionally set $env:GITHUB_TOKEN = \"<PAT>\" first to raise GitHub's API rate limit.",
+            "setup_command": "&{\n  cd $HOME\n  $null = mkdir -Force llama-cuda\n  cd .\\llama-cuda\n\n  $headers = @{}\n  if ($env:GITHUB_TOKEN) { $headers['Authorization'] = \"Bearer $env:GITHUB_TOKEN\" }\n  try {\n    $release = Invoke-RestMethod -Uri \"https://api.github.com/repos/ggml-org/llama.cpp/releases/tags/b11574\" -Headers $headers\n  } catch {\n    throw \"Failed to query the GitHub Releases API: $($_.Exception.Message)\"\n  }\n\n  $cudaAsset  = $release.assets | Where-Object { $_.name -like \"cudart-llama-bin-win-cuda-*-x64.zip\" } | Select-Object -First 1\n  $llamaAsset = $release.assets | Where-Object { $_.name -like \"llama-*-bin-win-cuda-*-x64.zip\" }       | Select-Object -First 1\n  if (-not $cudaAsset -or -not $llamaAsset) {\n    throw \"No matching Windows CUDA release asset found for $($release.tag_name).\"\n  }\n\n  Invoke-WebRequest -Uri $cudaAsset.browser_download_url  -OutFile $cudaAsset.name\n  Invoke-WebRequest -Uri $llamaAsset.browser_download_url -OutFile $llamaAsset.name\n\n  Expand-Archive $cudaAsset.name  .\\llama -Force\n  Expand-Archive $llamaAsset.name .\\llama -Force\n\n  cd .\\llama\n  $env:PATH = \"$PWD;$env:PATH\"\n}"
+          },
+          "serve": {
+            "label": "Launch DFlash · n=7",
+            "target": "single-node",
+            "instructions": "Run in PowerShell with llama-server.exe on PATH. llama-server downloads and caches the named target, draft, and projector files from Hugging Face. The omitted load-mode flag retains default mmap behavior.",
+            "command": "llama-server.exe -hf \"unsloth/Qwen3.8-27B-GGUF\" `\n  -hff \"Qwen3.8-27B-UD-Q4_K_M.gguf\" `\n  --mmproj-url \"https://huggingface.co/unsloth/Qwen3.8-27B-GGUF/resolve/4ca720788d1e01f1bff70c033e0d0028fd02e502/mmproj-F16.gguf\" `\n  --host 127.0.0.1 `\n  --port 9931 `\n  --backend-sampling `\n  --batch-size 4096 `\n  --ubatch-size 512 `\n  --ctx-size 163840 `\n  --parallel 1 `\n  -ngl 999 `\n  --spec-type draft-dflash `\n  --spec-draft-n-max 7 `\n  -hfrd \"incoai/Qwen3.8-27B-DFlash2-GGUF\" `\n  --spec-draft-model \"Qwen3.8-27B-DFlash2-Q4_K_M.gguf\" `\n  --spec-draft-backend-sampling `\n  --temp 1.0 `\n  --top-p 0.95 `\n  --top-k 20 `\n  --min-p 0.0 `\n  --presence-penalty 0.0 `\n  --repeat-penalty 1.0",
+            "port": 9931,
+            "api_model": "unsloth/Qwen3.8-27B-GGUF"
+          },
+          "launch": null,
+          "sampling": "Target backend sampling: ON; speculative draft backend sampling: ON; --temp=1.0; --top-p=0.95; --top-k=20; --min-p=0.0; --presence-penalty=0.0; --repeat-penalty=1.0",
+          "notes": "Projector: [mmproj-F16.gguf](https://huggingface.co/unsloth/Qwen3.8-27B-GGUF/blob/4ca720788d1e01f1bff70c033e0d0028fd02e502/mmproj-F16.gguf).",
+          "clients": {
+            "shell": "'{\"model\":\"unsloth/Qwen3.8-27B-GGUF\",\"messages\":[{\"role\":\"user\",\"content\":\"Hello\"}]}' | curl.exe 'http://127.0.0.1:9931/v1/chat/completions' -H 'Content-Type: application/json' --data-binary '@-'",
+            "python": "from openai import OpenAI\n\nclient = OpenAI(base_url=\"http://127.0.0.1:9931/v1\", api_key=\"EMPTY\")\nresp = client.chat.completions.create(\n    model=\"unsloth/Qwen3.8-27B-GGUF\",\n    messages=[{\"role\": \"user\", \"content\": \"Hello\"}],\n)\nprint(resp.choices[0].message.content)"
+          }
+        },
+        {
+          "id": "qwen/qwen3.8-27b/rtx-spark/windows/llama-cpp/24gb/iq4-xs/vision-dflash",
+          "hardware": "rtx-spark",
+          "platform": {
+            "os": "windows",
+            "execution": "native"
+          },
+          "backend": "llama-cpp",
+          "backend_version": "b11572",
+          "backend_min_version": "b11229",
+          "min_vidmem_gb": 24,
+          "precision": "iq4-xs",
+          "variant": "vision-dflash",
+          "status": "optimized",
+          "prerequisites": [
+            "A CUDA-enabled Windows ARM64 llama.cpp build b11229, source commit c2a9e1606807970f4ee3167bacd951699c89caea, with llama-server.exe on PATH.",
+            "Network access for llama-server to download and cache the named Hugging Face checkpoint files."
+          ],
+          "limitations": [],
+          "checkpoint": {
+            "target": "https://huggingface.co/unsloth/Qwen3.8-27B-GGUF/blob/main/Qwen3.8-27B-UD-IQ4_XS.gguf",
+            "target_label": "unsloth/Qwen3.8-27B-GGUF/Qwen3.8-27B-UD-IQ4_XS.gguf",
+            "draft": "https://huggingface.co/incoai/Qwen3.8-27B-DFlash2-GGUF/blob/main/Qwen3.8-27B-DFlash2-Q4_K_M.gguf",
+            "draft_label": "incoai/Qwen3.8-27B-DFlash2-GGUF/Qwen3.8-27B-DFlash2-Q4_K_M.gguf"
+          },
+          "security": null,
+          "topology": null,
+          "runtime": {
+            "setup_label": "Download llama.cpp",
+            "setup_instructions": "Pinned to b11572. Leaves you in the extracted folder with it added to PATH for this session. Optionally set $env:GITHUB_TOKEN = \"<PAT>\" first to raise GitHub's API rate limit.",
+            "setup_command": "&{\n  cd $HOME\n  $null = mkdir -Force llama-cuda\n  cd .\\llama-cuda\n\n  $headers = @{}\n  if ($env:GITHUB_TOKEN) { $headers['Authorization'] = \"Bearer $env:GITHUB_TOKEN\" }\n  try {\n    $release = Invoke-RestMethod -Uri \"https://api.github.com/repos/ggml-org/llama.cpp/releases/tags/b11572\" -Headers $headers\n  } catch {\n    throw \"Failed to query the GitHub Releases API: $($_.Exception.Message)\"\n  }\n\n  $cudaAsset  = $release.assets | Where-Object { $_.name -like \"cudart-llama-bin-win-cuda-*-arm64.zip\" } | Select-Object -First 1\n  $llamaAsset = $release.assets | Where-Object { $_.name -like \"llama-*-bin-win-cuda-*-arm64.zip\" }       | Select-Object -First 1\n  if (-not $cudaAsset -or -not $llamaAsset) {\n    throw \"No matching Windows CUDA release asset found for $($release.tag_name).\"\n  }\n\n  Invoke-WebRequest -Uri $cudaAsset.browser_download_url  -OutFile $cudaAsset.name\n  Invoke-WebRequest -Uri $llamaAsset.browser_download_url -OutFile $llamaAsset.name\n\n  Expand-Archive $cudaAsset.name  .\\llama -Force\n  Expand-Archive $llamaAsset.name .\\llama -Force\n\n  cd .\\llama\n  $env:PATH = \"$PWD;$env:PATH\"\n}"
+          },
+          "serve": {
+            "label": "Launch DFlash · n=7",
+            "target": "single-node",
+            "instructions": "Run in PowerShell with llama-server.exe on PATH. llama-server downloads and caches the named target and draft files from Hugging Face. The omitted load-mode flag retains default mmap behavior.",
+            "command": "llama-server.exe -hf \"unsloth/Qwen3.8-27B-GGUF\" `\n  -hff \"Qwen3.8-27B-UD-IQ4_XS.gguf\" `\n  --mmproj-url \"https://huggingface.co/unsloth/Qwen3.8-27B-GGUF/resolve/4ca720788d1e01f1bff70c033e0d0028fd02e502/mmproj-F16.gguf\" `\n  --host 127.0.0.1 `\n  --port 9931 `\n  --batch-size 4096 `\n  --ubatch-size 512 `\n  --ctx-size 105472 `\n  --parallel 1 `\n  -ngl 999 `\n  --spec-type draft-dflash `\n  --spec-draft-n-max 7 `\n  -hfrd \"incoai/Qwen3.8-27B-DFlash2-GGUF\" `\n  --spec-draft-model \"Qwen3.8-27B-DFlash2-Q4_K_M.gguf\" `\n  --spec-draft-backend-sampling `\n  --temp 1.0 `\n  --top-p 0.95 `\n  --top-k 20 `\n  --min-p 0.0 `\n  --presence-penalty 0.0 `\n  --repeat-penalty 1.0",
+            "port": 9931,
+            "api_model": "unsloth/Qwen3.8-27B-GGUF"
+          },
+          "launch": null,
+          "sampling": "Target backend sampling: OFF; speculative draft backend sampling: ON; --temp=1.0; --top-p=0.95; --top-k=20; --min-p=0.0; --presence-penalty=0.0; --repeat-penalty=1.0",
+          "notes": "Projector: [mmproj-F16.gguf](https://huggingface.co/unsloth/Qwen3.8-27B-GGUF/blob/4ca720788d1e01f1bff70c033e0d0028fd02e502/mmproj-F16.gguf).",
+          "clients": {
+            "shell": "'{\"model\":\"unsloth/Qwen3.8-27B-GGUF\",\"messages\":[{\"role\":\"user\",\"content\":\"Hello\"}]}' | curl.exe 'http://127.0.0.1:9931/v1/chat/completions' -H 'Content-Type: application/json' --data-binary '@-'",
+            "python": "from openai import OpenAI\n\nclient = OpenAI(base_url=\"http://127.0.0.1:9931/v1\", api_key=\"EMPTY\")\nresp = client.chat.completions.create(\n    model=\"unsloth/Qwen3.8-27B-GGUF\",\n    messages=[{\"role\": \"user\", \"content\": \"Hello\"}],\n)\nprint(resp.choices[0].message.content)"
+          }
+        },
+        {
+          "id": "qwen/qwen3.8-27b/rtx-spark/windows/llama-cpp/28gb/q4-k-m/vision-dflash",
+          "hardware": "rtx-spark",
+          "platform": {
+            "os": "windows",
+            "execution": "native"
+          },
+          "backend": "llama-cpp",
+          "backend_version": "b11572",
+          "backend_min_version": "b11229",
+          "min_vidmem_gb": 28,
+          "precision": "q4-k-m",
+          "variant": "vision-dflash",
+          "status": "optimized",
+          "prerequisites": [
+            "A CUDA-enabled Windows ARM64 llama.cpp build b11229, source commit c2a9e1606807970f4ee3167bacd951699c89caea, with llama-server.exe on PATH.",
+            "Network access for llama-server to download and cache the named Hugging Face checkpoint files."
+          ],
+          "limitations": [],
+          "checkpoint": {
+            "target": "https://huggingface.co/unsloth/Qwen3.8-27B-GGUF/blob/main/Qwen3.8-27B-UD-Q4_K_M.gguf",
+            "target_label": "unsloth/Qwen3.8-27B-GGUF/Qwen3.8-27B-UD-Q4_K_M.gguf",
+            "draft": "https://huggingface.co/incoai/Qwen3.8-27B-DFlash2-GGUF/blob/main/Qwen3.8-27B-DFlash2-Q4_K_M.gguf",
+            "draft_label": "incoai/Qwen3.8-27B-DFlash2-GGUF/Qwen3.8-27B-DFlash2-Q4_K_M.gguf"
+          },
+          "security": null,
+          "topology": null,
+          "runtime": {
+            "setup_label": "Download llama.cpp",
+            "setup_instructions": "Pinned to b11572. Leaves you in the extracted folder with it added to PATH for this session. Optionally set $env:GITHUB_TOKEN = \"<PAT>\" first to raise GitHub's API rate limit.",
+            "setup_command": "&{\n  cd $HOME\n  $null = mkdir -Force llama-cuda\n  cd .\\llama-cuda\n\n  $headers = @{}\n  if ($env:GITHUB_TOKEN) { $headers['Authorization'] = \"Bearer $env:GITHUB_TOKEN\" }\n  try {\n    $release = Invoke-RestMethod -Uri \"https://api.github.com/repos/ggml-org/llama.cpp/releases/tags/b11572\" -Headers $headers\n  } catch {\n    throw \"Failed to query the GitHub Releases API: $($_.Exception.Message)\"\n  }\n\n  $cudaAsset  = $release.assets | Where-Object { $_.name -like \"cudart-llama-bin-win-cuda-*-arm64.zip\" } | Select-Object -First 1\n  $llamaAsset = $release.assets | Where-Object { $_.name -like \"llama-*-bin-win-cuda-*-arm64.zip\" }       | Select-Object -First 1\n  if (-not $cudaAsset -or -not $llamaAsset) {\n    throw \"No matching Windows CUDA release asset found for $($release.tag_name).\"\n  }\n\n  Invoke-WebRequest -Uri $cudaAsset.browser_download_url  -OutFile $cudaAsset.name\n  Invoke-WebRequest -Uri $llamaAsset.browser_download_url -OutFile $llamaAsset.name\n\n  Expand-Archive $cudaAsset.name  .\\llama -Force\n  Expand-Archive $llamaAsset.name .\\llama -Force\n\n  cd .\\llama\n  $env:PATH = \"$PWD;$env:PATH\"\n}"
+          },
+          "serve": {
+            "label": "Launch DFlash · n=7",
+            "target": "single-node",
+            "instructions": "Run in PowerShell with llama-server.exe on PATH. llama-server downloads and caches the named target and draft files from Hugging Face. The omitted load-mode flag retains default mmap behavior.",
+            "command": "llama-server.exe -hf \"unsloth/Qwen3.8-27B-GGUF\" `\n  -hff \"Qwen3.8-27B-UD-Q4_K_M.gguf\" `\n  --mmproj-url \"https://huggingface.co/unsloth/Qwen3.8-27B-GGUF/resolve/4ca720788d1e01f1bff70c033e0d0028fd02e502/mmproj-F16.gguf\" `\n  --host 127.0.0.1 `\n  --port 9931 `\n  --batch-size 4096 `\n  --ubatch-size 512 `\n  --ctx-size 138240 `\n  --parallel 1 `\n  -ngl 999 `\n  --spec-type draft-dflash `\n  --spec-draft-n-max 7 `\n  -hfrd \"incoai/Qwen3.8-27B-DFlash2-GGUF\" `\n  --spec-draft-model \"Qwen3.8-27B-DFlash2-Q4_K_M.gguf\" `\n  --spec-draft-backend-sampling `\n  --temp 1.0 `\n  --top-p 0.95 `\n  --top-k 20 `\n  --min-p 0.0 `\n  --presence-penalty 0.0 `\n  --repeat-penalty 1.0",
+            "port": 9931,
+            "api_model": "unsloth/Qwen3.8-27B-GGUF"
+          },
+          "launch": null,
+          "sampling": "Target backend sampling: OFF; speculative draft backend sampling: ON; --temp=1.0; --top-p=0.95; --top-k=20; --min-p=0.0; --presence-penalty=0.0; --repeat-penalty=1.0",
+          "notes": "Projector: [mmproj-F16.gguf](https://huggingface.co/unsloth/Qwen3.8-27B-GGUF/blob/4ca720788d1e01f1bff70c033e0d0028fd02e502/mmproj-F16.gguf).",
+          "clients": {
+            "shell": "'{\"model\":\"unsloth/Qwen3.8-27B-GGUF\",\"messages\":[{\"role\":\"user\",\"content\":\"Hello\"}]}' | curl.exe 'http://127.0.0.1:9931/v1/chat/completions' -H 'Content-Type: application/json' --data-binary '@-'",
+            "python": "from openai import OpenAI\n\nclient = OpenAI(base_url=\"http://127.0.0.1:9931/v1\", api_key=\"EMPTY\")\nresp = client.chat.completions.create(\n    model=\"unsloth/Qwen3.8-27B-GGUF\",\n    messages=[{\"role\": \"user\", \"content\": \"Hello\"}],\n)\nprint(resp.choices[0].message.content)"
+          }
+        }
+      ]
+    },
+    {
+      "id": "qwen/qwen3.8-flash-next",
+      "display_name": "Qwen3.8 Flash-Next",
+      "builder": "qwen",
+      "family": "Qwen3.8",
+      "summary": "Qwen 3.8 (Flash-Next) text and vision model.",
+      "upstream": null,
+      "modalities": [
+        "text",
+        "image"
+      ],
+      "recipes": [
+        {
+          "id": "qwen/qwen3.8-flash-next/dgx-spark-2gpu/linux/vllm/64gb/fp4-local",
+          "hardware": "dgx-spark-2gpu",
+          "platform": {
+            "os": "linux",
+            "execution": "container"
+          },
+          "backend": "vllm",
+          "backend_version": "0.1.dev21830+g8244d1c44.d20261015",
+          "backend_min_version": null,
+          "min_vidmem_gb": 64,
+          "precision": "fp4-local",
+          "variant": null,
+          "status": "optimized",
+          "prerequisites": [],
+          "limitations": [
+            "The source requires the custom B12x container image."
+          ],
+          "checkpoint": {
+            "target": "https://huggingface.co/nvidia/Qwen3.8-Flash-Next-FP4-Local",
+            "target_label": "nvidia/Qwen3.8-Flash-Next-FP4-Local",
+            "draft": null,
+            "draft_label": null
+          },
+          "security": "Evaluation configuration only. Host networking exposes vLLM on host interfaces; use a firewall or reverse proxy, a scoped read-only HF token, and an isolated cache. For production, pin tested image, model, and code revisions.",
+          "topology": {
+            "summary": "2× DGX Spark; one node rank per Spark; tensor parallel 2",
+            "gpu_count": 2,
+            "node_count": 2,
+            "tensor_parallel_size": 2
+          },
+          "runtime": {
+            "kind": "container",
+            "label": "Container (community, ARM64, custom B12x)",
+            "image": "eugr/spark-vllm-b12x:nightly-20261015",
+            "image_url": "https://hub.docker.com/layers/eugr/spark-vllm-b12x/nightly-20261015",
+            "setup_label": "Start container",
+            "setup_target": "all-nodes",
+            "setup_instructions": "Run on every node after setting `HF_TOKEN`; replace the node-specific placeholders.",
+            "setup_command": "# Example two-Spark values (adjust to your network):\n#   HEAD_IP=\"10.100.32.1\"        # head node IP on the ETH subnet\n#   ETH_IF=\"enp1s0f0np0\"        # ConnectX baseboard ethernet (socket/control)\n#   IB_IF=\"rocep1s0f0,roceP2p1s0f0\"   # RoCE HCA names (data plane) - use both \"twins\"!\nexport HEAD_IP=\"<head-connectx-ip>\"\nexport ETH_IF=\"<connectx-interface>\"\nexport IB_IF=\"<roce-interface-1>,<roce-interface-2>\"\nexport MASTER_PORT=29501\nexport IMAGE=\"eugr/spark-vllm-b12x:nightly-20261015\"\nexport HF_CACHE_DIR=\"$HOME/.cache/huggingface\"\n\nmkdir -p \"$HF_CACHE_DIR\" \"$HOME/.cache/vllm\" \"$HOME/.cache/flashinfer\" \"$HOME/.triton\" \"$HOME/.cache/b12x\"\n\ndocker run --rm -it \\\n  --privileged \\\n  --gpus all \\\n  --ipc host \\\n  --network host \\\n  --shm-size=16g \\\n  --ulimit nofile=1048576:1048576 \\\n  --ulimit memlock=-1 \\\n  --ulimit stack=67108864 \\\n  -e HF_TOKEN=$HF_TOKEN \\\n  -e MN_IF_NAME=\"$ETH_IF\" \\\n  -e UCX_NET_DEVICES=\"$ETH_IF\" \\\n  -e NCCL_SOCKET_IFNAME=\"$ETH_IF\" \\\n  -e NCCL_IB_HCA=\"$IB_IF\" \\\n  -e NCCL_IB_DISABLE=0 \\\n  -e OMPI_MCA_btl_tcp_if_include=\"$ETH_IF\" \\\n  -e GLOO_SOCKET_IFNAME=\"$ETH_IF\" \\\n  -e TP_SOCKET_IFNAME=\"$ETH_IF\" \\\n  -e NCCL_IGNORE_CPU_AFFINITY=1 \\\n  -e HEAD_IP=\"$HEAD_IP\" \\\n  -e MASTER_PORT=\"$MASTER_PORT\" \\\n  -v \"$HF_CACHE_DIR:/root/.cache/huggingface\" \\\n  -v \"$HOME/.cache/vllm:/root/.cache/vllm\" \\\n  -v \"$HOME/.cache/flashinfer:/root/.cache/flashinfer\" \\\n  -v \"$HOME/.triton:/root/.triton\" \\\n  -v $HOME/.cache/b12x:/root/.cache/b12x \\\n  --entrypoint /bin/bash \\\n  \"$IMAGE\""
+          },
+          "serve": {
+            "label": "Launch head",
+            "target": "head",
+            "instructions": null,
+            "command": "export VLLM_PLE_TABLE_MEMORY=\"disk\"\nexport CUTE_DSL_ARCH=\"sm_121a\"\nexport SAFETENSORS_FAST_GPU=\"1\"\nexport VLLM_WORKER_MULTIPROC_METHOD=\"spawn\"\nexport VLLM_SSM_CONV_STATE_LAYOUT=\"DS\"\nexport VLLM_USE_AOT_COMPILE=\"1\"\nexport VLLM_USE_MEGA_AOT_ARTIFACT=\"1\"\nexport VLLM_USE_V2_MODEL_RUNNER=\"1\"\nexport B12X_POLICY_MODE=\"auto\"\nexport VLLM_ENABLE_ROCE_ALLREDUCE=\"1\"\nexport VLLM_ROCE_ALLREDUCE_MAX_SIZE=\"2MB\"\nexport NCCL_BUFFSIZE=\"1048576\"\nexport NCCL_MAX_CTAS=\"8\"\nexport B12X_WEIGHTS_COMPILE_WORKERS=\"4\"\nexport B12X_STATE_COMPILE_WORKERS=\"4\"\nexport B12X_BIND_COMPILE_WORKERS=\"4\"\nexport VLLM_B12X_MOE_FP4_FORCE_A16=\"1\"\nexport B12X_W4A16_A4_PREFILL=\"1\"\n\nvllm serve nvidia/Qwen3.8-Flash-Next-FP4-Local \\\n  --host 0.0.0.0 \\\n  --port 8000 \\\n  --trust-remote-code \\\n  --tensor-parallel-size 2 \\\n  --mamba-cache-mode align \\\n  --enable-prefix-caching \\\n  --enable-chunked-prefill \\\n  --dtype bfloat16 \\\n  --kv-cache-dtype fp8 \\\n  --quantization modelopt_mixed \\\n  --block-size 16 \\\n  --load-format b12x \\\n  --max-model-len 262144 \\\n  --max-num-seqs 8 \\\n  --max-num-batched-tokens 2048 \\\n  --speculative-config '{\"method\":\"mtp\",\"num_speculative_tokens\":4}' \\\n  --gdn-decode-kernel b12x \\\n  --linear-backend b12x \\\n  --moe-backend b12x \\\n  --no-enable-flashinfer-autotune \\\n  --mm-encoder-tp-mode data \\\n  --reasoning-parser qwen3 \\\n  --tool-call-parser qwen3_xml \\\n  --enable-auto-tool-choice \\\n  --compilation-config '{\"pass_config\":{\"fuse_act_quant\":true},\"max_cudagraph_capture_size\":40,\"cudagraph_capture_sizes\":[1,2,4,5,8,10,16,20,24,32,40]}' \\\n  --mm-processor-cache-gb 0 \\\n  --limit-mm-per-prompt '{\"image\":1}' \\\n  --gpu-memory-utilization 0.8 \\\n  --kv-cache-memory-bytes 3G \\\n  --nnodes 2 \\\n  --node-rank 0 \\\n  --master-addr \"$HEAD_IP\" \\\n  --master-port \"$MASTER_PORT\"",
+            "port": 8000,
+            "api_model": "nvidia/Qwen3.8-Flash-Next-FP4-Local",
+            "additional_commands": [
+              {
+                "id": "worker",
+                "label": "Launch worker",
+                "target": "workers",
+                "instructions": null,
+                "command": "export VLLM_PLE_TABLE_MEMORY=\"disk\"\nexport CUTE_DSL_ARCH=\"sm_121a\"\nexport SAFETENSORS_FAST_GPU=\"1\"\nexport VLLM_WORKER_MULTIPROC_METHOD=\"spawn\"\nexport VLLM_SSM_CONV_STATE_LAYOUT=\"DS\"\nexport VLLM_USE_AOT_COMPILE=\"1\"\nexport VLLM_USE_MEGA_AOT_ARTIFACT=\"1\"\nexport VLLM_USE_V2_MODEL_RUNNER=\"1\"\nexport B12X_POLICY_MODE=\"auto\"\nexport VLLM_ENABLE_ROCE_ALLREDUCE=\"1\"\nexport VLLM_ROCE_ALLREDUCE_MAX_SIZE=\"2MB\"\nexport NCCL_BUFFSIZE=\"1048576\"\nexport NCCL_MAX_CTAS=\"8\"\nexport B12X_WEIGHTS_COMPILE_WORKERS=\"4\"\nexport B12X_STATE_COMPILE_WORKERS=\"4\"\nexport B12X_BIND_COMPILE_WORKERS=\"4\"\nexport VLLM_B12X_MOE_FP4_FORCE_A16=\"1\"\nexport B12X_W4A16_A4_PREFILL=\"1\"\n\nvllm serve nvidia/Qwen3.8-Flash-Next-FP4-Local \\\n  --host 0.0.0.0 \\\n  --port 8000 \\\n  --trust-remote-code \\\n  --tensor-parallel-size 2 \\\n  --mamba-cache-mode align \\\n  --enable-prefix-caching \\\n  --enable-chunked-prefill \\\n  --dtype bfloat16 \\\n  --kv-cache-dtype fp8 \\\n  --quantization modelopt_mixed \\\n  --block-size 16 \\\n  --load-format b12x \\\n  --max-model-len 262144 \\\n  --max-num-seqs 8 \\\n  --max-num-batched-tokens 2048 \\\n  --speculative-config '{\"method\":\"mtp\",\"num_speculative_tokens\":4}' \\\n  --gdn-decode-kernel b12x \\\n  --linear-backend b12x \\\n  --moe-backend b12x \\\n  --no-enable-flashinfer-autotune \\\n  --mm-encoder-tp-mode data \\\n  --reasoning-parser qwen3 \\\n  --tool-call-parser qwen3_xml \\\n  --enable-auto-tool-choice \\\n  --compilation-config '{\"pass_config\":{\"fuse_act_quant\":true},\"max_cudagraph_capture_size\":40,\"cudagraph_capture_sizes\":[1,2,4,5,8,10,16,20,24,32,40]}' \\\n  --mm-processor-cache-gb 0 \\\n  --limit-mm-per-prompt '{\"image\":1}' \\\n  --gpu-memory-utilization 0.8 \\\n  --kv-cache-memory-bytes 3G \\\n  --nnodes 2 \\\n  --node-rank 1 \\\n  --master-addr \"$HEAD_IP\" \\\n  --master-port \"$MASTER_PORT\" \\\n  --headless"
+              }
+            ]
+          },
+          "launch": null,
+          "sampling": null,
+          "notes": "Use the same CX7 port on every node; assign both port subinterfaces on separate subnets; cache the image and checkpoint on every node; start workers before the head. Docker runs privileged.",
+          "clients": {
+            "shell": "curl http://localhost:8000/v1/chat/completions \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\"model\": \"nvidia/Qwen3.8-Flash-Next-FP4-Local\", \"messages\": [{\"role\": \"user\", \"content\": \"Hello\"}]}'",
+            "python": "from openai import OpenAI\n\nclient = OpenAI(base_url=\"http://localhost:8000/v1\", api_key=\"EMPTY\")\nresp = client.chat.completions.create(\n    model=\"nvidia/Qwen3.8-Flash-Next-FP4-Local\",\n    messages=[{\"role\": \"user\", \"content\": \"Hello\"}],\n)\nprint(resp.choices[0].message.content)"
+          }
+        },
+        {
+          "id": "qwen/qwen3.8-flash-next/dgx-spark/linux/vllm/fp4-local",
+          "hardware": "dgx-spark",
+          "platform": {
+            "os": "linux",
+            "execution": "container"
+          },
+          "backend": "vllm",
+          "backend_version": "0.1.dev21830+g8244d1c44.d20261015",
+          "backend_min_version": null,
+          "min_vidmem_gb": 128,
+          "precision": "fp4-local",
+          "variant": null,
+          "status": "optimized",
+          "prerequisites": [
+            "A single DGX Spark with 128 GB of memory.",
+            "Docker with NVIDIA GPU support and access to the target checkpoint."
+          ],
+          "limitations": [
+            "The source requires the custom B12x container image."
+          ],
+          "checkpoint": {
+            "target": "https://huggingface.co/nvidia/Qwen3.8-Flash-Next-FP4-Local",
+            "target_label": "nvidia/Qwen3.8-Flash-Next-FP4-Local",
+            "draft": null,
+            "draft_label": null
+          },
+          "security": "Evaluation configuration only. Host networking exposes vLLM on host interfaces; use a firewall or reverse proxy, a scoped read-only HF token, and an isolated cache. For production, pin tested image, model, and code revisions.",
+          "topology": {
+            "summary": "1× DGX Spark",
+            "gpu_count": 1,
+            "node_count": 1,
+            "tensor_parallel_size": 1
+          },
+          "runtime": {
+            "kind": "container",
+            "label": "Container (community, ARM64, custom B12x)",
+            "image": "eugr/spark-vllm-b12x:nightly-20261015",
+            "image_url": "https://hub.docker.com/layers/eugr/spark-vllm-b12x/nightly-20261015",
+            "setup_label": "Start container",
+            "setup_target": "single-node",
+            "setup_instructions": "Set `HF_TOKEN` in the host environment.",
+            "setup_command": "mkdir -p $HOME/.cache/huggingface $HOME/.cache/vllm $HOME/.cache/flashinfer $HOME/.triton $HOME/.cache/b12x\n\ndocker run --rm -it \\\n  --gpus all \\\n  --ipc host \\\n  --network host \\\n  --shm-size=16g \\\n  --ulimit memlock=-1 \\\n  --ulimit stack=67108864 \\\n  --security-opt seccomp=unconfined \\\n  --security-opt apparmor=unconfined \\\n  -e HF_TOKEN=$HF_TOKEN \\\n  -v ~/.cache/huggingface:/root/.cache/huggingface \\\n  -v $HOME/.cache/vllm:/root/.cache/vllm \\\n  -v $HOME/.cache/flashinfer:/root/.cache/flashinfer \\\n  -v $HOME/.triton:/root/.triton \\\n  -v $HOME/.cache/b12x:/root/.cache/b12x \\\n  --entrypoint /bin/bash \\\n  eugr/spark-vllm-b12x:nightly-20261015"
+          },
+          "serve": {
+            "label": "Launch",
+            "target": "single-node",
+            "instructions": null,
+            "command": "export VLLM_PLE_TABLE_MEMORY=\"disk\"\nexport B12X_DISK_BACKEND=\"io_uring\"\nexport CUTE_DSL_ARCH=\"sm_121a\"\nexport SAFETENSORS_FAST_GPU=\"1\"\nexport VLLM_WORKER_MULTIPROC_METHOD=\"spawn\"\nexport VLLM_SSM_CONV_STATE_LAYOUT=\"DS\"\nexport VLLM_USE_AOT_COMPILE=\"1\"\nexport VLLM_USE_MEGA_AOT_ARTIFACT=\"1\"\nexport VLLM_USE_V2_MODEL_RUNNER=\"1\"\nexport B12X_POLICY_MODE=\"auto\"\nexport VLLM_MXFP8_LM_HEAD=\"1\"\nexport VLLM_B12X_MOE_FP4_LAYER_MAX_INPUT_SCALE=\"w13\"\nexport VLLM_B12X_MOE_FP4_FORCE_A16=1\nexport B12X_W4A16_A4_PREFILL=1\n\nvllm serve nvidia/Qwen3.8-Flash-Next-FP4-Local \\\n  --host 0.0.0.0 \\\n  --port 8000 \\\n  --tensor-parallel-size 1 \\\n  --pipeline-parallel-size 1 \\\n  --mamba-cache-mode align \\\n  --enable-prefix-caching \\\n  --enable-chunked-prefill \\\n  --dtype bfloat16 \\\n  --kv-cache-dtype fp8 \\\n  --quantization modelopt_mixed \\\n  --block-size 16 \\\n  --load-format b12x \\\n  --max-model-len 262144 \\\n  --max-num-seqs 8 \\\n  --max-num-batched-tokens 4096 \\\n  --speculative-config '{\"method\":\"mtp\",\"num_speculative_tokens\":4}' \\\n  --gdn-decode-kernel b12x \\\n  --linear-backend b12x \\\n  --moe-backend b12x \\\n  --no-enable-flashinfer-autotune \\\n  --mm-encoder-tp-mode data \\\n  --reasoning-parser qwen3 \\\n  --tool-call-parser qwen3_xml \\\n  --enable-auto-tool-choice \\\n  --compilation-config '{\"pass_config\":{\"fuse_act_quant\":true}}' \\\n  --gpu-memory-utilization 0.8",
+            "port": 8000,
+            "api_model": "nvidia/Qwen3.8-Flash-Next-FP4-Local"
+          },
+          "launch": null,
+          "sampling": null,
+          "notes": null,
+          "clients": {
+            "shell": "curl http://localhost:8000/v1/chat/completions \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\"model\": \"nvidia/Qwen3.8-Flash-Next-FP4-Local\", \"messages\": [{\"role\": \"user\", \"content\": \"Hello\"}]}'",
+            "python": "from openai import OpenAI\n\nclient = OpenAI(base_url=\"http://localhost:8000/v1\", api_key=\"EMPTY\")\nresp = client.chat.completions.create(\n    model=\"nvidia/Qwen3.8-Flash-Next-FP4-Local\",\n    messages=[{\"role\": \"user\", \"content\": \"Hello\"}],\n)\nprint(resp.choices[0].message.content)"
+          }
+        },
+        {
+          "id": "qwen/qwen3.8-flash-next/rtx-pro-4gpu/linux/vllm/fp4-local",
+          "hardware": "rtx-pro-4gpu",
+          "platform": {
+            "os": "linux",
+            "execution": "container"
+          },
+          "backend": "vllm",
+          "backend_version": "0.1.dev21830+g8244d1c44.cu134",
+          "backend_min_version": null,
+          "min_vidmem_gb": 96,
+          "precision": "fp4-local",
+          "variant": null,
+          "status": "optimized",
+          "prerequisites": [],
+          "limitations": [],
+          "checkpoint": {
+            "target": "https://huggingface.co/nvidia/Qwen3.8-Flash-Next-FP4-Local",
+            "target_label": "nvidia/Qwen3.8-Flash-Next-FP4-Local",
+            "draft": null,
+            "draft_label": null
+          },
+          "security": "Evaluation configuration only. Host networking exposes vLLM on host interfaces; use a firewall or reverse proxy, a scoped read-only HF token, and an isolated cache. For production, pin tested image, model, and code revisions.",
+          "topology": {
+            "summary": "4× RTX Pro 6000",
+            "gpu_count": 4,
+            "node_count": 1,
+            "tensor_parallel_size": 4
+          },
+          "runtime": {
+            "kind": "container",
+            "label": "Container (community)",
+            "image": "ghcr.io/local-inference-lab/vllm:release-10152026",
+            "image_url": "https://github.com/local-inference-lab/blackwell-llm-docker/pkgs/container/vllm/1392689728?tag=release-10152026",
+            "setup_label": "Start container",
+            "setup_target": "single-node",
+            "setup_instructions": "Set `HF_TOKEN` in the host environment.",
+            "setup_command": "docker run --rm -it \\\n  --gpus all \\\n  --ipc host \\\n  --network host \\\n  --shm-size=16g \\\n  --ulimit memlock=-1 \\\n  --ulimit stack=67108864 \\\n  -e HF_TOKEN=$HF_TOKEN \\\n  -v ~/.cache/huggingface:/root/.cache/huggingface \\\n  --entrypoint /bin/bash \\\n  ghcr.io/local-inference-lab/vllm:release-10152026"
+          },
+          "serve": {
+            "label": "Launch",
+            "target": "single-node",
+            "instructions": null,
+            "command": "export B12X_DENSE_SPLITK_TURBO=1\nexport B12X_DYNAMIC_DETERMINISTIC_OUTPUT=0\nexport B12X_DYNAMIC_DIRECT_EXPERT_SCALES=1\nexport B12X_DYNAMIC_SKIP_SPLIT_BARRIER_RESET=1\nexport B12X_DYNAMIC_SPLIT_COMPUTE_MAC=224\nexport B12X_DYNAMIC_SPLIT_FAST_PREPARE=1\nexport B12X_DYNAMIC_SPLIT_LOW_SMEM=1\nexport B12X_DYNAMIC_SPLIT_ROUTE_COMPUTE=1\nexport B12X_DYNAMIC_WORK_SOURCE=persistent_grid\nexport B12X_W4A16_A4_PREFILL=1\nexport B12X_DISK_BACKEND=io_uring\nexport B12X_MHC_PDL=1\nexport B12X_PCIE_ONESHOT_BLOCK_LIMIT=4\nexport B12X_PCIE_ONESHOT_PDL=1\nexport B12X_PCIE_ONESHOT_THREADS=512\nexport CUDA_BINARY_LOADER_THREAD_COUNT=8\nexport CUDA_DEVICE_ORDER=PCI_BUS_ID\nexport CUDA_MODULE_LOADING=LAZY\nexport CUTE_DSL_ARCH=sm_120a\nexport INSTANTTENSOR_BACKEND=BUFFERED\nexport NCCL_BUFFSIZE=2097152\nexport NCCL_CUMEM_ENABLE=0\nexport NCCL_IB_DISABLE=1\nexport NCCL_MAX_NCHANNELS=16\nexport NCCL_MIN_NCHANNELS=16\nexport NCCL_NET_PLUGIN=spcx\nexport NCCL_P2P_LEVEL=SYS\nexport NCCL_PROTO=LL,LL128,Simple\nexport OMP_NUM_THREADS=2\nexport PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True\nexport SAFETENSORS_FAST_GPU=1\nexport TORCHINDUCTOR_LOOP_ORDERING_AFTER_FUSION=0\nexport TORCH_CUDA_ARCH_LIST=12.0a\nexport VLLM_B12X_DENSE_ACTIVATION_MODE=auto\nexport VLLM_B12X_MOE_FP4_FORCE_A16=1\nexport VLLM_CAUSAL_CONV1D_UPDATE_HOIST=1\nexport VLLM_COMPUTE_NANS_IN_LOGITS=0\nexport VLLM_DISABLED_KERNELS=MarlinFP8ScaledMMLinearKernel\nexport VLLM_ENABLE_PCIE_ALLREDUCE=1\nexport VLLM_GDN_SPEC_DECODE_METADATA_FASTPATH=1\nexport VLLM_LM_HEAD_A16=1\nexport VLLM_MEMORY_PROFILER_ESTIMATE_CUDAGRAPHS=0\nexport VLLM_MTP_NVFP4_LM_HEAD=1\nexport VLLM_MXFP8_LM_HEAD=0\nexport VLLM_PCIE_ALLREDUCE_BACKEND=b12x\nexport VLLM_PLE_CPU_OFFLOAD=1\nexport VLLM_QWEN3_8_FLASH_NEXT_HC_TP=0\nexport VLLM_QWEN3_8_FLASH_NEXT_MTP_COMPACT=1\nexport VLLM_QWEN3_8_FLASH_NEXT_OVERLAP=1\nexport VLLM_SSM_CONV_STATE_LAYOUT=DS\nexport VLLM_USE_FASTOKENS=1\nexport VLLM_USE_V2_MODEL_RUNNER=1\nexport VLLM_WORKER_MULTIPROC_METHOD=spawn\nexport TORCH_ALLOW_TF32_CUBLAS_OVERRIDE=1\nexport TORCH_NCCL_USE_COMM_NONBLOCKING=0\n\nvllm serve nvidia/Qwen3.8-Flash-Next-FP4-Local \\\n  --host 0.0.0.0 \\\n  --port 8000 \\\n  --async-scheduling \\\n  --block-size 64 \\\n  --compilation-config '{\"cudagraph_mode\":\"FULL_AND_PIECEWISE\",\"custom_ops\":[\"all\"]}' \\\n  --decode-context-parallel-size 1 \\\n  --dtype bfloat16 \\\n  --enable-auto-tool-choice \\\n  --enable-chunked-prefill \\\n  --no-enable-flashinfer-autotune \\\n  --enable-prefix-caching \\\n  --enable-prompt-tokens-details \\\n  --gdn-decode-kernel b12x \\\n  --gpu-memory-utilization 0.92 \\\n  --kv-cache-dtype fp8 \\\n  --no-language-model-only \\\n  --linear-backend b12x \\\n  --load-format instanttensor \\\n  --mamba-cache-mode align \\\n  --mamba-ssm-cache-dtype auto \\\n  --max-cudagraph-capture-size 64 \\\n  --max-model-len 262144 \\\n  --max-num-batched-tokens 8192 \\\n  --max-num-seqs 16 \\\n  --mm-encoder-tp-mode data \\\n  --mm-processor-cache-gb 0.0 \\\n  --moe-backend b12x \\\n  --pipeline-parallel-size 1 \\\n  --quantization modelopt_mixed \\\n  --reasoning-parser qwen3 \\\n  --speculative-config '{\"method\":\"mtp\",\"draft_sample_method\":\"probabilistic\",\"rejection_sample_method\":\"standard\",\"moe_backend\":\"b12x\",\"num_speculative_tokens\":3}' \\\n  --tensor-parallel-size 4 \\\n  --tool-call-parser qwen3_xml",
+            "port": 8000,
+            "api_model": "nvidia/Qwen3.8-Flash-Next-FP4-Local"
+          },
+          "launch": null,
+          "sampling": null,
+          "notes": null,
+          "clients": {
+            "shell": "curl http://localhost:8000/v1/chat/completions \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\"model\": \"nvidia/Qwen3.8-Flash-Next-FP4-Local\", \"messages\": [{\"role\": \"user\", \"content\": \"Hello\"}]}'",
+            "python": "from openai import OpenAI\n\nclient = OpenAI(base_url=\"http://localhost:8000/v1\", api_key=\"EMPTY\")\nresp = client.chat.completions.create(\n    model=\"nvidia/Qwen3.8-Flash-Next-FP4-Local\",\n    messages=[{\"role\": \"user\", \"content\": \"Hello\"}],\n)\nprint(resp.choices[0].message.content)"
+          }
+        },
+        {
+          "id": "qwen/qwen3.8-flash-next/rtx-pro/linux/vllm/fp4-local",
+          "hardware": "rtx-pro",
+          "platform": {
+            "os": "linux",
+            "execution": "container"
+          },
+          "backend": "vllm",
+          "backend_version": "0.1.dev21830+g8244d1c44",
+          "backend_min_version": null,
+          "min_vidmem_gb": 96,
+          "precision": "fp4-local",
+          "variant": null,
+          "status": "optimized",
+          "prerequisites": [],
+          "limitations": [],
+          "checkpoint": {
+            "target": "https://huggingface.co/nvidia/Qwen3.8-Flash-Next-FP4-Local",
+            "target_label": "nvidia/Qwen3.8-Flash-Next-FP4-Local",
+            "draft": null,
+            "draft_label": null
+          },
+          "security": "Evaluation configuration only. Host networking exposes vLLM on host interfaces; use a firewall or reverse proxy, a scoped read-only HF token, and an isolated cache. For production, pin tested image, model, and code revisions.",
+          "topology": {
+            "summary": "1× RTX Pro",
+            "gpu_count": 1,
+            "node_count": 1,
+            "tensor_parallel_size": 1
+          },
+          "runtime": {
+            "kind": "container",
+            "label": "Container (community)",
+            "image": "ghcr.io/local-inference-lab/vllm:release-10152026",
+            "image_url": "https://github.com/local-inference-lab/blackwell-llm-docker/pkgs/container/vllm/1392689728?tag=release-10152026",
+            "setup_label": "Start container",
+            "setup_target": "single-node",
+            "setup_instructions": "Set `HF_TOKEN` in the host environment.",
+            "setup_command": "docker run --rm -it \\\n  --gpus all \\\n  --ipc host \\\n  --network host \\\n  --shm-size=16g \\\n  --ulimit memlock=-1 \\\n  --ulimit stack=67108864 \\\n  -e HF_TOKEN=$HF_TOKEN \\\n  -v ~/.cache/huggingface:/root/.cache/huggingface \\\n  --entrypoint /bin/bash \\\n  ghcr.io/local-inference-lab/vllm:release-10152026"
+          },
+          "serve": {
+            "label": "Launch",
+            "target": "single-node",
+            "instructions": null,
+            "command": "export B12X_DENSE_SPLITK_TURBO=1\nexport B12X_DYNAMIC_DETERMINISTIC_OUTPUT=0\nexport B12X_DYNAMIC_DIRECT_EXPERT_SCALES=1\nexport B12X_DYNAMIC_SKIP_SPLIT_BARRIER_RESET=1\nexport B12X_DYNAMIC_SPLIT_COMPUTE_MAC=224\nexport B12X_DYNAMIC_SPLIT_FAST_PREPARE=1\nexport B12X_DYNAMIC_SPLIT_LOW_SMEM=1\nexport B12X_DYNAMIC_SPLIT_ROUTE_COMPUTE=1\nexport B12X_DYNAMIC_WORK_SOURCE=persistent_grid\nexport B12X_W4A16_A4_PREFILL=1\nexport B12X_DISK_BACKEND=io_uring\nexport B12X_MHC_PDL=1\nexport B12X_PCIE_ONESHOT_BLOCK_LIMIT=4\nexport B12X_PCIE_ONESHOT_PDL=1\nexport B12X_PCIE_ONESHOT_THREADS=512\nexport CUDA_BINARY_LOADER_THREAD_COUNT=8\nexport CUDA_DEVICE_ORDER=PCI_BUS_ID\nexport CUDA_MODULE_LOADING=LAZY\nexport CUTE_DSL_ARCH=sm_120a\nexport INSTANTTENSOR_BACKEND=BUFFERED\nexport NCCL_BUFFSIZE=2097152\nexport NCCL_CUMEM_ENABLE=0\nexport NCCL_IB_DISABLE=1\nexport NCCL_MAX_NCHANNELS=16\nexport NCCL_MIN_NCHANNELS=16\nexport NCCL_NET_PLUGIN=spcx\nexport NCCL_P2P_LEVEL=SYS\nexport NCCL_PROTO=LL,LL128,Simple\nexport OMP_NUM_THREADS=2\nexport PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True\nexport SAFETENSORS_FAST_GPU=1\nexport TORCHINDUCTOR_LOOP_ORDERING_AFTER_FUSION=0\nexport TORCH_CUDA_ARCH_LIST=12.0a\nexport VLLM_B12X_DENSE_ACTIVATION_MODE=auto\nexport VLLM_B12X_MOE_FP4_FORCE_A16=1\nexport VLLM_CAUSAL_CONV1D_UPDATE_HOIST=1\nexport VLLM_COMPUTE_NANS_IN_LOGITS=0\nexport VLLM_DISABLED_KERNELS=MarlinFP8ScaledMMLinearKernel\nexport VLLM_ENABLE_PCIE_ALLREDUCE=1\nexport VLLM_GDN_SPEC_DECODE_METADATA_FASTPATH=1\nexport VLLM_LM_HEAD_A16=1\nexport VLLM_MEMORY_PROFILER_ESTIMATE_CUDAGRAPHS=0\nexport VLLM_MTP_NVFP4_LM_HEAD=1\nexport VLLM_MXFP8_LM_HEAD=0\nexport VLLM_PCIE_ALLREDUCE_BACKEND=b12x\nexport VLLM_PLE_CPU_OFFLOAD=1\nexport VLLM_QWEN3_8_FLASH_NEXT_HC_TP=0\nexport VLLM_QWEN3_8_FLASH_NEXT_MTP_COMPACT=1\nexport VLLM_QWEN3_8_FLASH_NEXT_OVERLAP=1\nexport VLLM_SSM_CONV_STATE_LAYOUT=DS\nexport VLLM_USE_FASTOKENS=1\nexport VLLM_USE_V2_MODEL_RUNNER=1\nexport VLLM_WORKER_MULTIPROC_METHOD=spawn\nexport TORCH_ALLOW_TF32_CUBLAS_OVERRIDE=1\nexport TORCH_NCCL_USE_COMM_NONBLOCKING=0\nvllm serve nvidia/Qwen3.8-Flash-Next-FP4-Local \\\n  --host 0.0.0.0 \\\n  --port 8000 \\\n  --async-scheduling \\\n  --block-size 64 \\\n  --compilation-config '{\"cudagraph_mode\":\"FULL_AND_PIECEWISE\",\"custom_ops\":[\"all\"]}' \\\n  --decode-context-parallel-size 1 \\\n  --dtype bfloat16 \\\n  --enable-auto-tool-choice \\\n  --enable-chunked-prefill \\\n  --no-enable-flashinfer-autotune \\\n  --enable-prefix-caching \\\n  --enable-prompt-tokens-details \\\n  --gdn-decode-kernel b12x \\\n  --gpu-memory-utilization 0.975 \\\n  --kv-cache-dtype fp8 \\\n  --no-language-model-only \\\n  --linear-backend b12x \\\n  --load-format instanttensor \\\n  --mamba-cache-mode align \\\n  --mamba-ssm-cache-dtype auto \\\n  --max-cudagraph-capture-size 64 \\\n  --max-model-len 262144 \\\n  --max-num-batched-tokens 6019 \\\n  --max-num-seqs 16 \\\n  --mm-encoder-tp-mode data \\\n  --mm-processor-cache-gb 0.0 \\\n  --moe-backend b12x \\\n  --pipeline-parallel-size 1 \\\n  --quantization modelopt_mixed \\\n  --reasoning-parser qwen3 \\\n  --speculative-config '{\"method\":\"mtp\",\"draft_sample_method\":\"probabilistic\",\"rejection_sample_method\":\"standard\",\"moe_backend\":\"b12x\",\"num_speculative_tokens\":3}' \\\n  --tensor-parallel-size 1 \\\n  --tool-call-parser qwen3_xml",
+            "port": 8000,
+            "api_model": "nvidia/Qwen3.8-Flash-Next-FP4-Local"
+          },
+          "launch": null,
+          "sampling": null,
+          "notes": null,
+          "clients": {
+            "shell": "curl http://localhost:8000/v1/chat/completions \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\"model\": \"nvidia/Qwen3.8-Flash-Next-FP4-Local\", \"messages\": [{\"role\": \"user\", \"content\": \"Hello\"}]}'",
+            "python": "from openai import OpenAI\n\nclient = OpenAI(base_url=\"http://localhost:8000/v1\", api_key=\"EMPTY\")\nresp = client.chat.completions.create(\n    model=\"nvidia/Qwen3.8-Flash-Next-FP4-Local\",\n    messages=[{\"role\": \"user\", \"content\": \"Hello\"}],\n)\nprint(resp.choices[0].message.content)"
+          }
+        },
+        {
+          "id": "qwen/qwen3.8-flash-next/rtx-pro/windows/llama-cpp/78gb/iq4-xs/vision-mtp",
+          "hardware": "rtx-pro",
+          "platform": {
+            "os": "windows",
+            "execution": "native"
+          },
+          "backend": "llama-cpp",
+          "backend_version": "b11574",
+          "backend_min_version": "b11370",
+          "min_vidmem_gb": 78,
+          "precision": "iq4-xs",
+          "variant": "vision-mtp",
+          "status": "optimized",
+          "prerequisites": [],
+          "limitations": [],
+          "checkpoint": {
+            "target": "https://huggingface.co/unsloth/Qwen3.8-Flash-Next-GGUF/blob/main/UD-IQ4_XS/Qwen3.8-Flash-Next-UD-IQ4_XS-00001-of-00003.gguf",
+            "target_label": "unsloth/Qwen3.8-Flash-Next-GGUF/UD-IQ4_XS/Qwen3.8-Flash-Next-UD-IQ4_XS-00001-of-00003.gguf",
+            "draft": "https://huggingface.co/ggml-org/Qwen3.8-Flash-Next-GGUF/blob/main/mtp-Qwen3.8-Flash-Next-Q8_0.gguf",
+            "draft_label": "ggml-org Q8_0 MTP head (main model remains UD-IQ4_XS)"
+          },
+          "security": null,
+          "topology": null,
+          "runtime": {
+            "setup_label": "Download llama.cpp",
+            "setup_instructions": "Pinned to b11574. Leaves you in the extracted folder with it added to PATH for this session. Optionally set $env:GITHUB_TOKEN = \"<PAT>\" first to raise GitHub's API rate limit.",
+            "setup_command": "&{\n  cd $HOME\n  $null = mkdir -Force llama-cuda\n  cd .\\llama-cuda\n\n  $headers = @{}\n  if ($env:GITHUB_TOKEN) { $headers['Authorization'] = \"Bearer $env:GITHUB_TOKEN\" }\n  try {\n    $release = Invoke-RestMethod -Uri \"https://api.github.com/repos/ggml-org/llama.cpp/releases/tags/b11574\" -Headers $headers\n  } catch {\n    throw \"Failed to query the GitHub Releases API: $($_.Exception.Message)\"\n  }\n\n  $cudaAsset  = $release.assets | Where-Object { $_.name -like \"cudart-llama-bin-win-cuda-*-x64.zip\" } | Select-Object -First 1\n  $llamaAsset = $release.assets | Where-Object { $_.name -like \"llama-*-bin-win-cuda-*-x64.zip\" }       | Select-Object -First 1\n  if (-not $cudaAsset -or -not $llamaAsset) {\n    throw \"No matching Windows CUDA release asset found for $($release.tag_name).\"\n  }\n\n  Invoke-WebRequest -Uri $cudaAsset.browser_download_url  -OutFile $cudaAsset.name\n  Invoke-WebRequest -Uri $llamaAsset.browser_download_url -OutFile $llamaAsset.name\n\n  Expand-Archive $cudaAsset.name  .\\llama -Force\n  Expand-Archive $llamaAsset.name .\\llama -Force\n\n  cd .\\llama\n  $env:PATH = \"$PWD;$env:PATH\"\n}"
+          },
+          "serve": {
+            "label": "Launch MTP · n=3",
+            "target": "single-node",
+            "instructions": "Run in PowerShell from the extracted b11370 directory. llama-server downloads the specified target shards, Q8_0 MTP head and BF16 projector using its normal cache.",
+            "command": ".\\llama-server.exe -hf \"unsloth/Qwen3.8-Flash-Next-GGUF\" `\n  -hff \"UD-IQ4_XS/Qwen3.8-Flash-Next-UD-IQ4_XS-00001-of-00003.gguf\" `\n  --mmproj-url \"https://huggingface.co/unsloth/Qwen3.8-Flash-Next-GGUF/resolve/38bb39ee97821de2c9009abb7e93950eec396e66/mmproj-BF16.gguf\" `\n  --host 127.0.0.1 `\n  --port 9931 `\n  --batch-size 2048 `\n  --ubatch-size 512 `\n  --ctx-size 262144 `\n  --parallel 1 `\n  -fa on `\n  -lzm on `\n  --temp 1.0 `\n  --top-p 0.95 `\n  --top-k 20 `\n  --min-p 0.0 `\n  --presence-penalty 0.0 `\n  --repeat-penalty 1.0 `\n  --spec-type draft-mtp `\n  --spec-draft-n-max 3 `\n  -hfrd \"ggml-org/Qwen3.8-Flash-Next-GGUF\" `\n  --spec-draft-model \"mtp-Qwen3.8-Flash-Next-Q8_0.gguf\"",
+            "port": 9931,
+            "api_model": "unsloth/Qwen3.8-Flash-Next-GGUF"
+          },
+          "launch": null,
+          "sampling": "--temp=1.0; --top-p=0.95; --top-k=20; --min-p=0.0; --presence-penalty=0.0; --repeat-penalty=1.0",
+          "notes": "Target shards: [1](https://huggingface.co/unsloth/Qwen3.8-Flash-Next-GGUF/blob/main/UD-IQ4_XS/Qwen3.8-Flash-Next-UD-IQ4_XS-00001-of-00003.gguf), [2](https://huggingface.co/unsloth/Qwen3.8-Flash-Next-GGUF/blob/main/UD-IQ4_XS/Qwen3.8-Flash-Next-UD-IQ4_XS-00002-of-00003.gguf), [3](https://huggingface.co/unsloth/Qwen3.8-Flash-Next-GGUF/blob/main/UD-IQ4_XS/Qwen3.8-Flash-Next-UD-IQ4_XS-00003-of-00003.gguf).\nMTP head: [mtp-Qwen3.8-Flash-Next-Q8_0.gguf](https://huggingface.co/ggml-org/Qwen3.8-Flash-Next-GGUF/blob/main/mtp-Qwen3.8-Flash-Next-Q8_0.gguf).\nProjector: [mmproj-BF16.gguf](https://huggingface.co/unsloth/Qwen3.8-Flash-Next-GGUF/blob/38bb39ee97821de2c9009abb7e93950eec396e66/mmproj-BF16.gguf).",
+          "clients": {
+            "shell": "'{\"model\":\"unsloth/Qwen3.8-Flash-Next-GGUF\",\"messages\":[{\"role\":\"user\",\"content\":\"Hello\"}]}' | curl.exe 'http://127.0.0.1:9931/v1/chat/completions' -H 'Content-Type: application/json' --data-binary '@-'",
+            "python": "from openai import OpenAI\n\nclient = OpenAI(base_url=\"http://127.0.0.1:9931/v1\", api_key=\"EMPTY\")\nresp = client.chat.completions.create(\n    model=\"unsloth/Qwen3.8-Flash-Next-GGUF\",\n    messages=[{\"role\": \"user\", \"content\": \"Hello\"}],\n)\nprint(resp.choices[0].message.content)"
+          }
+        },
+        {
+          "id": "qwen/qwen3.8-flash-next/rtx-spark/windows/llama-cpp/78gb/iq4-xs/vision-mtp",
+          "hardware": "rtx-spark",
+          "platform": {
+            "os": "windows",
+            "execution": "native"
+          },
+          "backend": "llama-cpp",
+          "backend_version": "b11617",
+          "backend_min_version": "b11370",
+          "min_vidmem_gb": 78,
+          "precision": "iq4-xs",
+          "variant": "vision-mtp",
+          "status": "optimized",
+          "prerequisites": [],
+          "limitations": [],
+          "checkpoint": {
+            "target": "https://huggingface.co/unsloth/Qwen3.8-Flash-Next-GGUF/blob/main/UD-IQ4_XS/Qwen3.8-Flash-Next-UD-IQ4_XS-00001-of-00003.gguf",
+            "target_label": "unsloth/Qwen3.8-Flash-Next-GGUF/UD-IQ4_XS/Qwen3.8-Flash-Next-UD-IQ4_XS-00001-of-00003.gguf",
+            "draft": "https://huggingface.co/ggml-org/Qwen3.8-Flash-Next-GGUF/blob/main/mtp-Qwen3.8-Flash-Next-Q8_0.gguf",
+            "draft_label": "ggml-org Q8_0 MTP head (main model remains UD-IQ4_XS)"
+          },
+          "security": null,
+          "topology": null,
+          "runtime": {
+            "setup_label": "Download llama.cpp",
+            "setup_instructions": "Pinned to b11617. Leaves you in the extracted folder with it added to PATH for this session. Optionally set $env:GITHUB_TOKEN = \"<PAT>\" first to raise GitHub's API rate limit.",
+            "setup_command": "&{\n  cd $HOME\n  $null = mkdir -Force llama-cuda\n  cd .\\llama-cuda\n\n  $headers = @{}\n  if ($env:GITHUB_TOKEN) { $headers['Authorization'] = \"Bearer $env:GITHUB_TOKEN\" }\n  try {\n    $release = Invoke-RestMethod -Uri \"https://api.github.com/repos/ggml-org/llama.cpp/releases/tags/b11617\" -Headers $headers\n  } catch {\n    throw \"Failed to query the GitHub Releases API: $($_.Exception.Message)\"\n  }\n\n  $cudaAsset  = $release.assets | Where-Object { $_.name -like \"cudart-llama-bin-win-cuda-*-arm64.zip\" } | Select-Object -First 1\n  $llamaAsset = $release.assets | Where-Object { $_.name -like \"llama-*-bin-win-cuda-*-arm64.zip\" }       | Select-Object -First 1\n  if (-not $cudaAsset -or -not $llamaAsset) {\n    throw \"No matching Windows CUDA release asset found for $($release.tag_name).\"\n  }\n\n  Invoke-WebRequest -Uri $cudaAsset.browser_download_url  -OutFile $cudaAsset.name\n  Invoke-WebRequest -Uri $llamaAsset.browser_download_url -OutFile $llamaAsset.name\n\n  Expand-Archive $cudaAsset.name  .\\llama -Force\n  Expand-Archive $llamaAsset.name .\\llama -Force\n\n  cd .\\llama\n  $env:PATH = \"$PWD;$env:PATH\"\n}"
+          },
+          "serve": {
+            "label": "Launch MTP · n=3",
+            "target": "single-node",
+            "instructions": "Run in PowerShell from the extracted b11617 directory. llama-server downloads the specified target shards, Q8_0 MTP head and BF16 projector using its normal cache.",
+            "command": ".\\llama-server.exe -hf \"unsloth/Qwen3.8-Flash-Next-GGUF\" `\n  -hff \"UD-IQ4_XS/Qwen3.8-Flash-Next-UD-IQ4_XS-00001-of-00003.gguf\" `\n  --mmproj-url \"https://huggingface.co/unsloth/Qwen3.8-Flash-Next-GGUF/resolve/38bb39ee97821de2c9009abb7e93950eec396e66/mmproj-BF16.gguf\" `\n  --host 127.0.0.1 `\n  --port 9931 `\n  --batch-size 2048 `\n  --ubatch-size 512 `\n  --ctx-size 262144 `\n  --parallel 1 `\n  -fa on `\n  -lzm on `\n  --temp 1.0 `\n  --top-p 0.95 `\n  --top-k 20 `\n  --min-p 0.0 `\n  --presence-penalty 0.0 `\n  --repeat-penalty 1.0 `\n  --spec-type draft-mtp `\n  --spec-draft-n-max 3 `\n  -hfrd \"ggml-org/Qwen3.8-Flash-Next-GGUF\" `\n  --spec-draft-model \"mtp-Qwen3.8-Flash-Next-Q8_0.gguf\"",
+            "port": 9931,
+            "api_model": "unsloth/Qwen3.8-Flash-Next-GGUF"
+          },
+          "launch": null,
+          "sampling": "--temp=1.0; --top-p=0.95; --top-k=20; --min-p=0.0; --presence-penalty=0.0; --repeat-penalty=1.0",
+          "notes": "Target shards: [1](https://huggingface.co/unsloth/Qwen3.8-Flash-Next-GGUF/blob/main/UD-IQ4_XS/Qwen3.8-Flash-Next-UD-IQ4_XS-00001-of-00003.gguf), [2](https://huggingface.co/unsloth/Qwen3.8-Flash-Next-GGUF/blob/main/UD-IQ4_XS/Qwen3.8-Flash-Next-UD-IQ4_XS-00002-of-00003.gguf), [3](https://huggingface.co/unsloth/Qwen3.8-Flash-Next-GGUF/blob/main/UD-IQ4_XS/Qwen3.8-Flash-Next-UD-IQ4_XS-00003-of-00003.gguf).\nMTP head: [mtp-Qwen3.8-Flash-Next-Q8_0.gguf](https://huggingface.co/ggml-org/Qwen3.8-Flash-Next-GGUF/blob/main/mtp-Qwen3.8-Flash-Next-Q8_0.gguf).\nProjector: [mmproj-BF16.gguf](https://huggingface.co/unsloth/Qwen3.8-Flash-Next-GGUF/blob/38bb39ee97821de2c9009abb7e93950eec396e66/mmproj-BF16.gguf).",
+          "clients": {
+            "shell": "'{\"model\":\"unsloth/Qwen3.8-Flash-Next-GGUF\",\"messages\":[{\"role\":\"user\",\"content\":\"Hello\"}]}' | curl.exe 'http://127.0.0.1:9931/v1/chat/completions' -H 'Content-Type: application/json' --data-binary '@-'",
+            "python": "from openai import OpenAI\n\nclient = OpenAI(base_url=\"http://127.0.0.1:9931/v1\", api_key=\"EMPTY\")\nresp = client.chat.completions.create(\n    model=\"unsloth/Qwen3.8-Flash-Next-GGUF\",\n    messages=[{\"role\": \"user\", \"content\": \"Hello\"}],\n)\nprint(resp.choices[0].message.content)"
+          }
+        }
+      ]
+    },
+    {
+      "id": "z-ai/glm-5.3-flash",
+      "display_name": "GLM-5.3-Flash",
+      "builder": "z-ai",
+      "family": "GLM-5",
+      "summary": "GLM-5.3-Flash inference configurations.",
+      "upstream": null,
+      "modalities": [
+        "text"
+      ],
+      "recipes": [
+        {
+          "id": "z-ai/glm-5.3-flash/dgx-spark-2gpu/linux/vllm/fp4-local",
+          "hardware": "dgx-spark-2gpu",
+          "platform": {
+            "os": "linux",
+            "execution": "container"
+          },
+          "backend": "vllm",
+          "backend_version": "0.1.dev21830+g8244d1c44.d20261015",
+          "backend_min_version": null,
+          "min_vidmem_gb": 128,
+          "precision": "fp4-local",
+          "variant": null,
+          "status": "optimized",
+          "prerequisites": [
+            "Two DGX Spark nodes with 128 GB of memory per node and the ConnectX/RoCE network configured as described below.",
+            "Docker with NVIDIA GPU support and the image and checkpoint cached on both nodes."
+          ],
+          "limitations": [
+            "The source requires the custom B12x container image."
+          ],
+          "checkpoint": {
+            "target": "https://huggingface.co/nvidia/GLM-5.3-Flash-FP4-Local",
+            "target_label": "nvidia/GLM-5.3-Flash-FP4-Local",
+            "draft": null,
+            "draft_label": null
+          },
+          "security": "Evaluation configuration only. Host networking exposes vLLM on host interfaces; use a firewall or reverse proxy, a scoped read-only HF token, and an isolated cache. For production, pin tested image, model, and code revisions.",
+          "topology": {
+            "summary": "2× DGX Spark; one node rank per Spark; tensor parallel 2",
+            "gpu_count": 2,
+            "node_count": 2,
+            "tensor_parallel_size": 2
+          },
+          "runtime": {
+            "kind": "container",
+            "label": "Container (community, ARM64, custom B12x)",
+            "image": "eugr/spark-vllm-b12x:nightly-20261015",
+            "image_url": "https://hub.docker.com/layers/eugr/spark-vllm-b12x/nightly-20261015",
+            "setup_label": "Start container",
+            "setup_target": "all-nodes",
+            "setup_instructions": "Run on every node after setting `HF_TOKEN`; replace the node-specific placeholders.",
+            "setup_command": "# Example two-Spark values (adjust to your network):\n#   HEAD_IP=\"10.100.32.1\"        # head node IP on the ETH subnet\n#   ETH_IF=\"enp1s0f0np0\"        # ConnectX baseboard ethernet (socket/control)\n#   IB_IF=\"rocep1s0f0,roceP2p1s0f0\"   # RoCE HCA names (data plane) - use both \"twins\"!\nexport HEAD_IP=\"<head-connectx-ip>\"\nexport ETH_IF=\"<connectx-interface>\"\nexport IB_IF=\"<roce-interface-1>,<roce-interface-2>\"\nexport MASTER_PORT=29501\nexport IMAGE=\"eugr/spark-vllm-b12x:nightly-20261015\"\nexport HF_CACHE_DIR=\"$HOME/.cache/huggingface\"\n\nmkdir -p \"$HF_CACHE_DIR\" \"$HOME/.cache/vllm\" \"$HOME/.cache/flashinfer\" \"$HOME/.triton\" \"$HOME/.cache/b12x\"\n\ndocker run --rm -it \\\n  --privileged \\\n  --gpus all \\\n  --ipc host \\\n  --network host \\\n  --shm-size=16g \\\n  --ulimit nofile=1048576:1048576 \\\n  --ulimit memlock=-1 \\\n  --ulimit stack=67108864 \\\n  -e HF_TOKEN=$HF_TOKEN \\\n  -e MN_IF_NAME=\"$ETH_IF\" \\\n  -e UCX_NET_DEVICES=\"$ETH_IF\" \\\n  -e NCCL_SOCKET_IFNAME=\"$ETH_IF\" \\\n  -e NCCL_IB_HCA=\"$IB_IF\" \\\n  -e NCCL_IB_DISABLE=0 \\\n  -e OMPI_MCA_btl_tcp_if_include=\"$ETH_IF\" \\\n  -e GLOO_SOCKET_IFNAME=\"$ETH_IF\" \\\n  -e TP_SOCKET_IFNAME=\"$ETH_IF\" \\\n  -e NCCL_IGNORE_CPU_AFFINITY=1 \\\n  -e HEAD_IP=\"$HEAD_IP\" \\\n  -e MASTER_PORT=\"$MASTER_PORT\" \\\n  -v \"$HF_CACHE_DIR:/root/.cache/huggingface\" \\\n  -v \"$HOME/.cache/vllm:/root/.cache/vllm\" \\\n  -v \"$HOME/.cache/flashinfer:/root/.cache/flashinfer\" \\\n  -v \"$HOME/.triton:/root/.triton\" \\\n  -v $HOME/.cache/b12x:/root/.cache/b12x \\\n  --entrypoint /bin/bash \\\n  \"$IMAGE\""
+          },
+          "serve": {
+            "label": "Launch head",
+            "target": "head",
+            "instructions": null,
+            "command": "export CUTE_DSL_ARCH=\"sm_121a\"\nexport SAFETENSORS_FAST_GPU=\"1\"\nexport VLLM_ENABLE_ROCE_ALLREDUCE=\"1\"\nexport VLLM_ROCE_ALLREDUCE_MAX_SIZE=\"2MB\"\nexport NCCL_BUFFSIZE=1048576\nexport NCCL_MAX_CTAS=8\nexport VLLM_WORKER_MULTIPROC_METHOD=\"spawn\"\nexport VLLM_SSM_CONV_STATE_LAYOUT=\"DS\"\nexport VLLM_USE_AOT_COMPILE=\"1\"\nexport VLLM_USE_MEGA_AOT_ARTIFACT=\"1\"\nexport VLLM_USE_V2_MODEL_RUNNER=\"1\"\nexport VLLM_ENABLE_PCIE_ALLREDUCE=\"0\"\nexport B12X_POLICY_MODE=\"auto\"\nexport VLLM_B12X_MOE_FP4_FORCE_A16=1\nexport B12X_W4A16_A4_PREFILL=1\n\nvllm serve nvidia/GLM-5.3-Flash-FP4-Local \\\n  --host 0.0.0.0 \\\n  --port 8000 \\\n  --tensor-parallel-size 2 \\\n  --pipeline-parallel-size 1 \\\n  --decode-context-parallel-size 1 \\\n  --mamba-cache-mode align \\\n  --enable-prefix-caching \\\n  --enable-chunked-prefill \\\n  --dtype bfloat16 \\\n  --kv-cache-dtype fp8 \\\n  --quantization modelopt_mixed \\\n  --attention-backend B12X \\\n  --block-size 256 \\\n  --moe-backend b12x \\\n  --linear-backend b12x \\\n  --no-enable-flashinfer-autotune \\\n  --load-format b12x \\\n  --max-model-len 500000 \\\n  --max-num-seqs 4 \\\n  --max-num-batched-tokens 4096 \\\n  --speculative-config '{\"method\":\"mtp\",\"num_speculative_tokens\":5,\"moe_backend\":\"humming\",\"attention_backend\":\"B12X\"}' \\\n  --reasoning-parser glm45 \\\n  --tool-call-parser glm47 \\\n  --enable-auto-tool-choice \\\n  --gpu-memory-utilization 0.87 \\\n  --nnodes 2 \\\n  --node-rank 0 \\\n  --master-addr \"$HEAD_IP\" \\\n  --master-port \"$MASTER_PORT\"",
+            "port": 8000,
+            "api_model": "nvidia/GLM-5.3-Flash-FP4-Local",
+            "additional_commands": [
+              {
+                "id": "worker",
+                "label": "Launch worker",
+                "target": "workers",
+                "instructions": null,
+                "command": "export CUTE_DSL_ARCH=\"sm_121a\"\nexport SAFETENSORS_FAST_GPU=\"1\"\nexport VLLM_ENABLE_ROCE_ALLREDUCE=\"1\"\nexport VLLM_ROCE_ALLREDUCE_MAX_SIZE=\"2MB\"\nexport NCCL_BUFFSIZE=1048576\nexport NCCL_MAX_CTAS=8\nexport VLLM_WORKER_MULTIPROC_METHOD=\"spawn\"\nexport VLLM_SSM_CONV_STATE_LAYOUT=\"DS\"\nexport VLLM_USE_AOT_COMPILE=\"1\"\nexport VLLM_USE_MEGA_AOT_ARTIFACT=\"1\"\nexport VLLM_USE_V2_MODEL_RUNNER=\"1\"\nexport VLLM_ENABLE_PCIE_ALLREDUCE=\"0\"\nexport B12X_POLICY_MODE=\"auto\"\nexport VLLM_B12X_MOE_FP4_FORCE_A16=1\nexport B12X_W4A16_A4_PREFILL=1\n\nvllm serve nvidia/GLM-5.3-Flash-FP4-Local \\\n  --host 0.0.0.0 \\\n  --port 8000 \\\n  --tensor-parallel-size 2 \\\n  --pipeline-parallel-size 1 \\\n  --decode-context-parallel-size 1 \\\n  --mamba-cache-mode align \\\n  --enable-prefix-caching \\\n  --enable-chunked-prefill \\\n  --dtype bfloat16 \\\n  --kv-cache-dtype fp8 \\\n  --quantization modelopt_mixed \\\n  --attention-backend B12X \\\n  --block-size 256 \\\n  --moe-backend b12x \\\n  --linear-backend b12x \\\n  --no-enable-flashinfer-autotune \\\n  --load-format b12x \\\n  --max-model-len 500000 \\\n  --max-num-seqs 4 \\\n  --max-num-batched-tokens 4096 \\\n  --speculative-config '{\"method\":\"mtp\",\"num_speculative_tokens\":5,\"moe_backend\":\"humming\",\"attention_backend\":\"B12X\"}' \\\n  --reasoning-parser glm45 \\\n  --tool-call-parser glm47 \\\n  --enable-auto-tool-choice \\\n  --gpu-memory-utilization 0.87 \\\n  --nnodes 2 \\\n  --node-rank 1 \\\n  --master-addr \"$HEAD_IP\" \\\n  --master-port \"$MASTER_PORT\" \\\n  --headless"
+              }
+            ]
+          },
+          "launch": null,
+          "sampling": null,
+          "notes": "Use the same CX7 port on every node; assign both port subinterfaces on separate subnets; cache the image and checkpoint on every node; start workers before the head. Docker runs privileged.",
+          "clients": {
+            "shell": "curl http://localhost:8000/v1/chat/completions \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\"model\": \"nvidia/GLM-5.3-Flash-FP4-Local\", \"messages\": [{\"role\": \"user\", \"content\": \"Hello\"}]}'",
+            "python": "from openai import OpenAI\n\nclient = OpenAI(base_url=\"http://localhost:8000/v1\", api_key=\"EMPTY\")\nresp = client.chat.completions.create(\n    model=\"nvidia/GLM-5.3-Flash-FP4-Local\",\n    messages=[{\"role\": \"user\", \"content\": \"Hello\"}],\n)\nprint(resp.choices[0].message.content)"
+          }
+        }
+      ]
+    }
+  ],
+  "recommended_recipes": {
+    "llama-cpp": {
+      "windows": [
+        {
+          "hardware": "geforce-rtx",
+          "model": "qwen/qwen3.8-27b",
+          "recipe": "qwen/qwen3.8-27b/geforce-rtx/windows/llama-cpp/24gb/iq4-xs/vision-mtp",
+          "status": "optimized",
+          "min_vidmem_gb": 24,
+          "memory_config_gb": 24
+        },
+        {
+          "hardware": "geforce-rtx",
+          "model": "qwen/qwen3.8-27b",
+          "recipe": "qwen/qwen3.8-27b/geforce-rtx/windows/llama-cpp/30gb/q4-k-m/vision-dflash2",
+          "status": "optimized",
+          "min_vidmem_gb": 30,
+          "memory_config_gb": 32
+        },
+        {
+          "hardware": "rtx-pro",
+          "model": "qwen/qwen3.8-flash-next",
+          "recipe": "qwen/qwen3.8-flash-next/rtx-pro/windows/llama-cpp/78gb/iq4-xs/vision-mtp",
+          "status": "optimized",
+          "min_vidmem_gb": 78,
+          "memory_config_gb": 96
+        },
+        {
+          "hardware": "rtx-spark",
+          "model": "qwen/qwen3.8-27b",
+          "recipe": "qwen/qwen3.8-27b/rtx-spark/windows/llama-cpp/24gb/iq4-xs/vision-dflash",
+          "status": "optimized",
+          "min_vidmem_gb": 24,
+          "memory_config_gb": 48
+        },
+        {
+          "hardware": "rtx-spark",
+          "model": "qwen/qwen3.8-27b",
+          "recipe": "qwen/qwen3.8-27b/rtx-spark/windows/llama-cpp/28gb/q4-k-m/vision-dflash",
+          "status": "optimized",
+          "min_vidmem_gb": 28,
+          "memory_config_gb": 64
+        },
+        {
+          "hardware": "rtx-spark",
+          "model": "qwen/qwen3.8-flash-next",
+          "recipe": "qwen/qwen3.8-flash-next/rtx-spark/windows/llama-cpp/78gb/iq4-xs/vision-mtp",
+          "status": "optimized",
+          "min_vidmem_gb": 78,
+          "memory_config_gb": 128
+        }
+      ]
+    },
+    "vllm": {
+      "linux": [
+        {
+          "hardware": "dgx-spark",
+          "model": "qwen/qwen3.8-flash-next",
+          "recipe": "qwen/qwen3.8-flash-next/dgx-spark/linux/vllm/fp4-local",
+          "status": "optimized",
+          "min_vidmem_gb": 128,
+          "memory_config_gb": 128
+        },
+        {
+          "hardware": "dgx-spark",
+          "model": "qwen/qwen3.8-27b",
+          "recipe": "qwen/qwen3.8-27b/dgx-spark/linux/vllm/64gb/nvfp4",
+          "status": "optimized",
+          "min_vidmem_gb": 64,
+          "memory_config_gb": 64
+        },
+        {
+          "hardware": "dgx-station",
+          "model": "deepseek/deepseek-v4-flash-0731",
+          "recipe": "deepseek/deepseek-v4-flash-0731/dgx-station/linux/vllm/fp4-fp8-mixed",
+          "status": "optimized"
+        },
+        {
+          "hardware": "dgx-spark-2gpu",
+          "model": "qwen/qwen3.8-flash-next",
+          "recipe": "qwen/qwen3.8-flash-next/dgx-spark-2gpu/linux/vllm/64gb/fp4-local",
+          "status": "optimized",
+          "min_vidmem_gb": 64,
+          "memory_config_gb": 64
+        },
+        {
+          "hardware": "dgx-spark-2gpu",
+          "model": "z-ai/glm-5.3-flash",
+          "recipe": "z-ai/glm-5.3-flash/dgx-spark-2gpu/linux/vllm/fp4-local",
+          "status": "optimized",
+          "min_vidmem_gb": 128,
+          "memory_config_gb": 128
+        },
+        {
+          "hardware": "geforce-rtx",
+          "model": "google/gemma-4-26b-a4b",
+          "recipe": "google/gemma-4-26b-a4b/geforce-rtx/linux/vllm/nvfp4/mtp",
+          "status": "experimental",
+          "min_vidmem_gb": 32
+        },
+        {
+          "hardware": "rtx-pro",
+          "model": "qwen/qwen3.8-flash-next",
+          "recipe": "qwen/qwen3.8-flash-next/rtx-pro/linux/vllm/fp4-local",
+          "status": "optimized",
+          "min_vidmem_gb": 96
+        },
+        {
+          "hardware": "dgx-spark-4gpu",
+          "model": "minimax/minimax-m3",
+          "recipe": "minimax/minimax-m3/dgx-spark-4gpu/linux/vllm/128gb/nvfp4",
+          "status": "optimized",
+          "min_vidmem_gb": 128,
+          "memory_config_gb": 128
+        },
+        {
+          "hardware": "rtx-pro-2gpu",
+          "model": "deepseek/deepseek-v4-flash-0731",
+          "recipe": "deepseek/deepseek-v4-flash-0731/rtx-pro-2gpu/linux/vllm/fp4-fp8-mixed",
+          "status": "optimized",
+          "min_vidmem_gb": 96
+        },
+        {
+          "hardware": "rtx-pro-4gpu",
+          "model": "qwen/qwen3.8-flash-next",
+          "recipe": "qwen/qwen3.8-flash-next/rtx-pro-4gpu/linux/vllm/fp4-local",
+          "status": "optimized",
+          "min_vidmem_gb": 96
+        }
+      ]
+    }
+  }
+}

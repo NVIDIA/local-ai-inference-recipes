@@ -1,0 +1,61 @@
+# SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: LicenseRef-NvidiaProprietary
+#
+# NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
+# property and proprietary rights in and to this material, related
+# documentation and any modifications thereto. Any use, reproduction,
+# disclosure or distribution of this material and related documentation
+# is subject to the Apache 2.0 License
+#
+# Disclaimer: This Local AI Inference Recipes Repo and its recipes are
+# provided for informational purposes only and were created with AI
+# assistance. They must be independently reviewed and validated for
+# accuracy before use. NVIDIA assumes no liability for any use of these
+# recipes or reliance upon them.
+
+schema_version: 2
+status: optimized
+recipe_sha256: 5f4ef6b0d932af467ecc4a26425e3aeed38cf436fd339779d192db47af5e20f6
+launch_id: default
+measured_at: 2026-10-20
+
+harness:
+  name: aiperf
+  version: 0.12.0
+
+system:
+  label: 2× NVIDIA RTX Pro 6000
+  accelerator: NVIDIA RTX Pro 6000
+  accelerator_count: 2
+  operating_system: linux
+  os_version: Ubuntu 24.04.4 LTS
+  driver_version: 595.91.07
+  cuda_version: "13.4"
+
+software:
+  model_revision: 6821d6ad3681a4b137b066b76094fa82ebd0a380
+  backend_version: 0.1.dev21830+g8244d1c44.cu134
+  runtime_revision: sha256:745feb916ee816f5409fd58386114be4f22fbede7f9c0e0a7b8c4fe8dac0fb29
+
+profiles:
+  - id: coding
+    harnesses:
+      - name: aiperf
+        version: 0.12.0
+      - name: agentperf-local
+        version: v0.3.3
+    workload:
+      input_tokens: null
+      dataset: nvidia/SPEED-Bench
+      profile: qualitative
+      category: coding
+      output_tokens: 8192
+      concurrency: 1
+      requests: 10
+      warmup_requests: 3
+    results:
+      decode_tokens_per_second_mean: 213.00
+      e2e_latency_ms_mean: 180570
+    result_harness:
+      decode_tokens_per_second_mean: aiperf
+      e2e_latency_ms_mean: agentperf-local

@@ -1,0 +1,82 @@
+# SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: LicenseRef-NvidiaProprietary
+#
+# NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
+# property and proprietary rights in and to this material, related
+# documentation and any modifications thereto. Any use, reproduction,
+# disclosure or distribution of this material and related documentation
+# is subject to the Apache 2.0 License
+#
+# Disclaimer: This Local AI Inference Recipes Repo and its recipes are
+# provided for informational purposes only and were created with AI
+# assistance. They must be independently reviewed and validated for
+# accuracy before use. NVIDIA assumes no liability for any use of these
+# recipes or reliance upon them.
+
+schema_version: 4
+title: Muse-Glimmer-30B · RTX Pro · vLLM
+model: meta/muse-glimmer-30b
+hardware: rtx-pro
+platform:
+  os: linux
+  execution: container
+backend: vllm
+variant: dflash
+spec_dec: dflash
+status: experimental
+precision:
+  label: NVFP4-W4A16
+checkpoint:
+  target: https://huggingface.co/nvidia/Muse-Glimmer-30B-NVFP4
+  target_label: nvidia/Muse-Glimmer-30B-NVFP4
+  draft: https://huggingface.co/meta-models/Muse-Glimmer-30B-assistant
+  draft_label: meta-models/Muse-Glimmer-30B-assistant
+concurrency: null
+topology:
+  summary: 1× RTX Pro
+  gpu_count: 1
+  node_count: 1
+  tensor_parallel_size: 1
+sampling: null
+security: Evaluation configuration only. Host networking exposes vLLM on host interfaces; use a firewall or reverse proxy, a scoped read-only HF token, and an isolated cache. For production, pin tested image, model, and code revisions.
+runtime:
+  kind: container
+  label: Container
+  image: vllm/vllm-openai:v0.28.0-ubuntu2404
+  image_url: https://hub.docker.com/r/vllm/vllm-openai/tags?name=v0.28.0-ubuntu2404
+  setup_label: Start container
+  setup_target: single-node
+  setup_instructions: Set `HF_TOKEN` in the host environment.
+  setup_command: |
+    docker run --rm -it \
+      --privileged \
+      --gpus all \
+      --ipc host \
+      --network host \
+      --shm-size=16g \
+      --ulimit memlock=-1 \
+      --ulimit stack=67108864 \
+      -e HF_TOKEN=$HF_TOKEN \
+      -v ~/.cache/huggingface:/root/.cache/huggingface \
+      --entrypoint /bin/bash \
+      vllm/vllm-openai:v0.28.0-ubuntu2404
+serve:
+  label: Launch DFlash · n=15
+  target: single-node
+  instructions: null
+  command: |
+    vllm serve nvidia/Muse-Glimmer-30B-NVFP4 \
+      --generation-config auto \
+      --max-num-batched-tokens 8192 \
+      --enable-chunked-prefill \
+      --async-scheduling \
+      --tensor-parallel-size 1 \
+      --enable-auto-tool-choice \
+      --enable-prefix-caching \
+      --no-enable-flashinfer-autotune \
+      --tool-call-parser muse_glimmer \
+      --reasoning-parser muse_glimmer \
+      --speculative-config '{"method": "dflash", "model": "meta-models/Muse-Glimmer-30B-assistant", "num_speculative_tokens": 15}'
+  port: 8000
+  api_model: nvidia/Muse-Glimmer-30B-NVFP4
+notes: null

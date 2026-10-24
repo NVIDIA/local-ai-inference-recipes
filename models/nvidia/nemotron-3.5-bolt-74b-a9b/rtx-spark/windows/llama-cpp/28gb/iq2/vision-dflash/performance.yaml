@@ -1,0 +1,60 @@
+# SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: LicenseRef-NvidiaProprietary
+#
+# NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
+# property and proprietary rights in and to this material, related
+# documentation and any modifications thereto. Any use, reproduction,
+# disclosure or distribution of this material and related documentation
+# is subject to the Apache 2.0 License
+#
+# Disclaimer: This Local AI Inference Recipes Repo and its recipes are
+# provided for informational purposes only and were created with AI
+# assistance. They must be independently reviewed and validated for
+# accuracy before use. NVIDIA assumes no liability for any use of these
+# recipes or reliance upon them.
+
+schema_version: 2
+status: optimized
+recipe_sha256: 10f9e56809ec17ece52f68ef96e7111bd3559e1796a73385891ac4f2d41d44d7
+launch_id: default
+measured_at: '2026-10-14'
+harness:
+  name: llama.cpp SPEED-Bench Qualitative Coding
+  version: not recorded (manual run)
+system:
+  label: RTX Spark Yukon
+  accelerator: NVIDIA GB10
+  accelerator_count: 1
+  operating_system: windows
+  os_version: Windows ARM64
+  driver_version: '617.06'
+  cuda_version: '13.4'
+software:
+  model_revision: c1eb53e5a5a93133f991ef050436d20da97ae885
+  backend_version: b11669
+  runtime_revision: 620d2225cc436ab0b001e3200e590e3b286ef9ab
+profiles:
+  - id: coding
+    harnesses:
+      - name: llama.cpp SPEED-Bench Qualitative Coding
+        version: not recorded (manual run)
+      - name: agentperf-local
+        version: not recorded (manual run)
+    workload:
+      input_tokens: null
+      context_tokens: 65536
+      dataset: nvidia/SPEED-Bench
+      profile: qualitative
+      category: coding
+      conversations: 80
+      throughput_aggregation: conversation
+      output_tokens: 8192
+      concurrency: 1
+      requests: null
+      warmup_requests: 0
+    results:
+      decode_tokens_per_second_mean: 86.13
+      e2e_latency_ms_mean: 745637.6100
+    result_harness:
+      decode_tokens_per_second_mean: llama.cpp SPEED-Bench Qualitative Coding
+      e2e_latency_ms_mean: agentperf-local

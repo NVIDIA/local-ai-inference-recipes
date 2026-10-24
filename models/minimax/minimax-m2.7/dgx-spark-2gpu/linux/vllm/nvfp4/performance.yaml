@@ -1,0 +1,67 @@
+# SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: LicenseRef-NvidiaProprietary
+#
+# NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
+# property and proprietary rights in and to this material, related
+# documentation and any modifications thereto. Any use, reproduction,
+# disclosure or distribution of this material and related documentation
+# is subject to the Apache 2.0 License
+#
+# Disclaimer: This Local AI Inference Recipes Repo and its recipes are
+# provided for informational purposes only and were created with AI
+# assistance. They must be independently reviewed and validated for
+# accuracy before use. NVIDIA assumes no liability for any use of these
+# recipes or reliance upon them.
+
+# Source: PBR 309514 workbook, llm data!V1338 and V1463.
+# Job ended 2026-10-13 at 21:25:02, supplied by Raphael.
+# Dated image identified by Raphael from the job end time; revisions resolved from registries.
+schema_version: 2
+status: optimized
+recipe_sha256: d690b9043857d59cb0d7d2f6c07f22335438d98bd2a0a23ea333577f4f411947
+launch_id: default
+measured_at: 2026-10-13
+
+harness:
+  name: aiperf
+  version: 0.12.0
+
+system:
+  label: 2× NVIDIA DGX Spark 128 GB
+  accelerator: NVIDIA GB10
+  accelerator_count: 2
+  operating_system: linux
+  os_version: FastOS 1.145.33
+  driver_version: 580.159.03
+
+software:
+  model_revision: e79701cb1f9dce8fe5395b9ed2b20170beebecde
+  # Backend build confirmed by Prerit in MR !229.
+  backend_version: "0.1.dev21818+g3a947437c.d20261013"
+  # Digest of eugr/spark-vllm:nightly-20261013, resolved from Docker Hub.
+  runtime_revision: sha256:d33f2b78ef6b4f11447521a3e496a0711bbd2ac9bb3ff8802a27ab757de9637a
+
+profiles:
+  - id: coding
+    harnesses:
+      - name: aiperf
+        version: 0.12.0
+      - name: agentperf-local
+        version: 0.3.2
+    # Workload fields describe AIPerf; AA uses agentperf-default-v1's full replay.
+    workload:
+      input_tokens: null
+      dataset: nvidia/SPEED-Bench
+      profile: qualitative
+      category: coding
+      output_tokens: 8192
+      concurrency: 1
+      requests: 10
+      warmup_requests: 3
+    results:
+      decode_tokens_per_second_mean: 26.4
+      # AA total agentic replay duration: 1529.2 seconds converted to milliseconds.
+      e2e_latency_ms_mean: 1529200
+    result_harness:
+      decode_tokens_per_second_mean: aiperf
+      e2e_latency_ms_mean: agentperf-local

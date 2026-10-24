@@ -1,0 +1,61 @@
+# SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: LicenseRef-NvidiaProprietary
+#
+# NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
+# property and proprietary rights in and to this material, related
+# documentation and any modifications thereto. Any use, reproduction,
+# disclosure or distribution of this material and related documentation
+# is subject to the Apache 2.0 License
+#
+# Disclaimer: This Local AI Inference Recipes Repo and its recipes are
+# provided for informational purposes only and were created with AI
+# assistance. They must be independently reviewed and validated for
+# accuracy before use. NVIDIA assumes no liability for any use of these
+# recipes or reliance upon them.
+
+# Measured with AIPerf 0.12.0 on 2026-10-14.
+schema_version: 2
+status: optimized
+recipe_sha256: a69e6d2b5ad7c3d3d9e9f688fd063889825c8f9cc41fef880cd71d4f654d65e1
+launch_id: default
+measured_at: 2026-10-14
+
+harness:
+  name: aiperf
+  version: 0.12.0
+
+system:
+  label: NVIDIA RTX Pro
+  accelerator: NVIDIA RTX Pro 6000
+  accelerator_count: 1
+  operating_system: linux
+  os_version: Ubuntu 24.04.4 LTS
+  driver_version: 595.91.07
+  cuda_version: "13.0"
+
+software:
+  model_revision: 5165e12246e823a578bc2d483958439c38d9d6bd
+  runtime_revision: sha256:cb9bc64f0f038c2c2ebf13b31248fb87aca40c356c3d20f363be087cfcff1fcd
+
+profiles:
+  - id: coding
+    harnesses:
+      - name: aiperf
+        version: 0.12.0
+      - name: agentperf-local
+        version: 0e1c95ab295ed5f783898129ef63a9f207924a30
+    workload:
+      input_tokens: null
+      dataset: nvidia/SPEED-Bench
+      profile: qualitative
+      category: coding
+      output_tokens: 8192
+      concurrency: 1
+      requests: 15
+      warmup_requests: 3
+    results:
+      decode_tokens_per_second_mean: 378.99
+      e2e_latency_ms_mean: 208842.13
+    result_harness:
+      decode_tokens_per_second_mean: aiperf
+      e2e_latency_ms_mean: agentperf-local

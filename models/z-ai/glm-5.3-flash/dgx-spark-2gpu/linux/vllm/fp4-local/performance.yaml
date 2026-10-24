@@ -1,0 +1,83 @@
+# SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: LicenseRef-NvidiaProprietary
+#
+# NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
+# property and proprietary rights in and to this material, related
+# documentation and any modifications thereto. Any use, reproduction,
+# disclosure or distribution of this material and related documentation
+# is subject to the Apache 2.0 License
+#
+# Disclaimer: This Local AI Inference Recipes Repo and its recipes are
+# provided for informational purposes only and were created with AI
+# assistance. They must be independently reviewed and validated for
+# accuracy before use. NVIDIA assumes no liability for any use of these
+# recipes or reliance upon them.
+
+# Both nodes used fresh containers with HF_HUB_OFFLINE=1 and the
+# fully cached checkpoint revision recorded below.
+# AA reported 32 decode_window_unmeasurable warnings for per-turn
+# normalization. Every turn produced its exact server token count;
+# only whole-replay completion time is published, not normalized rates.
+# AIPerf and AA ran sequentially against this recipe's endpoint.
+# AIPerf summary SHA-256: 5c3136651fea9b1296785775eb208f6b1dc7a3f4966ea29571c06ef509f3ec3d
+# AA summary SHA-256: f66e81f48eeb0e4db72588ad674268d28625cd444da86e346e44bdd64a3513c7
+schema_version: 2
+status: optimized
+recipe_sha256: a1e350311603d46019e6c6991457d34cd59bad05000a8c150e1e5881a08ebf04
+launch_id: default
+measured_at: 2026-10-16
+
+harness:
+  name: aiperf
+  version: 0.12.0
+
+system:
+  label: 2× NVIDIA DGX Spark (128 GB per node)
+  accelerator: NVIDIA GB10
+  accelerator_count: 2
+  operating_system: linux
+  os_version: Ubuntu 24.04.4 LTS
+  driver_version: 580.159.03
+  cuda_version: "13.0.88"
+
+software:
+  model_revision: f5a0baba30120da613e27973ee3535a725d4ece3
+  backend_version: 0.1.dev21830+g8244d1c44.d20261015
+  runtime_revision: sha256:03a956544e9f9b4b7ba91690469fbe7848bdbef29a7d2e0f5788368467bb3595
+
+profiles:
+  - id: coding
+    harnesses:
+      - name: aiperf
+        version: 0.12.0
+      - name: agentperf-local
+        version: 0e1c95ab295ed5f783898129ef63a9f207924a30
+    # Workload fields describe AIPerf only. AA 0.3.3 uses agentperf-default-v1:
+    # 8 tasks, 168 successful measured turns, exact output lengths (30,883
+    # server output tokens), standard sampling, tool_choice none, no tool delay,
+    # and default cache isolation. AA's full replay was not capped at 10 requests.
+    # SPEED-Bench qualitative.jsonl SHA-256:
+    # e9bbbe998472b79501ed79ba2bf126e58b63e153a6deef70ce2b63ea7a4de845
+    workload:
+      input_tokens: null
+      dataset: nvidia/SPEED-Bench
+      profile: qualitative
+      category: coding
+      context_tokens: 500000
+      input_tokens_min: 39
+      input_tokens_max: 8248
+      input_tokens_total: 17533
+      output_tokens: 8192
+      concurrency: 1
+      requests: 10
+      conversations: 8
+      warmup_requests: 0
+    results:
+      # Native active_decode_throughput.avg, matching the merged card's
+      # reproduction command: an active-time-weighted rate, not a request mean.
+      decode_tokens_per_second_mean: 33.93837551232709
+      # AA whole-replay measured_duration_ms, rendered as Completion Time.
+      e2e_latency_ms_mean: 1216696.251184214
+    result_harness:
+      decode_tokens_per_second_mean: aiperf
+      e2e_latency_ms_mean: agentperf-local

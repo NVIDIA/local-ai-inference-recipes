@@ -1,0 +1,83 @@
+# SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: LicenseRef-NvidiaProprietary
+#
+# NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
+# property and proprietary rights in and to this material, related
+# documentation and any modifications thereto. Any use, reproduction,
+# disclosure or distribution of this material and related documentation
+# is subject to the Apache 2.0 License
+#
+# Disclaimer: This Local AI Inference Recipes Repo and its recipes are
+# provided for informational purposes only and were created with AI
+# assistance. They must be independently reviewed and validated for
+# accuracy before use. NVIDIA assumes no liability for any use of these
+# recipes or reliance upon them.
+
+# SPEED-Bench measured on 2026-10-16; AA is retained from the earlier same-day run.
+# SPEED-Bench source: local-lilicorr-lmstudio-q4km-temp06-osl8192.
+# AA source: local-lilicorr-lmstudio-q4km.
+# Measured server default: --temp 0.6; recipe retains --temp 1.0 at maintainer request.
+# LiLiCorr draft checkpoint revision: 75a5829055f69a0359085ae6bbd0a81b60bc05c6
+schema_version: 2
+recipe_sha256: 034085b986b33752c42be9630b3b7e35cb3e06a2565de9c25e3fc59474b928e1
+launch_id: default
+measured_at: 2026-10-16
+
+harness:
+  name: llama.cpp SPEED-Bench Qualitative Coding
+  version: llama.cpp bed0a856606ee4a24a164066f73d2379447033f5
+
+system:
+  label: NVIDIA RTX PRO 6000 Blackwell Workstation Edition
+  accelerator: NVIDIA RTX PRO 6000 Blackwell Workstation Edition
+  accelerator_count: 1
+  operating_system: windows
+  os_version: Windows x86_64
+  cuda_version: "13.4"
+
+software:
+  model_revision: 716398014e94528b38bf58871dbd6eb996bd7ad9
+  backend_version: b11669
+  runtime_revision: 620d2225cc436ab0b001e3200e590e3b286ef9ab
+
+profiles:
+  - id: coding
+    harnesses:
+      - name: llama.cpp SPEED-Bench Qualitative Coding
+        version: llama.cpp bed0a856606ee4a24a164066f73d2379447033f5
+      - name: agentperf-local
+        version: 0e1c95ab295ed5f783898129ef63a9f207924a30
+      - name: nvidia-smi
+        version: not recorded (manual run)
+    # Workload fields describe SPEED-Bench only: 80 coding conversations / 89 HTTP turns,
+    # temperature 0, timeout 900 seconds, no --limit or --extra-inputs override.
+    # SPEED-Bench explicitly sends temperature 0, overriding the server default.
+    # AA uses agentperf-default-v1/manifest-x86_64.json: 168 successful turns,
+    # exact replay output lengths, --tool-choice none, and default cache isolation.
+    # AA standard sampling: temperature 0.7, top_p 0.8, top_k 20, min_p 0.0.
+    workload:
+      input_tokens: null
+      dataset: nvidia/SPEED-Bench
+      profile: qualitative
+      category: coding
+      context_tokens: 196608
+      output_tokens: 8192
+      concurrency: 1
+      requests: 89
+      conversations: 80
+      warmup_requests: 0
+      throughput_aggregation: conversation
+    results:
+      # Native avg_prompt_t_s / avg_pred_t_s, averaged over the 80 conversations.
+      prefill_tokens_per_second_mean: 843.7145724391362
+      decode_tokens_per_second_mean: 225.57567176410566
+      # Earlier AA whole-replay measured_duration_ms, retained at maintainer request.
+      e2e_latency_ms_mean: 237800.15370063484
+      # Peak nvidia-smi memory.used sampled every 0.5 s during startup and SPEED-Bench;
+      # includes other GPU allocations. Decimal GB = MiB * 1048576 / 1e9.
+      peak_gpu_memory_gb_max: 82.076237824
+    result_harness:
+      prefill_tokens_per_second_mean: llama.cpp SPEED-Bench Qualitative Coding
+      decode_tokens_per_second_mean: llama.cpp SPEED-Bench Qualitative Coding
+      e2e_latency_ms_mean: agentperf-local
+      peak_gpu_memory_gb_max: nvidia-smi

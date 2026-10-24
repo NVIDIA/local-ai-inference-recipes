@@ -1,0 +1,70 @@
+# SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: LicenseRef-NvidiaProprietary
+#
+# NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
+# property and proprietary rights in and to this material, related
+# documentation and any modifications thereto. Any use, reproduction,
+# disclosure or distribution of this material and related documentation
+# is subject to the Apache 2.0 License
+#
+# Disclaimer: This Local AI Inference Recipes Repo and its recipes are
+# provided for informational purposes only and were created with AI
+# assistance. They must be independently reviewed and validated for
+# accuracy before use. NVIDIA assumes no liability for any use of these
+# recipes or reliance upon them.
+
+# RTX Spark manual run, llama.cpp b11609 (ARM64, CUDA 13.4). SPEED-Bench
+# qualitative/coding, 80 samples, OSL 8192, concurrency 1; AA Perf agentperf-local
+# on the agentperf-default-v1 arm64 manifest, 168 turns, 0 failures.
+# e2e_latency_ms_mean is agentperf's whole-run measured_duration_ms, which the site
+# relabels "E2E Completion Time" and renders in seconds.
+# q8_0 K and V cache is what fits 96K context in a 20 GB budget.
+# GPU driver is the value last reported by this runner; vBIOS was not recorded.
+# SPEED-Bench input-token statistics were not captured for this run.
+schema_version: 2
+status: optimized
+recipe_sha256: 295080060f8d56178365e862cc50d949568eaceac5cc5bc535fec8001485aeb2
+launch_id: default
+measured_at: '2026-10-14'
+harness:
+  name: llama.cpp SPEED-Bench Qualitative Coding
+  version: llama.cpp fcac19079f3f2985fe74ed845f0880e7e9a8030a; wrapper f4bde04723988d09e76d2e691dd66aa359422aff
+system:
+  label: NVIDIA RTX Spark N1X
+  accelerator: NVIDIA RTX Spark N1X
+  accelerator_count: 1
+  operating_system: windows
+  os_version: Windows ARM64
+  driver_version: '617.06'
+  cuda_version: '13.4'
+software:
+  model_revision: 4ca720788d1e01f1bff70c033e0d0028fd02e502
+  backend_version: b11609
+  runtime_revision: fcac19079f3f2985fe74ed845f0880e7e9a8030a
+profiles:
+  - id: coding
+    harnesses:
+      - name: llama.cpp SPEED-Bench Qualitative Coding
+        version: llama.cpp fcac19079f3f2985fe74ed845f0880e7e9a8030a; wrapper f4bde04723988d09e76d2e691dd66aa359422aff
+      - name: agentperf-local
+        version: 70e1b996e05f
+    workload:
+      input_tokens: null
+      context_tokens: 98304
+      dataset: nvidia/SPEED-Bench
+      profile: qualitative
+      category: coding
+      conversations: 80
+      throughput_aggregation: conversation
+      output_tokens: 8192
+      concurrency: 1
+      requests: 89
+      warmup_requests: 0
+    results:
+      prefill_tokens_per_second_mean: 362.41
+      decode_tokens_per_second_mean: 28.74
+      e2e_latency_ms_mean: 1494186.470500019
+    result_harness:
+      prefill_tokens_per_second_mean: llama.cpp SPEED-Bench Qualitative Coding
+      decode_tokens_per_second_mean: llama.cpp SPEED-Bench Qualitative Coding
+      e2e_latency_ms_mean: agentperf-local

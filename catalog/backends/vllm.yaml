@@ -1,0 +1,42 @@
+# SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: LicenseRef-NvidiaProprietary
+#
+# NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
+# property and proprietary rights in and to this material, related
+# documentation and any modifications thereto. Any use, reproduction,
+# disclosure or distribution of this material and related documentation
+# is subject to the Apache 2.0 License
+#
+# Disclaimer: This Local AI Inference Recipes Repo and its recipes are
+# provided for informational purposes only and were created with AI
+# assistance. They must be independently reviewed and validated for
+# accuracy before use. NVIDIA assumes no liability for any use of these
+# recipes or reliance upon them.
+
+schema_version: 1
+id: vllm
+display_name: vLLM
+protocol: openai-compatible
+upstream: https://github.com/vllm-project/vllm
+container_default: vllm/vllm-openai:v0.24.0-ubuntu2404
+notes: |-
+  Recipes are self-contained: each declares its selected image and complete
+  Docker startup and model-specific launch commands. Multi-node recipes include
+  every node role; source-supplied alternatives remain separate complete
+  options. Use the fallback default only when the source supplies neither an
+  image nor a startup command.
+
+  Known images: [vllm/vllm-openai:v0.24.0-ubuntu2404](https://hub.docker.com/r/vllm/vllm-openai/tags?name=v0.24.0-ubuntu2404)
+  (fallback default); [vllm/vllm-openai:v0.25.1-ubuntu2404](https://hub.docker.com/r/vllm/vllm-openai/tags?name=v0.25.1-ubuntu2404);
+  [vllm/vllm-openai:nightly](https://hub.docker.com/r/vllm/vllm-openai/tags?name=nightly)
+  (mutable); [vllm/vllm-openai:nightly-311b3513af33bc29b4acb2fde2e9313e5e9966a0](https://hub.docker.com/r/vllm/vllm-openai/tags?name=nightly-311b3513af33bc29b4acb2fde2e9313e5e9966a0);
+  [vllm/vllm-openai:nightly-aa9903490c616dc6871e5acc62cec7bb1e5e9434](https://hub.docker.com/r/vllm/vllm-openai/tags?name=nightly-aa9903490c616dc6871e5acc62cec7bb1e5e9434);
+  [eugr/spark-vllm:latest](https://hub.docker.com/r/eugr/spark-vllm/tags?name=latest)
+  (community, ARM64-only, mutable); [eugr/spark-vllm:nightly-20260704](https://hub.docker.com/r/eugr/spark-vllm/tags?name=nightly-20260704)
+  (community, ARM64-only); [eugr/spark-vllm-b12x:latest](https://hub.docker.com/r/eugr/spark-vllm-b12x/tags?name=latest)
+  (community, ARM64-only, mutable, custom B12x); [nvcr.io/nvidia/vllm:26.05.post1-py3](https://catalog.ngc.nvidia.com/orgs/nvidia/-/containers/vllm/-/tags)
+  (NVIDIA, AMD64 and ARM64);
+
+  Evaluation only: host networking exposes vLLM on host interfaces. Use a
+  firewall or reverse proxy, a scoped read-only HF token, and an isolated cache;
+  pin tested image, model, and code revisions for production.

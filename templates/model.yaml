@@ -1,0 +1,41 @@
+# SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: LicenseRef-NvidiaProprietary
+#
+# NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
+# property and proprietary rights in and to this material, related
+# documentation and any modifications thereto. Any use, reproduction,
+# disclosure or distribution of this material and related documentation
+# is subject to the Apache 2.0 License
+#
+# Disclaimer: This Local AI Inference Recipes Repo and its recipes are
+# provided for informational purposes only and were created with AI
+# assistance. They must be independently reviewed and validated for
+# accuracy before use. NVIDIA assumes no liability for any use of these
+# recipes or reliance upon them.
+
+schema_version: 1
+id: <builder>/<model>            # must match models/<builder>/<model>
+display_name: <Display Name>
+builder: <builder>
+family: <Family>
+summary: <one short neutral sentence>
+# upstream: https://huggingface.co/<org>/<model>   # omit rather than guess
+modalities:
+  - text
+availability: available          # available | pending | deprecated
+
+# Use for known but incomplete guidance; do not create a partial recipe.yaml.
+# planned_configurations:
+#   -
+#     hardware: <catalog id or null when count is unresolved>
+#     hardware_label: <human-readable target>
+#     gpu_count: <integer or null>
+#     platform:
+#       os: <linux or windows>
+#       execution: <container or native>
+#     backend: <backend id or null>
+#     variant: <full precision slug or null>
+#     precision: <precision or null>
+#     status: <what is missing or blocked>
+#     note: <optional operational context or null>
+#     source: <optional direct source URL or null>

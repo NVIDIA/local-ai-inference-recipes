@@ -1,0 +1,99 @@
+# SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: LicenseRef-NvidiaProprietary
+#
+# NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
+# property and proprietary rights in and to this material, related
+# documentation and any modifications thereto. Any use, reproduction,
+# disclosure or distribution of this material and related documentation
+# is subject to the Apache 2.0 License
+#
+# Disclaimer: This Local AI Inference Recipes Repo and its recipes are
+# provided for informational purposes only and were created with AI
+# assistance. They must be independently reviewed and validated for
+# accuracy before use. NVIDIA assumes no liability for any use of these
+# recipes or reliance upon them.
+
+schema_version: 4
+title: NVIDIA Nemotron 3.5 Bolt 74B A9B · RTX Pro · vLLM · LiLiCorr
+model: nvidia/nemotron-3.5-bolt-74b-a9b
+hardware: rtx-pro
+platform:
+  os: linux
+  execution: container
+backend: vllm
+backend_version: 0.32.0rc1.dev190+g3f1bcfd82
+spec_dec: lilicorr
+status: optimized
+validation:
+  validated_at: '2026-10-15'
+  validated_by: prodney
+  tested_stack:
+    os_version: Ubuntu 24.04.4 LTS
+    driver: '595.91.07'
+    cuda: '13.0'
+precision:
+  label: IQ2
+checkpoint:
+  target: https://huggingface.co/nvidia/NVIDIA-Nemotron-3.5-Bolt-74B-A9B-24GB
+  target_label: nvidia/NVIDIA-Nemotron-3.5-Bolt-74B-A9B-24GB
+  draft: https://huggingface.co/nvidia/NVIDIA-Nemotron-3.5-Bolt-74B-A9B-24GB-LiLiCorr
+  draft_label: nvidia/NVIDIA-Nemotron-3.5-Bolt-74B-A9B-24GB-LiLiCorr
+concurrency: 8
+topology:
+  summary: 1× RTX Pro
+  gpu_count: 1
+  node_count: 1
+  tensor_parallel_size: null
+sampling: null
+security: Evaluation configuration only. Host networking exposes vLLM on host interfaces; use a firewall or reverse proxy, a scoped read-only HF token, and an isolated cache. For production, pin tested image, model, and code revisions.
+runtime:
+  kind: container
+  label: Container
+  image: vllm/vllm-openai:nightly
+  image_url: https://hub.docker.com/layers/vllm/vllm-openai/nightly
+  setup_label: Start container
+  setup_target: single-node
+  setup_instructions: Set `HF_TOKEN` in the host environment.
+  setup_command: |
+    docker run --rm -it \
+      --gpus all \
+      --ipc host \
+      --network host \
+      --shm-size=16g \
+      --ulimit memlock=-1 \
+      --ulimit stack=67108864 \
+      -e HF_TOKEN=$HF_TOKEN \
+      -v ~/.cache/huggingface:/root/.cache/huggingface \
+      --entrypoint /bin/bash \
+      vllm/vllm-openai:nightly
+serve:
+  label: Launch
+  target: single-node
+  instructions: null
+  command: |
+    # Install b12x==1.5.1 in the container and download the kernels
+    pip install b12x==1.5.1
+    vllm download-kernels
+
+    vllm serve \
+      --model nvidia/NVIDIA-Nemotron-3.5-Bolt-74B-A9B-24GB \
+      --block-size 64 \
+      --enable-auto-tool-choice \
+      --enable-mamba-cache-stochastic-rounding \
+      --enable-mamba-shared-prefix-checkpoint \
+      --mamba-backend flashinfer \
+      --mamba-cache-philox-rounds 5 \
+      --mamba-ssm-cache-dtype float16 \
+      --max-model-len 262144 \
+      --max-num-batched-tokens 8192 \
+      --max-num-seqs 8 \
+      --prefix-match-unit 64 \
+      --reasoning-parser nemotron_v3 \
+      --speculative_config.method dflash \
+      --speculative_config.model nvidia/NVIDIA-Nemotron-3.5-Bolt-74B-A9B-24GB-LiLiCorr \
+      --speculative_config.num_speculative_tokens 7 \
+      --tool-call-parser qwen3_coder \
+      --trust-remote-code
+  port: 8000
+  api_model: nvidia/NVIDIA-Nemotron-3.5-Bolt-74B-A9B-24GB
+notes: null

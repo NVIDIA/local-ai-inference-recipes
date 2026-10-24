@@ -1,0 +1,80 @@
+# SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: LicenseRef-NvidiaProprietary
+#
+# NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
+# property and proprietary rights in and to this material, related
+# documentation and any modifications thereto. Any use, reproduction,
+# disclosure or distribution of this material and related documentation
+# is subject to the Apache 2.0 License
+#
+# Disclaimer: This Local AI Inference Recipes Repo and its recipes are
+# provided for informational purposes only and were created with AI
+# assistance. They must be independently reviewed and validated for
+# accuracy before use. NVIDIA assumes no liability for any use of these
+# recipes or reliance upon them.
+
+schema_version: 4
+title: "Recursive Flint 40B-A2.5B · NVIDIA GeForce RTX 5090 · Q4_1"
+model: recursivesi/flint
+hardware: geforce-rtx
+platform:
+  os: windows
+  execution: native
+backend: llama-cpp
+backend_version: b11803
+backend_min_version: b11803
+min_vidmem_gb: 28
+status: experimental
+prerequisites:
+  - "Windows x64 CUDA 13.4 llama.cpp b11803 or later, with matching CUDA runtime DLLs. b11803 downloads: https://github.com/ggml-org/llama.cpp/releases/tag/b11803."
+  - "Download the linked flint-int4-q4_1.gguf into the folder containing llama-server.exe."
+  - "Allow 28 GiB for inference plus operating-system headroom."
+limitations: null
+precision:
+  label: Q4_1
+checkpoint:
+  target: https://huggingface.co/RecursiveSI/flint-int4-gguf/blob/main/flint-int4-q4_1.gguf
+  target_label: RecursiveSI/flint-int4-gguf/flint-int4-q4_1.gguf
+  draft: null
+  draft_label: null
+concurrency: 1
+topology: null
+sampling: "Backend sampling: ON; temp 0; top-p 1; top-k 1; min-p 0; presence-penalty 0; repeat-penalty 1; seed 1234."
+security: null
+runtime: null
+serve:
+  label: Launch Recursive Flint 40B-A2.5B Q4_1
+  target: single-node
+  instructions: "In PowerShell, open the folder containing llama-server.exe and the GGUF, then set $env:GGML_CUDA_MMQ_PREC = \"auto\" before launching."
+  command: |
+    .\llama-server.exe -m flint-int4-q4_1.gguf `
+      --no-mmproj `
+      --host 127.0.0.1 `
+      --port 57884 `
+      --batch-size 4096 `
+      --ubatch-size 2048 `
+      --ctx-size 98304 `
+      --parallel 1 `
+      -ngl 999 `
+      --n-predict 8192 `
+      -fit off `
+      --backend-sampling `
+      --temp 0 `
+      --top-p 1 `
+      --top-k 1 `
+      --min-p 0 `
+      --presence-penalty 0 `
+      --repeat-penalty 1 `
+      -fa on `
+      -ctk f16 `
+      -ctv f16 `
+      --jinja `
+      --seed 1234 `
+      --threads 12 `
+      --threads-batch 12 `
+      --metrics `
+      --no-webui `
+      --alias flint-q4-1
+  port: 57884
+  api_model: flint-q4-1
+notes: null

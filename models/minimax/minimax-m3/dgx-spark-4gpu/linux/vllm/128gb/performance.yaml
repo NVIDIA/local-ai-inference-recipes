@@ -1,0 +1,56 @@
+# SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: LicenseRef-NvidiaProprietary
+#
+# NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
+# property and proprietary rights in and to this material, related
+# documentation and any modifications thereto. Any use, reproduction,
+# disclosure or distribution of this material and related documentation
+# is subject to the Apache 2.0 License
+#
+# Disclaimer: This Local AI Inference Recipes Repo and its recipes are
+# provided for informational purposes only and were created with AI
+# assistance. They must be independently reviewed and validated for
+# accuracy before use. NVIDIA assumes no liability for any use of these
+# recipes or reliance upon them.
+
+schema_version: 2
+recipe_sha256: 0aef47a246f1e168517bb9b674948a1e9b5f8156f5f20846d43cd3f3b4cf264a
+launch_id: default
+measured_at: "2026-10-23"
+harness:
+  name: aiperf
+  version: "0.12.0"
+system:
+  label: 4× NVIDIA DGX Spark 128 GB
+  accelerator: NVIDIA GB10
+  accelerator_count: 4
+  operating_system: linux
+  os_version: FastOS 1.145.33
+  driver_version: "580.159.03"
+  cuda_version: "13.0.2"
+software:
+  model_revision: 901464083161bf8612a29ff7ad29914cd4ab4a85
+  backend_version: "0.1.dev21818+g3a947437c.d20261013"
+  runtime_revision: sha256:d33f2b78ef6b4f11447521a3e496a0711bbd2ac9bb3ff8802a27ab757de9637a
+profiles:
+  - id: coding
+    harnesses:
+      - name: aiperf
+        version: "0.12.0"
+      - name: agentperf-local
+        version: "0.3.2"
+    workload:
+      input_tokens: null
+      dataset: nvidia/SPEED-Bench
+      profile: qualitative
+      category: coding
+      output_tokens: 8192
+      concurrency: 1
+      requests: 10
+      warmup_requests: 3
+    results:
+      decode_tokens_per_second_mean: 42.4
+      e2e_latency_ms_mean: 882400
+    result_harness:
+      decode_tokens_per_second_mean: aiperf
+      e2e_latency_ms_mean: agentperf-local

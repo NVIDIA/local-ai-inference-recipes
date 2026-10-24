@@ -1,0 +1,74 @@
+# SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: LicenseRef-NvidiaProprietary
+#
+# NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
+# property and proprietary rights in and to this material, related
+# documentation and any modifications thereto. Any use, reproduction,
+# disclosure or distribution of this material and related documentation
+# is subject to the Apache 2.0 License
+#
+# Disclaimer: This Local AI Inference Recipes Repo and its recipes are
+# provided for informational purposes only and were created with AI
+# assistance. They must be independently reviewed and validated for
+# accuracy before use. NVIDIA assumes no liability for any use of these
+# recipes or reliance upon them.
+
+schema_version: 4
+title: "NVIDIA Nemotron 3.5 Bolt 74B A9B (Vision) · GeForce RTX GPUs · 28GB · IQ2 · LiLiCorr"
+model: nvidia/nemotron-3.5-bolt-74b-a9b
+hardware: geforce-rtx
+platform:
+  os: windows
+  execution: native
+backend: llama-cpp
+backend_version: "b11669"
+backend_min_version: "b11669"
+min_vidmem_gb: 28
+variant: vision-dflash
+spec_dec: lilicorr
+status: experimental
+prerequisites:
+  - "A CUDA-enabled Windows x86-64 llama.cpp build b11669, source commit 620d2225cc436ab0b001e3200e590e3b286ef9ab, with llama-server.exe on PATH."
+  - "Network access for llama-server to download and cache the named Hugging Face checkpoint files."
+limitations: null
+precision:
+  label: IQ2
+checkpoint:
+  target: https://huggingface.co/nvidia/NVIDIA-Nemotron-3.5-Bolt-74B-A9B-24GB-GGUF/blob/main/NVIDIA-Nemotron-3.5-Bolt-74B-A9B-24GB.gguf
+  target_label: "nvidia/NVIDIA-Nemotron-3.5-Bolt-74B-A9B-24GB-GGUF/NVIDIA-Nemotron-3.5-Bolt-74B-A9B-24GB.gguf"
+  draft: https://huggingface.co/nvidia/NVIDIA-Nemotron-3.5-Bolt-74B-A9B-24GB-LiLiCorr-GGUF/blob/main/NVIDIA-Nemotron-3.5-Bolt-74B-A9B-24GB-LiLiCorr.gguf
+  draft_label: "nvidia/NVIDIA-Nemotron-3.5-Bolt-74B-A9B-24GB-LiLiCorr-GGUF/NVIDIA-Nemotron-3.5-Bolt-74B-A9B-24GB-LiLiCorr.gguf"
+concurrency: 1
+topology: null
+sampling: "--temp=1.0; --top-p=0.95"
+security: null
+runtime: null
+serve:
+  label: "Launch LiLiCorr · n=6"
+  target: single-node
+  instructions: "Run in PowerShell with llama-server.exe on PATH. llama-server downloads and caches the named target, draft, and projector files from Hugging Face. The omitted load-mode flag retains default mmap behavior."
+  command: |
+    llama-server.exe -hf "nvidia/NVIDIA-Nemotron-3.5-Bolt-74B-A9B-24GB-GGUF" `
+      -hff "NVIDIA-Nemotron-3.5-Bolt-74B-A9B-24GB.gguf" `
+      --mmproj-url "https://huggingface.co/nvidia/NVIDIA-Nemotron-3.5-Bolt-74B-A9B-24GB-GGUF/resolve/main/mmproj-NVIDIA-Nemotron-3.5-Bolt-74B-A9B-24GB.gguf" `
+      --batch-size 2048 `
+      --ubatch-size 512 `
+      --ctx-size 65536 `
+      --parallel 1 `
+      -ngl 999 `
+      --spec-type draft-dflash `
+      --spec-draft-n-max 6 `
+      -hfrd "nvidia/NVIDIA-Nemotron-3.5-Bolt-74B-A9B-24GB-LiLiCorr-GGUF" `
+      --spec-draft-model "NVIDIA-Nemotron-3.5-Bolt-74B-A9B-24GB-LiLiCorr.gguf" `
+      --spec-draft-ngl 999 `
+      --cache-type-k q8_0 `
+      --cache-type-v q8_0 `
+      --temp 1.0 `
+      --top-p 0.95 `
+      --flash-attn on `
+      --jinja `
+      --host 127.0.0.1 `
+      --port 9931
+  port: 9931
+  api_model: nvidia/NVIDIA-Nemotron-3.5-Bolt-74B-A9B-24GB-GGUF
+notes: "Projector: [mmproj-NVIDIA-Nemotron-3.5-Bolt-74B-A9B-24GB.gguf](https://huggingface.co/nvidia/NVIDIA-Nemotron-3.5-Bolt-74B-A9B-24GB-GGUF/blob/main/mmproj-NVIDIA-Nemotron-3.5-Bolt-74B-A9B-24GB.gguf)."

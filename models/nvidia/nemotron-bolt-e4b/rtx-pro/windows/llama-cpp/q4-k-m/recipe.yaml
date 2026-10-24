@@ -1,0 +1,90 @@
+# SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: LicenseRef-NvidiaProprietary
+#
+# NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
+# property and proprietary rights in and to this material, related
+# documentation and any modifications thereto. Any use, reproduction,
+# disclosure or distribution of this material and related documentation
+# is subject to the Apache 2.0 License
+#
+# Disclaimer: This Local AI Inference Recipes Repo and its recipes are
+# provided for informational purposes only and were created with AI
+# assistance. They must be independently reviewed and validated for
+# accuracy before use. NVIDIA assumes no liability for any use of these
+# recipes or reliance upon them.
+
+schema_version: 4
+title: NVIDIA-Nemotron-3.5-Bolt-E4B-4GB · RTX PRO 6000 · Q4_K_M + BF16 DFlash
+model: nvidia/nemotron-bolt-e4b
+hardware: rtx-pro
+platform:
+  os: windows
+  execution: native
+backend: llama-cpp
+backend_version: b11803
+spec_dec: dflash
+status: experimental
+prerequisites:
+  - A CUDA-enabled Windows x86-64 llama.cpp build with llama-server.exe on PATH.
+  - Download the linked target and draft GGUF files into the working directory. Hugging Face access may require authentication.
+limitations:
+  - Text generation at concurrency 1.
+precision:
+  label: Q4_K_M
+checkpoint:
+  target: https://huggingface.co/nvidia/NVIDIA-Nemotron-3.5-Bolt-E4B-4GB/blob/main/Nemotron-3.5-Bolt-E4B-Q4_K_M.gguf
+  target_label: nvidia/NVIDIA-Nemotron-3.5-Bolt-E4B-4GB/Nemotron-3.5-Bolt-E4B-Q4_K_M.gguf
+  draft: https://huggingface.co/nvidia/NVIDIA-Nemotron-3.5-Bolt-E4B-4GB-DFlash/blob/main/Nemotron-3.5-Bolt-E4B-DFlash-BF16.gguf
+  draft_label: nvidia/NVIDIA-Nemotron-3.5-Bolt-E4B-4GB-DFlash/Nemotron-3.5-Bolt-E4B-DFlash-BF16.gguf
+min_vidmem_gb: 10.10
+concurrency: 1
+topology: null
+sampling: Temperature 0; top-p 1; top-k 1; min-p 0; seed 1234.
+security: null
+runtime: null
+serve:
+  label: Launch DFlash · 7 draft tokens
+  target: single-node
+  instructions: Run in PowerShell from the directory containing both GGUF files. Set $env:GGML_CUDA_MMQ_PREC = "auto" before launching. Default mmap is retained.
+  command: |-
+    llama-server.exe `
+      -m ./Nemotron-3.5-Bolt-E4B-Q4_K_M.gguf `
+      --no-mmproj `
+      --host 127.0.0.1 `
+      --port 8080 `
+      --batch-size 2048 `
+      --ubatch-size 1024 `
+      --ctx-size 98304 `
+      --parallel 1 `
+      -ngl 999 `
+      --n-predict 8192 `
+      -fit off `
+      --spec-type draft-dflash `
+      --spec-draft-n-max 7 `
+      --spec-draft-model ./Nemotron-3.5-Bolt-E4B-DFlash-BF16.gguf `
+      --spec-draft-backend-sampling `
+      --backend-sampling `
+      --temp 0 `
+      --top-p 1 `
+      --top-k 1 `
+      --min-p 0 `
+      --presence-penalty 0 `
+      --repeat-penalty 1 `
+      -fa on `
+      -ctk f16 `
+      -ctv f16 `
+      --jinja `
+      --seed 1234 `
+      --threads 12 `
+      --threads-batch 12 `
+      --metrics `
+      --no-webui `
+      --chat-template-kwargs '{"enable_thinking":true,"preserve_thinking":true}' `
+      --spec-draft-p-min 0 `
+      -ngld 999 `
+      --spec-draft-type-k f16 `
+      --spec-draft-type-v f16 `
+      --alias bolt-q4-k-m
+  port: 8080
+  api_model: bolt-q4-k-m
+notes: null
