@@ -1,0 +1,68 @@
+# SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: LicenseRef-NvidiaProprietary
+#
+# NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
+# property and proprietary rights in and to this material, related
+# documentation and any modifications thereto. Any use, reproduction,
+# disclosure or distribution of this material and related documentation
+# is subject to the Apache 2.0 License
+#
+# Disclaimer: This Local AI Inference Recipes Repo and its recipes are
+# provided for informational purposes only and were created with AI
+# assistance. They must be independently reviewed and validated for
+# accuracy before use. NVIDIA assumes no liability for any use of these
+# recipes or reliance upon them.
+
+# AIPerf source revision: 0883bd1aee552472124aa710e4cf067b7b77cddb.
+# AIPerf decode retains the native active-throughput average.
+# AIPerf uses seed 42 and natural EOS with an 8,192-token output cap.
+# Prepared qualitative.jsonl SHA-256: e9bbbe998472b79501ed79ba2bf126e58b63e153a6deef70ce2b63ea7a4de845
+# Coding workload fields describe AIPerf; AA uses the full agentperf-default-v1 replay.
+# Coding E2E is AA whole-replay measured_duration_ms.
+schema_version: 2
+recipe_sha256: 01eccb254e411dfa862d11083a2d4a440f1b55f32df02db14e688ed2e7cf5b1f
+launch_id: default
+measured_at: '2026-11-05'
+harness:
+  name: aiperf
+  version: 0.12.0
+system:
+  label: 8× NVIDIA DGX Spark (128 GB per node)
+  accelerator: NVIDIA GB10
+  accelerator_count: 8
+  operating_system: linux
+  os_version: Ubuntu 24.04.4 LTS
+  driver_version: 580.142 (4 nodes); 580.159.03 (4 nodes)
+  cuda_version: 13.0.88
+software:
+  model_revision: 4239e4db19376904f2e82c167e78f70abb5455fe
+  backend_version: 0.1.dev22954+ga34ca64c1
+  runtime_revision: sha256:24e75d49ee3ccef483bd207122b857c56a39f12af00d40076b2596d57079d7c2
+  agentperf_version: 0.3.4
+profiles:
+  - id: coding
+    harnesses:
+      - name: aiperf
+        version: 0.12.0
+      - name: agentperf-local
+        version: 1fe80568c1e4b81b338ef276ccc6874a36d3704d
+    workload:
+      input_tokens: null
+      dataset: nvidia/SPEED-Bench
+      profile: qualitative
+      category: coding
+      context_tokens: 1048576
+      input_tokens_min: 171
+      input_tokens_max: 2386
+      input_tokens_total: 5816
+      output_tokens: 8192
+      concurrency: 1
+      requests: 10
+      conversations: 8
+      warmup_requests: 3
+    results:
+      decode_tokens_per_second_mean: 45.15917801484067
+      e2e_latency_ms_mean: 1196089.1001579966
+    result_harness:
+      decode_tokens_per_second_mean: aiperf
+      e2e_latency_ms_mean: agentperf-local

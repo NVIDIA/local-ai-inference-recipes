@@ -1,0 +1,69 @@
+# SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: LicenseRef-NvidiaProprietary
+#
+# NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
+# property and proprietary rights in and to this material, related
+# documentation and any modifications thereto. Any use, reproduction,
+# disclosure or distribution of this material and related documentation
+# is subject to the Apache 2.0 License
+#
+# Disclaimer: This Local AI Inference Recipes Repo and its recipes are
+# provided for informational purposes only and were created with AI
+# assistance. They must be independently reviewed and validated for
+# accuracy before use. NVIDIA assumes no liability for any use of these
+# recipes or reliance upon them.
+
+schema_version: 2
+recipe_sha256: 9d20bec4f8db42dfac5e1d5d4aae9c66a7121b2a28177a5c80f5683eb88f66f6
+launch_id: default
+measured_at: 2026-11-05
+
+harness:
+  name: aiperf
+  version: 0.8.0
+
+system:
+  label: 4× NVIDIA RTX PRO 6000 Blackwell Server Edition (one CPU socket of an 8-GPU node)
+  accelerator: NVIDIA RTX PRO 6000 Blackwell Server Edition
+  accelerator_count: 4
+  operating_system: linux
+  os_version: Ubuntu 24.04.5 LTS
+  driver_version: "615.71.10"
+  cuda_version: "13.0"
+
+software:
+  model_revision: 6821d6ad3681a4b137b066b76094fa82ebd0a380
+  backend_version: 0.33.0
+  runtime_revision: sha256:91ee972ab751fb7180bc71c175865e36b091686600dca783d52b2511399810b3
+
+profiles:
+  - id: qualitative
+    # NOT the standard coding profile: SPEED-Bench qualitative, all categories (880 single-turn prompts),
+    # output capped at 256 tokens without ignore_eos (every completion reached 256, about 245 of them reasoning).
+    # SPEED-Bench dataset revision 487aa718444e816458d1a0a52bfce7a454285cf4; prepared qualitative.jsonl SHA-256
+    # 856d3321333d905a364e4dcf9bfcb2162157a5e7d53508afe8d05551efced1ba (880 rows).
+    # Node smc521ge-0038 was NOT exclusive (other jobs on its other 4 GPUs); the 4 GPUs used were all on NUMA node 0.
+    # Exact recipe serve command (with --moe-backend auto, the default). 3 repetitions of 16 requests with 1 warmup
+    # request each; results are the mean of the 3 per-run averages.
+    # Per run, output_token_throughput_per_user.avg: 213.46, 211.12, 205.38 (sd 4.16);
+    # prefill_throughput_per_user.avg: 3771.1, 5524.8, 5972.2 (sd 1163; the first run came right after server start);
+    # TTFT avg 68.7, 47.8, 46.0 ms. DSpark mean acceptance length 2.46 over the whole run.
+    workload:
+      input_tokens: null
+      dataset: nvidia/SPEED-Bench
+      profile: qualitative
+      # Every qualitative category in one file (coding, humanities, math, multilingual, qa, rag, reasoning, roleplay, stem, ...).
+      category: all
+      context_tokens: 16384
+      input_tokens_min: 109
+      input_tokens_max: 488
+      input_tokens_total: 11805
+      output_tokens: 256
+      concurrency: 1
+      requests: 48
+      warmup_requests: 3
+    results:
+      # aiperf 0.8.0 output_token_throughput_per_user (excludes TTFT) and prefill_throughput_per_user.
+      decode_tokens_per_second_mean: 209.98
+      prefill_tokens_per_second_mean: 5089.34
+      e2e_latency_ms_mean: 1275.4

@@ -1,0 +1,69 @@
+# SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: LicenseRef-NvidiaProprietary
+#
+# NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
+# property and proprietary rights in and to this material, related
+# documentation and any modifications thereto. Any use, reproduction,
+# disclosure or distribution of this material and related documentation
+# is subject to the Apache 2.0 License
+#
+# Disclaimer: This Local AI Inference Recipes Repo and its recipes are
+# provided for informational purposes only and were created with AI
+# assistance. They must be independently reviewed and validated for
+# accuracy before use. NVIDIA assumes no liability for any use of these
+# recipes or reliance upon them.
+
+schema_version: 4
+title: "RecursiveSI/flint · NVIDIA RTX Spark N1X · Q4_K_XL"
+model: "recursivesi/flint"
+hardware: "rtx-spark"
+platform:
+  os: "windows"
+  execution: "native"
+backend: "llama-cpp"
+backend_version: "b11803"
+status: "optimized"
+min_vidmem_gb: 26.71
+validation:
+  validated_at: "2026-11-05"
+  tested_stack:
+    os_version: "Windows 10.0.28000 ARM64"
+    driver: "617.67"
+    cuda: "13.4"
+limitations:
+  - "Tool execution and concurrent multi-user serving were not evaluated."
+prerequisites:
+  - "Use PowerShell 7.3 or newer with its default native argument passing for setup, launch and benchmark commands."
+  - "Use the b11803 Windows ARM64 CUDA 13.4 release and its matching CUDA runtime DLLs."
+precision:
+  label: "Q4_K_XL"
+checkpoint:
+  target: "https://huggingface.co/unsloth/flint-GGUF/blob/main/flint-UD-Q4_K_XL.gguf"
+  target_label: "unsloth/flint-GGUF/flint-UD-Q4_K_XL.gguf"
+  draft: null
+  draft_label: null
+concurrency: 1
+topology: null
+security: null
+runtime: null
+serve:
+  label: "Launch Flint"
+  target: "single-node"
+  instructions: "Run in PowerShell 7.3 or newer from the extracted b11803 directory. llama-server downloads the specified target GGUF using its normal cache."
+  command: |-
+    .\llama-server.exe `
+      -hf unsloth/flint-GGUF `
+      -hff flint-UD-Q4_K_XL.gguf `
+      --port 9931 `
+      -ngl 999 `
+      --ctx-size 98304 `
+      --batch-size 512 `
+      --ubatch-size 512 `
+      -fa on `
+      --parallel 1 `
+      --chat-template-kwargs '{"enable_thinking":true}' `
+      --fit off `
+      --backend-sampling `
+      --temp 0
+  port: 9931
+  api_model: "unsloth/flint-GGUF"

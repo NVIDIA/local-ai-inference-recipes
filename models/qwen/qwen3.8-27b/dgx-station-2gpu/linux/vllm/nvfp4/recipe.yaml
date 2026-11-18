@@ -1,0 +1,168 @@
+# SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: LicenseRef-NvidiaProprietary
+#
+# NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
+# property and proprietary rights in and to this material, related
+# documentation and any modifications thereto. Any use, reproduction,
+# disclosure or distribution of this material and related documentation
+# is subject to the Apache 2.0 License
+#
+# Disclaimer: This Local AI Inference Recipes Repo and its recipes are
+# provided for informational purposes only and were created with AI
+# assistance. They must be independently reviewed and validated for
+# accuracy before use. NVIDIA assumes no liability for any use of these
+# recipes or reliance upon them.
+
+schema_version: 4
+title: Qwen/Qwen3.8-27B · 2× DGX Station · vLLM
+model: qwen/qwen3.8-27b
+hardware: dgx-station-2gpu
+platform:
+  os: linux
+  execution: container
+backend: vllm
+backend_version: "0.31.0"
+status: experimental
+precision:
+  label: NVFP4
+checkpoint:
+  target: https://huggingface.co/nvidia/Qwen3.8-27B-NVFP4/tree/482ca0f3832238542f8f5295dde86b5f22711d80
+  target_label: nvidia/Qwen3.8-27B-NVFP4
+  draft: null
+  draft_label: null
+concurrency: 16
+topology:
+  summary: 2× DGX Station; one GB300 per node; tensor parallel 2
+  gpu_count: 2
+  node_count: 2
+  tensor_parallel_size: 2
+sampling: null
+prerequisites:
+  - One GB300 on each of two connected DGX Stations; select its UUID and exclude any auxiliary RTX GPU.
+  - Both observed RoCE rails must be up, peer reachable, and accessible through the matching /dev/infiniband devices.
+  - A complete verified local snapshot of target revision 482ca0f3832238542f8f5295dde86b5f22711d80 on each node.
+  - Node-local private writable Hugging Face cache storage; do not substitute unverified network home storage.
+limitations:
+  - Throughput was measured only with SPEED-Bench coding and an 8192-token output cap, at concurrency 16 (the card) and 1.
+  - Accuracy was checked only on the first 250 GSM8K test questions, where TP2 on two Stations matched the same image and checkpoint at TP1 on one Station within the acceptance bar (temperature 0 98.0% vs 97.6%; the model's default sampling, temperature 1.0, 98.0% vs 97.2%).
+  - Configured maximum concurrency and context are not evidence of measured workload capacity.
+security: Evaluation configuration only. Host networking exposes vLLM on host interfaces; use a firewall or reverse proxy and an isolated cache. This configuration exposes the selected GB300 and RDMA devices and grants IPC_LOCK; it does not use privileged mode.
+runtime:
+  kind: container
+  label: Container
+  image: vllm/vllm-openai@sha256:c1c9f6fd5c109ba7f0546a59f5b2f15fb87f64c77782e90a27b648b42a8e67c3
+  image_url: https://hub.docker.com/r/vllm/vllm-openai/tags?name=v0.31.0
+  setup_label: Start container
+  setup_target: all-nodes
+  setup_instructions: Run on each node. Set its GB300 UUID, observed RoCE interface/HCA names, shared head address, and private node-local storage paths. The first container downloads the pinned checkpoint without using a GPU; after it finishes, the second opens the serving container. Start the worker serve command before the head. Use the same pinned snapshot and image on both nodes.
+  setup_command: |
+    set -euo pipefail
+    export GB300_UUID="<this-node-GB300-UUID>"
+    export ETH_IF="<observed-control-RoCE-interface>"
+    export IB_HCAS="<observed-RoCE-HCA-1>,<observed-RoCE-HCA-2>"
+    export HEAD_IP="<head-RoCE-ip>"
+    export TARGET_SNAPSHOT="<absolute-node-local-directory>/482ca0f3832238542f8f5295dde86b5f22711d80"
+    export HF_CACHE_DIR="<absolute-node-local-private-hf-cache>"
+    export IMAGE="vllm/vllm-openai@sha256:c1c9f6fd5c109ba7f0546a59f5b2f15fb87f64c77782e90a27b648b42a8e67c3"
+
+    umask 077
+    mkdir -p "$TARGET_SNAPSHOT" "$HF_CACHE_DIR"
+    docker run --rm -i \
+      --network host \
+      --user "$(id -u):$(id -g)" \
+      -e HOME=/tmp \
+      -e HF_HUB_DISABLE_XET=1 \
+      -v "$TARGET_SNAPSHOT:/models/target" \
+      --entrypoint python3 \
+      "$IMAGE" - <<'PY'
+    from huggingface_hub import snapshot_download
+    snapshot_download(
+        "nvidia/Qwen3.8-27B-NVFP4",
+        revision="482ca0f3832238542f8f5295dde86b5f22711d80",
+        local_dir="/models/target",
+        max_workers=8,
+    )
+    PY
+
+    docker run --rm -it \
+      --gpus "device=$GB300_UUID" \
+      --ipc host \
+      --network host \
+      --shm-size=16g \
+      --device=/dev/infiniband:/dev/infiniband \
+      --cap-add IPC_LOCK \
+      --ulimit memlock=-1 \
+      --ulimit stack=67108864 \
+      -e NCCL_SOCKET_IFNAME="$ETH_IF" \
+      -e GLOO_SOCKET_IFNAME="$ETH_IF" \
+      -e NCCL_IB_HCA="$IB_HCAS" \
+      -e NCCL_IB_DISABLE=0 \
+      -e HF_HUB_OFFLINE=1 \
+      -e TRANSFORMERS_OFFLINE=1 \
+      -e CUDA_DEVICE_ORDER=PCI_BUS_ID \
+      -e CUDA_VISIBLE_DEVICES="$GB300_UUID" \
+      -e HEAD_IP="$HEAD_IP" \
+      -v "$TARGET_SNAPSHOT:/models/target:ro" \
+      -v "$HF_CACHE_DIR:/root/.cache/huggingface" \
+      --entrypoint /bin/bash \
+      "$IMAGE"
+serve:
+  label: Launch head
+  target: head
+  instructions: null
+  command: |
+    vllm serve /models/target \
+      --served-model-name nvidia/Qwen3.8-27B-NVFP4 \
+      --kv-cache-dtype fp8 \
+      --gpu-memory-utilization 0.7 \
+      --max-model-len 262144 \
+      --max-num-seqs 16 \
+      --max-num-batched-tokens 8192 \
+      --enable-chunked-prefill \
+      --async-scheduling \
+      --enable-prefix-caching \
+      --load-format fastsafetensors \
+      --tensor-parallel-size 2 \
+      --enable-auto-tool-choice \
+      --tool-call-parser qwen3_coder \
+      --reasoning-parser qwen3 \
+      --mm-encoder-tp-mode data \
+      --nnodes 2 \
+      --master-addr "$HEAD_IP" \
+      --master-port 29501 \
+      --node-rank 0
+  port: null
+  api_model: nvidia/Qwen3.8-27B-NVFP4
+  additional_commands:
+    - id: worker
+      label: Launch worker
+      target: workers
+      instructions: null
+      command: |
+        vllm serve /models/target \
+          --served-model-name nvidia/Qwen3.8-27B-NVFP4 \
+          --kv-cache-dtype fp8 \
+          --gpu-memory-utilization 0.7 \
+          --max-model-len 262144 \
+          --max-num-seqs 16 \
+          --max-num-batched-tokens 8192 \
+          --enable-chunked-prefill \
+          --async-scheduling \
+          --enable-prefix-caching \
+          --load-format fastsafetensors \
+          --tensor-parallel-size 2 \
+          --enable-auto-tool-choice \
+          --tool-call-parser qwen3_coder \
+          --reasoning-parser qwen3 \
+          --mm-encoder-tp-mode data \
+          --nnodes 2 \
+          --master-addr "$HEAD_IP" \
+          --master-port 29501 \
+          --node-rank 1 \
+          --headless
+notes: |-
+  This experimental two-node seed uses tensor parallel 2 with no speculative decoding and one GB300 per node. Auxiliary RTX GPUs must remain excluded. Set the observed RoCE interface and HCA names for each node; device visibility and peer reachability do not establish data-path bandwidth.
+
+  The card is AIPerf's aggregate active-decode rate at concurrency 16, the mean of two runs of 160 measured requests after 48 warmups, counting reasoning tokens; 78 of the 320 responses hit the 8192-token cap. At concurrency 1 the same two Stations measured 128.67 tok/s.
+
+  For text-only use, add `--language-model-only` to the vLLM command on both nodes: the vision encoder is not loaded, which shortens startup and frees its memory, and multimodal inputs are rejected.

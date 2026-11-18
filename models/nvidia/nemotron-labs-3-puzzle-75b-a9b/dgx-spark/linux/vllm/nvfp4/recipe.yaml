@@ -1,0 +1,94 @@
+# SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: LicenseRef-NvidiaProprietary
+#
+# NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
+# property and proprietary rights in and to this material, related
+# documentation and any modifications thereto. Any use, reproduction,
+# disclosure or distribution of this material and related documentation
+# is subject to the Apache 2.0 License
+#
+# Disclaimer: This Local AI Inference Recipes Repo and its recipes are
+# provided for informational purposes only and were created with AI
+# assistance. They must be independently reviewed and validated for
+# accuracy before use. NVIDIA assumes no liability for any use of these
+# recipes or reliance upon them.
+
+schema_version: 4
+title: nvidia/NVIDIA-Nemotron-Labs-3-Puzzle-75B-A9B · DGX Spark · vLLM
+model: nvidia/nemotron-labs-3-puzzle-75b-a9b
+hardware: dgx-spark
+platform:
+  os: linux
+  execution: container
+backend: vllm
+backend_version: "0.31.0"
+status: experimental
+limitations:
+  - "GSM8K test (first 250, graded) on DGX Spark: 97.6% at temperature 0 and 98.0% at the default sampling, vs 96.8% and 96.4% for a reference without MTP, with a float32 SSM cache and no stochastic rounding; within the noise bar."
+  - Stochastic rounding of the float16 SSM cache makes outputs nondeterministic across runs, even at temperature 0.
+prerequisites:
+  - Docker with NVIDIA GPU access and Hugging Face access to the checkpoint.
+spec_dec: mtp
+min_vidmem_gb: 128
+precision:
+  label: NVFP4
+checkpoint:
+  target: https://huggingface.co/nvidia/NVIDIA-Nemotron-Labs-3-Puzzle-75B-A9B-NVFP4
+  target_label: nvidia/NVIDIA-Nemotron-Labs-3-Puzzle-75B-A9B-NVFP4
+  draft: null
+  draft_label: null
+concurrency: null
+topology:
+  summary: 1× DGX Spark
+  gpu_count: 1
+  node_count: 1
+  tensor_parallel_size: null
+sampling: null
+security: Evaluation configuration only. Host networking exposes vLLM on host interfaces; use a firewall or reverse proxy, a scoped read-only HF token, and an isolated cache. For production, pin tested image, model, and code revisions.
+runtime:
+  kind: container
+  label: Container (vLLM v0.31.0, pinned digest)
+  image: vllm/vllm-openai@sha256:c1c9f6fd5c109ba7f0546a59f5b2f15fb87f64c77782e90a27b648b42a8e67c3
+  image_url: https://hub.docker.com/r/vllm/vllm-openai/tags?name=v0.31.0
+  setup_label: Start container
+  setup_target: single-node
+  setup_instructions: Set `HF_TOKEN` in the host environment.
+  setup_command: |
+    docker run --rm -it \
+      --gpus all \
+      --ipc host \
+      --network host \
+      --shm-size=16g \
+      --ulimit memlock=-1 \
+      --ulimit stack=67108864 \
+      -e HF_TOKEN=$HF_TOKEN \
+      -v ~/.cache/huggingface:/root/.cache/huggingface \
+      --entrypoint /bin/bash \
+      vllm/vllm-openai@sha256:c1c9f6fd5c109ba7f0546a59f5b2f15fb87f64c77782e90a27b648b42a8e67c3
+serve:
+  label: Launch
+  target: single-node
+  instructions: null
+  command: |
+    vllm serve nvidia/NVIDIA-Nemotron-Labs-3-Puzzle-75B-A9B-NVFP4 \
+        --revision 1d370e47fbc56d1019a471c2339663cdbbb5236f \
+        --host 0.0.0.0 \
+        --port 8000 \
+        --tensor-parallel-size 1 \
+        --max-model-len 262144 \
+        --gpu-memory-utilization 0.8 \
+        --max-num-seqs 8 \
+        --enable-expert-parallel \
+        --async-scheduling \
+        --trust-remote-code \
+        --mamba-backend flashinfer \
+        --mamba_ssm_cache_dtype float16 \
+        --enable-mamba-cache-stochastic-rounding \
+        --mamba-cache-philox-rounds 5 \
+        --speculative-config '{"method":"mtp","num_speculative_tokens":3}' \
+        --tool-call-parser qwen3_coder \
+        --reasoning-parser nemotron_v3 \
+        --enable-auto-tool-choice
+  port: 8000
+  api_model: nvidia/NVIDIA-Nemotron-Labs-3-Puzzle-75B-A9B-NVFP4
+notes: null

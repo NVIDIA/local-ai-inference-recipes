@@ -1,0 +1,74 @@
+# SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: LicenseRef-NvidiaProprietary
+#
+# NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
+# property and proprietary rights in and to this material, related
+# documentation and any modifications thereto. Any use, reproduction,
+# disclosure or distribution of this material and related documentation
+# is subject to the Apache 2.0 License
+#
+# Disclaimer: This Local AI Inference Recipes Repo and its recipes are
+# provided for informational purposes only and were created with AI
+# assistance. They must be independently reviewed and validated for
+# accuracy before use. NVIDIA assumes no liability for any use of these
+# recipes or reliance upon them.
+
+schema_version: 4
+title: "nvidia/NVIDIA-Nemotron-3.5-Bolt-E4B · NVIDIA RTX Spark N1X · Q8_K_XL + BF16 DFlash"
+model: "nvidia/nemotron-bolt-e4b"
+hardware: "rtx-spark"
+platform:
+  os: "windows"
+  execution: "native"
+backend: "llama-cpp"
+backend_version: "b11909"
+spec_dec: "dflash"
+status: "optimized"
+min_vidmem_gb: 8.65
+validation:
+  validated_at: "2026-11-05"
+  tested_stack:
+    os_version: "Windows 10.0.28000 ARM64"
+    driver: "617.67"
+    cuda: "13.4"
+limitations:
+  - "Tool execution and concurrent multi-user serving were not evaluated."
+prerequisites:
+  - "Use PowerShell 7.3 or newer with its default native argument passing for setup, launch and benchmark commands."
+  - "Use the b11909 Windows ARM64 CUDA 13.4 release and its matching CUDA runtime DLLs."
+  - "Download the linked BF16 draft GGUF into the directory containing llama-server.exe."
+precision:
+  label: "Q8_K_XL"
+checkpoint:
+  target: "https://huggingface.co/unsloth/NVIDIA-Nemotron-3.5-Bolt-E4B-GGUF/blob/main/NVIDIA-Nemotron-3.5-Bolt-E4B-UD-Q8_K_XL.gguf"
+  target_label: "unsloth/NVIDIA-Nemotron-3.5-Bolt-E4B-GGUF/NVIDIA-Nemotron-3.5-Bolt-E4B-UD-Q8_K_XL.gguf"
+  draft: "https://huggingface.co/nvidia/NVIDIA-Nemotron-3.5-Bolt-E4B-4GB-DFlash/blob/main/Nemotron-3.5-Bolt-E4B-DFlash-BF16.gguf"
+  draft_label: "nvidia/NVIDIA-Nemotron-3.5-Bolt-E4B-4GB-DFlash/Nemotron-3.5-Bolt-E4B-DFlash-BF16.gguf"
+concurrency: 1
+topology: null
+security: null
+runtime: null
+serve:
+  label: "Launch DFlash · 7 draft tokens"
+  target: "single-node"
+  instructions: "Run in PowerShell 7.3 or newer from the extracted b11909 directory. llama-server downloads the specified target GGUF using its normal cache. Place the linked BF16 draft GGUF beside llama-server.exe before launching."
+  command: |-
+    .\llama-server.exe `
+      -hf unsloth/NVIDIA-Nemotron-3.5-Bolt-E4B-GGUF `
+      -hff NVIDIA-Nemotron-3.5-Bolt-E4B-UD-Q8_K_XL.gguf `
+      --port 9931 `
+      -ngl 999 `
+      --ctx-size 65536 `
+      --batch-size 1024 `
+      --ubatch-size 512 `
+      -fa on `
+      --parallel 1 `
+      --spec-type draft-dflash `
+      --spec-draft-n-max 7 `
+      --spec-draft-model .\Nemotron-3.5-Bolt-E4B-DFlash-BF16.gguf `
+      --chat-template-kwargs '{"enable_thinking":true}' `
+      --spec-draft-backend-sampling `
+      --fit off `
+      --spec-draft-ngl 999
+  port: 9931
+  api_model: "unsloth/NVIDIA-Nemotron-3.5-Bolt-E4B-GGUF"

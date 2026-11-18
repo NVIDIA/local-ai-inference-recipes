@@ -1,0 +1,61 @@
+# SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: LicenseRef-NvidiaProprietary
+#
+# NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
+# property and proprietary rights in and to this material, related
+# documentation and any modifications thereto. Any use, reproduction,
+# disclosure or distribution of this material and related documentation
+# is subject to the Apache 2.0 License
+#
+# Disclaimer: This Local AI Inference Recipes Repo and its recipes are
+# provided for informational purposes only and were created with AI
+# assistance. They must be independently reviewed and validated for
+# accuracy before use. NVIDIA assumes no liability for any use of these
+# recipes or reliance upon them.
+
+schema_version: 2
+status: optimized
+recipe_sha256: 89fbe4627161358f52ca918e5eaa0a21086c78cfeca5631f04d4aac2ecade051
+launch_id: default
+measured_at: '2026-11-04'
+harness:
+  name: llama.cpp SPEED-Bench Qualitative Coding
+  version: sha256:adc36d81afa810672e8c70727381bcb7cfc00975b47908c860a000695dc1d111
+system:
+  label: NVIDIA GeForce RTX 5090
+  accelerator: NVIDIA GeForce RTX 5090
+  accelerator_count: 1
+  operating_system: windows
+  os_version: Windows 10.0.26200.9711 AMD64
+  cuda_version: '13.3'
+  driver_version: '610.88'
+software:
+  model_revision: e0fecb69cb3e5e4c5e8a056fa2aec98c78e91246
+  backend_version: b11785
+  runtime_revision: 8baabd53b77d1c48c6ef8d3b620436292f3f6231
+  agentperf_version: 0.3.4
+profiles:
+  - id: coding
+    harnesses:
+      - name: llama.cpp SPEED-Bench Qualitative Coding
+        version: sha256:adc36d81afa810672e8c70727381bcb7cfc00975b47908c860a000695dc1d111
+      - name: agentperf-local
+        version: 1fe80568c1e4b81b338ef276ccc6874a36d3704d
+    workload:
+      input_tokens: null
+      context_tokens: 262144
+      dataset: nvidia/SPEED-Bench
+      profile: qualitative
+      category: coding
+      conversations: 80
+      throughput_aggregation: conversation
+      output_tokens: 8192
+      concurrency: 1
+      requests: null
+      warmup_requests: 0
+    results:
+      decode_tokens_per_second_mean: 334.67944765796335
+      e2e_latency_ms_mean: 199475.12169810943
+    result_harness:
+      decode_tokens_per_second_mean: llama.cpp SPEED-Bench Qualitative Coding
+      e2e_latency_ms_mean: agentperf-local

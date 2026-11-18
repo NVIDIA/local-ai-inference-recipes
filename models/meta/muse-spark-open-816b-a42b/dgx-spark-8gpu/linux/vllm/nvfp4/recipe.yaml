@@ -1,0 +1,177 @@
+# SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: LicenseRef-NvidiaProprietary
+#
+# NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
+# property and proprietary rights in and to this material, related
+# documentation and any modifications thereto. Any use, reproduction,
+# disclosure or distribution of this material and related documentation
+# is subject to the Apache 2.0 License
+#
+# Disclaimer: This Local AI Inference Recipes Repo and its recipes are
+# provided for informational purposes only and were created with AI
+# assistance. They must be independently reviewed and validated for
+# accuracy before use. NVIDIA assumes no liability for any use of these
+# recipes or reliance upon them.
+
+schema_version: 3
+title: meta-models/Muse-Spark-Open-816B-A42B · 8× DGX Spark · vLLM
+model: meta/muse-spark-open-816b-a42b
+hardware: dgx-spark-8gpu
+platform:
+  os: linux
+  execution: container
+backend: vllm
+backend_version: 0.1.dev22954+ga34ca64c1
+status: experimental
+# Per node; eight nodes total.
+min_vidmem_gb: 128
+prerequisites:
+  - Eight DGX Spark nodes with 128 GB of memory per node and a configured ConnectX RoCE network through a QSFP switch.
+  - Docker with NVIDIA GPU support and the specified image available on every node.
+  - Hugging Face access to the target and draft checkpoints. Cache target revision `4239e4db19376904f2e82c167e78f70abb5455fe` and draft revision `fbec887a79866e9ecff6c57adfd9fd02aa3cadea` in the Hugging Face cache on every node before setup; the image sets `HF_HUB_OFFLINE=1`.
+limitations:
+  - Requires a Muse Spark container image with Humming, B12x, and DFlash2 support.
+precision:
+  label: NVFP4
+checkpoint:
+  target: https://huggingface.co/meta-models/Muse-Spark-Open-816B-A42B-NVFP4
+  target_label: meta-models/Muse-Spark-Open-816B-A42B-NVFP4
+  draft: https://huggingface.co/nvidia/Muse-Spark-Open-816B-A42B-DFlash2
+  draft_label: nvidia/Muse-Spark-Open-816B-A42B-DFlash2
+spec_dec: dflash2
+concurrency: 8
+topology:
+  summary: 8× DGX Spark; 128 GB per node; one node rank per Spark; tensor parallel 8
+  gpu_count: 8
+  node_count: 8
+  tensor_parallel_size: 8
+sampling: null
+security: Evaluation configuration only. Host networking exposes vLLM on host interfaces; use a firewall or reverse proxy, a scoped read-only HF token, and an isolated cache. For production, pin tested image, model, and code revisions.
+runtime:
+  kind: container
+  label: Container (mutable, ARM64, custom Muse Spark)
+  image: vllm/vllm:muse-spark-open-gb10
+  image_url: https://hub.docker.com/r/vllm/vllm/tags?name=muse-spark-open-gb10
+  setup_label: Start container
+  setup_target: all-nodes
+  setup_instructions: Run on all eight nodes after setting `HF_TOKEN`. Use the same head node ConnectX address (`HEAD_IP`) and rendezvous port (`MASTER_PORT`) on every node. Set `ETH_IF` to the local ConnectX Ethernet interface for control traffic and `IB_IF` to both local RoCE host channel adapter names for data traffic.
+  setup_command: |
+    # Example eight-Spark network values; adjust to the configured network:
+    #   HEAD_IP="10.100.32.1"               # head node's ConnectX address
+    #   ETH_IF="enp1s0f0np0"               # local Ethernet interface for control traffic
+    #   IB_IF="rocep1s0f0,roceP2p1s0f0"    # both local RoCE adapters for data traffic
+    export HEAD_IP="<head-connectx-ip>"
+    export ETH_IF="<connectx-interface>"
+    export IB_IF="<roce-interface-1>,<roce-interface-2>"
+    export MASTER_PORT=29501
+    export IMAGE="vllm/vllm:muse-spark-open-gb10"
+    export HF_CACHE_DIR="$HOME/.cache/huggingface"
+
+    mkdir -p "$HF_CACHE_DIR" "$HOME/.cache/vllm" "$HOME/.cache/flashinfer" \
+      "$HOME/.cache/b12x" "$HOME/.triton" "$HOME/.tilelang" "$HOME/.humming/cache" \
+      "$HOME/.cache/vllm/muse-spark-draft-context-compile"
+
+    docker run --rm -it \
+      --privileged \
+      --gpus all \
+      --ipc host \
+      --network host \
+      --shm-size=16g \
+      --ulimit nofile=1048576:1048576 \
+      --ulimit memlock=-1 \
+      --ulimit stack=67108864 \
+      -e HF_TOKEN=$HF_TOKEN \
+      -e MN_IF_NAME="$ETH_IF" \
+      -e UCX_NET_DEVICES="$ETH_IF" \
+      -e NCCL_SOCKET_IFNAME="$ETH_IF" \
+      -e NCCL_IB_HCA="$IB_IF" \
+      -e NCCL_IB_DISABLE=0 \
+      -e OMPI_MCA_btl_tcp_if_include="$ETH_IF" \
+      -e GLOO_SOCKET_IFNAME="$ETH_IF" \
+      -e TP_SOCKET_IFNAME="$ETH_IF" \
+      -e NCCL_IGNORE_CPU_AFFINITY=1 \
+      -e HEAD_IP="$HEAD_IP" \
+      -e MASTER_PORT="$MASTER_PORT" \
+      -v "$HF_CACHE_DIR:/root/.cache/huggingface" \
+      -v "$HOME/.cache/vllm:/root/.cache/vllm" \
+      -v "$HOME/.cache/flashinfer:/root/.cache/flashinfer" \
+      -v "$HOME/.cache/b12x:/root/.cache/b12x" \
+      -v "$HOME/.triton:/root/.triton" \
+      -v "$HOME/.tilelang:/root/.tilelang" \
+      -v "$HOME/.humming/cache:/root/.humming/cache" \
+      -v "$HOME/.cache/vllm/muse-spark-draft-context-compile:/tmp/muse-spark-draft-context-compile" \
+      --entrypoint /bin/bash \
+      "$IMAGE"
+serve:
+  label: Launch head
+  target: head
+  instructions: Run inside the head container after starting all seven workers.
+  command: |
+    vllm serve meta-models/Muse-Spark-Open-816B-A42B-NVFP4 \
+      --revision 4239e4db19376904f2e82c167e78f70abb5455fe \
+      --host 0.0.0.0 \
+      --port 8000 \
+      --no-enable-expert-parallel \
+      --tensor-parallel-size 8 \
+      --gpu-memory-utilization 0.84 \
+      --max-model-len auto \
+      --load-format safetensors \
+      --attention-backend TRITON_ATTN \
+      --kv-cache-dtype fp8 \
+      --max-num-seqs 8 \
+      --max-num-batched-tokens 4096 \
+      --reasoning-parser muse \
+      --tool-call-parser muse \
+      --enable-auto-tool-choice \
+      --trust-remote-code \
+      --per-request-spec-decode-metrics summary \
+      --speculative-config '{"method":"dflash","model":"nvidia/Muse-Spark-Open-816B-A42B-DFlash2","num_speculative_tokens":5,"draft_sample_method":"probabilistic","attention_backend":"TRITON_ATTN","revision":"fbec887a79866e9ecff6c57adfd9fd02aa3cadea","quantization":"mxfp8","linear_backend":"flashinfer_cutlass","enable_adaptive_verification":true}' \
+      --moe-backend humming \
+      --compilation-config '{"cache_dir": "/tmp/muse-spark-draft-context-compile"}' \
+      --linear-backend b12x \
+      --quantization-config '{"targets":{"*.self_attn.qkv_proj":"mxfp8","*.self_attn.o_proj":"mxfp8","*.feed_forward.pooler":"mxfp8","*.feed_forward.unpooler":"mxfp8","*.layers.0.feed_forward.experts":"mxfp8","*.layers.61.feed_forward.experts":"mxfp8"}}' \
+      --distributed-timeout-seconds 1800 \
+      --nnodes 8 \
+      --node-rank 0 \
+      --master-addr "$HEAD_IP" \
+      --master-port "$MASTER_PORT"
+  port: 8000
+  api_model: meta-models/Muse-Spark-Open-816B-A42B-NVFP4
+  additional_commands:
+    - id: workers
+      label: Launch workers
+      target: workers
+      instructions: Run inside each worker container. Set `NODE_RANK` to a unique value from 1 through 7; rank 0 belongs to the head.
+      command: |
+        export NODE_RANK="<worker-rank>"
+
+        vllm serve meta-models/Muse-Spark-Open-816B-A42B-NVFP4 \
+          --revision 4239e4db19376904f2e82c167e78f70abb5455fe \
+          --host 0.0.0.0 \
+          --port 8000 \
+          --no-enable-expert-parallel \
+          --tensor-parallel-size 8 \
+          --gpu-memory-utilization 0.84 \
+          --max-model-len auto \
+          --load-format safetensors \
+          --attention-backend TRITON_ATTN \
+          --kv-cache-dtype fp8 \
+          --max-num-seqs 8 \
+          --max-num-batched-tokens 4096 \
+          --reasoning-parser muse \
+          --tool-call-parser muse \
+          --enable-auto-tool-choice \
+          --trust-remote-code \
+          --per-request-spec-decode-metrics summary \
+          --speculative-config '{"method":"dflash","model":"nvidia/Muse-Spark-Open-816B-A42B-DFlash2","num_speculative_tokens":5,"draft_sample_method":"probabilistic","attention_backend":"TRITON_ATTN","revision":"fbec887a79866e9ecff6c57adfd9fd02aa3cadea","quantization":"mxfp8","linear_backend":"flashinfer_cutlass","enable_adaptive_verification":true}' \
+          --moe-backend humming \
+          --compilation-config '{"cache_dir": "/tmp/muse-spark-draft-context-compile"}' \
+          --linear-backend b12x \
+          --quantization-config '{"targets":{"*.self_attn.qkv_proj":"mxfp8","*.self_attn.o_proj":"mxfp8","*.feed_forward.pooler":"mxfp8","*.feed_forward.unpooler":"mxfp8","*.layers.0.feed_forward.experts":"mxfp8","*.layers.61.feed_forward.experts":"mxfp8"}}' \
+          --distributed-timeout-seconds 1800 \
+          --nnodes 8 \
+          --node-rank "$NODE_RANK" \
+          --master-addr "$HEAD_IP" \
+          --master-port "$MASTER_PORT" \
+          --headless
+notes: Use the same ConnectX-7 port on every node and assign its two subinterfaces to separate subnets. Start all seven workers before the head. Docker runs privileged. Humming uses `~/.humming/cache` by default. The compilation cache is persisted at `~/.cache/vllm/muse-spark-draft-context-compile` on each host. The target uses NVFP4 with the specified MXFP8 layer overrides; the DFlash2 draft uses MXFP8 with adaptive verification and up to five speculative tokens.

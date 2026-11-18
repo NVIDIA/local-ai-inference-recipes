@@ -1,0 +1,70 @@
+# SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: LicenseRef-NvidiaProprietary
+#
+# NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
+# property and proprietary rights in and to this material, related
+# documentation and any modifications thereto. Any use, reproduction,
+# disclosure or distribution of this material and related documentation
+# is subject to the Apache 2.0 License
+#
+# Disclaimer: This Local AI Inference Recipes Repo and its recipes are
+# provided for informational purposes only and were created with AI
+# assistance. They must be independently reviewed and validated for
+# accuracy before use. NVIDIA assumes no liability for any use of these
+# recipes or reliance upon them.
+
+schema_version: 4
+title: "LiquidAI/LFM3-1.7B · NVIDIA GeForce RTX 5090 · Q4_K_M"
+model: liquidai/lfm3-1.7b
+hardware: geforce-rtx
+platform:
+  os: windows
+  execution: native
+backend: llama-cpp
+backend_version: b11946
+backend_build:
+  kind: manual
+  revision: 8ca4060b7e30e76baaa5670ee1ec1b760b7f8552
+status: experimental
+prerequisites:
+  - "A CUDA-enabled Windows x86-64 llama.cpp b11946 build with llama-server.exe on PATH."
+  - "Network access for llama-server to download and cache the named Hugging Face checkpoint."
+limitations: null
+precision:
+  label: Q4_K_M
+checkpoint:
+  target: https://huggingface.co/LiquidAI/LFM3-1.7B-GGUF/blob/b3f2ae5d73cd3c91bf40e8ba752c648aa05dffdf/LFM3-1.7B-Q4_K_M.gguf
+  target_label: LiquidAI/LFM3-1.7B-GGUF/LFM3-1.7B-Q4_K_M.gguf
+  draft: null
+  draft_label: null
+min_vidmem_gb: 5
+concurrency: 1
+topology: null
+sampling: "Backend sampling: OFF; temp 1; top-p 1; top-k 0; min-p 0; presence-penalty 0; repeat-penalty 1."
+security: null
+runtime: null
+serve:
+  label: Launch LiquidAI/LFM3-1.7B Q4_K_M
+  target: single-node
+  instructions: "Run in PowerShell with llama-server.exe on PATH. llama-server downloads and caches the named checkpoint file from Hugging Face."
+  command: |-
+    llama-server.exe -hf "LiquidAI/LFM3-1.7B-GGUF" `
+      -hff "LFM3-1.7B-Q4_K_M.gguf" `
+      --no-mmproj `
+      --host 127.0.0.1 `
+      --port 9931 `
+      --batch-size 2048 `
+      --ubatch-size 1024 `
+      --ctx-size 98304 `
+      --parallel 1 `
+      -ngl 999 `
+      -fit off `
+      --temp 1 `
+      --top-p 1 `
+      --top-k 0 `
+      --min-p 0 `
+      --presence-penalty 0 `
+      --repeat-penalty 1
+  port: 9931
+  api_model: LiquidAI/LFM3-1.7B-GGUF
+notes: null

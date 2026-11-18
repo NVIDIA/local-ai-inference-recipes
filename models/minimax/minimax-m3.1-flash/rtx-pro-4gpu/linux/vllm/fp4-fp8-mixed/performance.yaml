@@ -1,0 +1,73 @@
+# SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: LicenseRef-NvidiaProprietary
+#
+# NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
+# property and proprietary rights in and to this material, related
+# documentation and any modifications thereto. Any use, reproduction,
+# disclosure or distribution of this material and related documentation
+# is subject to the Apache 2.0 License
+#
+# Disclaimer: This Local AI Inference Recipes Repo and its recipes are
+# provided for informational purposes only and were created with AI
+# assistance. They must be independently reviewed and validated for
+# accuracy before use. NVIDIA assumes no liability for any use of these
+# recipes or reliance upon them.
+
+schema_version: 2
+recipe_sha256: d8b9fb6fbc3cd79638087da5d67897e4ae3338cb7b1bdbf28a29e9df63d08b85
+launch_id: default
+measured_at: 2026-11-09
+
+harness:
+  name: aiperf
+  version: 0.12.0
+
+system:
+  label: 4× NVIDIA RTX PRO 6000 Blackwell Server Edition (one CPU socket of an 8-GPU node)
+  accelerator: NVIDIA RTX PRO 6000 Blackwell Server Edition
+  accelerator_count: 4
+  operating_system: linux
+  os_version: Ubuntu 24.04.5 LTS
+  driver_version: "615.71.10"
+  cuda_version: "13.4"
+
+software:
+  model_revision: 2f33a8b9ae49ce7b51c994df97166a7fd059bc2e
+  backend_version: 0.1.dev23341+g8744dd2fb.d20261022.cu134
+  runtime_revision: sha256:86f582dae25ea92802353727164ae4eb03b37b18baf9119b805ffaec2a7ef07c
+
+profiles:
+  - id: coding
+    # AIPerf source revision: 0883bd1aee552472124aa710e4cf067b7b77cddb.
+    # SPEED-Bench dataset revision: 487aa718444e816458d1a0a52bfce7a454285cf4,
+    # resolved with the aiperf-main resolver (git 2fd8c8292), 0 placeholder rows.
+    # Prepared qualitative.jsonl SHA-256:
+    # 5ac9cfb7f5b8800914e7b089c2797d5657560bceb0a67084b080ecf3aa9bb49f
+    # (880 rows; differs from the DGX Spark entry's prepared file, 596a4641...).
+    # Exclusive whole node, GPUs on NUMA node 0, exact recipe serve command.
+    # 3 repetitions of 10 requests (8 conversations) with 3 warmup requests each;
+    # workload fields aggregate the 30 measured requests, results are the mean
+    # of the 3 per-run averages. Natural EOS: completions of 449-8,192 tokens,
+    # including reasoning, 56,669 output tokens in total.
+    # Per run, active_decode_throughput.avg: 219.19, 211.93, 210.38 (sd 4.70);
+    # prefill_throughput_per_user.avg: 5653.9, 5629.7, 5803.9 (sd 94.3);
+    # TTFT avg 77.2, 66.5, 67.7 ms. agentperf-local was not run.
+    workload:
+      input_tokens: null
+      dataset: nvidia/SPEED-Bench
+      profile: qualitative
+      category: coding
+      context_tokens: 16384
+      input_tokens_min: 27
+      input_tokens_max: 2456
+      input_tokens_total: 12352
+      output_tokens: 8192
+      concurrency: 1
+      requests: 30
+      conversations: 24
+      warmup_requests: 9
+    results:
+      # Native active_decode_throughput.avg: an active-time-weighted rate.
+      decode_tokens_per_second_mean: 213.83334109077006
+      prefill_tokens_per_second_mean: 5695.820899421619
+      e2e_latency_ms_mean: null

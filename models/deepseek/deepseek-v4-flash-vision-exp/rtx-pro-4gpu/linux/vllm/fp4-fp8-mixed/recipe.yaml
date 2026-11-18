@@ -1,0 +1,99 @@
+# SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: LicenseRef-NvidiaProprietary
+#
+# NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
+# property and proprietary rights in and to this material, related
+# documentation and any modifications thereto. Any use, reproduction,
+# disclosure or distribution of this material and related documentation
+# is subject to the Apache 2.0 License
+#
+# Disclaimer: This Local AI Inference Recipes Repo and its recipes are
+# provided for informational purposes only and were created with AI
+# assistance. They must be independently reviewed and validated for
+# accuracy before use. NVIDIA assumes no liability for any use of these
+# recipes or reliance upon them.
+
+schema_version: 4
+title: deepseek-ai/DeepSeek-V4-Flash-Vision-Exp · 4× RTX Pro 6000 · vLLM
+model: deepseek/deepseek-v4-flash-vision-exp
+hardware: rtx-pro-4gpu
+platform:
+  os: linux
+  execution: container
+backend: vllm
+backend_version: 0.33.0
+backend_min_version: 0.33.0
+status: experimental
+validation:
+  validated_at: '2026-11-09'
+  tested_stack:
+    os_version: Ubuntu 24.04.5 LTS
+    driver: '615.71.10'
+    cuda: '13.0'
+min_vidmem_gb: 96
+prerequisites:
+  - One node with four RTX PRO 6000 Blackwell GPUs and PCIe peer-to-peer access between them (`nvidia-smi topo -p2p r` reports OK for every pair).
+limitations:
+  - Validated with a 16,384-token context, text only, ISL/OSL 2048/256 up to concurrency 8; the vision path was not exercised.
+  - Four GPUs on one CPU socket; GPUs split across two sockets measured much slower.
+precision:
+  label: FP4 + FP8 Mixed
+checkpoint:
+  target: https://huggingface.co/deepseek-ai/DeepSeek-V4-Flash-Vision-Exp
+  target_label: deepseek-ai/DeepSeek-V4-Flash-Vision-Exp
+  draft: https://huggingface.co/deepseek-ai/DeepSeek-V4-Flash-Vision-Exp
+  draft_label: deepseek-ai/DeepSeek-V4-Flash-Vision-Exp
+spec_dec: dspark
+concurrency: 8
+topology:
+  summary: 4× RTX Pro 6000 in one node, tensor parallel 4, on one CPU socket
+  gpu_count: 4
+  node_count: 1
+  tensor_parallel_size: 4
+sampling: null
+security: Evaluation configuration only. Host networking exposes vLLM on host interfaces; use a firewall or reverse proxy and an isolated cache. For production, pin tested image, model, and code revisions.
+runtime:
+  kind: container
+  label: Container (official)
+  image: vllm/vllm-openai:v0.33.0-x86_64
+  image_url: https://hub.docker.com/r/vllm/vllm-openai/tags?name=v0.33.0-x86_64
+  setup_label: Start container
+  setup_target: single-node
+  setup_instructions: Expose the four GPUs to use; on an 8-GPU host pick four on the same CPU socket (`nvidia-smi topo -m`, NUMA affinity column).
+  setup_command: |
+    docker run --rm -it \
+      --gpus '"device=0,1,2,3"' \
+      --ipc host \
+      --network host \
+      --shm-size=16g \
+      --ulimit memlock=-1 \
+      --ulimit stack=67108864 \
+      -v ~/.cache/huggingface:/root/.cache/huggingface \
+      -v ~/.cache/vllm:/root/.cache/vllm \
+      --entrypoint /bin/bash \
+      vllm/vllm-openai:v0.33.0-x86_64
+serve:
+  label: Launch
+  target: single-node
+  instructions: null
+  command: |
+    export VLLM_ALLREDUCE_USE_FLASHINFER_PCIE_IPC=1
+
+    vllm serve deepseek-ai/DeepSeek-V4-Flash-Vision-Exp \
+      --host 0.0.0.0 \
+      --port 8000 \
+      --tensor-parallel-size 4 \
+      --kv-cache-dtype fp8 \
+      --attention-config '{"indexer_kv_dtype":"fp8"}' \
+      --block-size 256 \
+      --max-model-len 16384 \
+      --max-num-seqs 64 \
+      --gpu-memory-utilization 0.9 \
+      --compilation-config '{"cudagraph_mode":"FULL_AND_PIECEWISE"}' \
+      --reasoning-parser deepseek_v4 \
+      --tool-call-parser deepseek_v4 \
+      --enable-auto-tool-choice \
+      --speculative-config '{"method":"dspark","model":"deepseek-ai/DeepSeek-V4-Flash-Vision-Exp","num_speculative_tokens":3,"draft_sample_method":"probabilistic","enable_adaptive_verification":false}'
+  port: 8000
+  api_model: deepseek-ai/DeepSeek-V4-Flash-Vision-Exp
+notes: '`VLLM_ALLREDUCE_USE_FLASHINFER_PCIE_IPC=1` enables FlashInfer''s PCIe IPC all-reduce, faster than NCCL on four PCIe-only GPUs. On sm_120 the mxfp4 indexer cache and the deep_gemm_mega_moe MoE backend are SM100-only, so the indexer cache stays fp8 and vLLM picks the MoE backend; DSpark adaptive verification is rejected by the DeepSeek V4 indexer backend and stays off.'

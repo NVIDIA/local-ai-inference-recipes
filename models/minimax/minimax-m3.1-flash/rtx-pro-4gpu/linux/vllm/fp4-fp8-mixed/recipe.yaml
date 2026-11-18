@@ -1,0 +1,100 @@
+# SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: LicenseRef-NvidiaProprietary
+#
+# NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
+# property and proprietary rights in and to this material, related
+# documentation and any modifications thereto. Any use, reproduction,
+# disclosure or distribution of this material and related documentation
+# is subject to the Apache 2.0 License
+#
+# Disclaimer: This Local AI Inference Recipes Repo and its recipes are
+# provided for informational purposes only and were created with AI
+# assistance. They must be independently reviewed and validated for
+# accuracy before use. NVIDIA assumes no liability for any use of these
+# recipes or reliance upon them.
+
+schema_version: 4
+title: MiniMaxAI/MiniMax-M3.1-Flash · 4× RTX Pro 6000 · vLLM
+model: minimax/minimax-m3.1-flash
+hardware: rtx-pro-4gpu
+platform:
+  os: linux
+  execution: container
+backend: vllm
+backend_version: 0.1.dev23341+g8744dd2fb.d20261022.cu134
+backend_min_version: 0.1.dev23341+g8744dd2fb.d20261022.cu134
+status: experimental
+validation:
+  validated_at: '2026-11-07'
+  tested_stack:
+    os_version: Ubuntu 24.04.5 LTS
+    driver: '615.71.10'
+    cuda: '13.4'
+min_vidmem_gb: 96
+prerequisites:
+  - One node with four RTX PRO 6000 Blackwell GPUs and PCIe peer-to-peer access between them (`nvidia-smi topo -p2p r` reports OK for every pair).
+limitations:
+  - Validated with a 16,384-token context, text only, ISL/OSL 2048/256 up to concurrency 32.
+  - Four GPUs on one CPU socket are fastest; GPUs split across two sockets measured up to 13% slower at concurrency 1.
+precision:
+  label: FP4 + FP8 Mixed
+checkpoint:
+  target: https://huggingface.co/MiniMaxAI/MiniMax-M3.1-Flash
+  target_label: MiniMaxAI/MiniMax-M3.1-Flash
+  draft: null
+  draft_label: null
+spec_dec: dspark
+concurrency: 32
+topology:
+  summary: 4× RTX Pro 6000 in one node, tensor parallel 4, preferably on one CPU socket
+  gpu_count: 4
+  node_count: 1
+  tensor_parallel_size: 4
+sampling: null
+security: Evaluation configuration only. Host networking exposes vLLM on host interfaces; use a firewall or reverse proxy and an isolated cache. For production, pin tested image, model, and code revisions.
+runtime:
+  kind: container
+  label: Container (official, mutable)
+  image: vllm/vllm-openai:minimax-m31-flash
+  image_url: https://hub.docker.com/r/vllm/vllm-openai/tags?name=minimax-m31-flash
+  setup_label: Start container
+  setup_target: single-node
+  setup_instructions: Expose the four GPUs to use; on an 8-GPU host pick four on the same CPU socket (`nvidia-smi topo -m`, NUMA affinity column).
+  setup_command: |
+    docker run --rm -it \
+      --gpus '"device=0,1,2,3"' \
+      --ipc host \
+      --network host \
+      --shm-size=16g \
+      --ulimit memlock=-1 \
+      --ulimit stack=67108864 \
+      -v ~/.cache/huggingface:/root/.cache/huggingface \
+      -v ~/.cache/vllm:/root/.cache/vllm \
+      -v ~/.cache/flashinfer:/root/.cache/flashinfer \
+      --entrypoint /bin/bash \
+      vllm/vllm-openai:minimax-m31-flash
+serve:
+  label: Launch
+  target: single-node
+  instructions: The first start tunes the FlashInfer PCIe IPC all-reduce during warmup; later starts reuse the tune cache in `~/.cache/vllm`.
+  command: |
+    export VLLM_ALLREDUCE_USE_FLASHINFER_PCIE_IPC=1
+
+    vllm serve MiniMaxAI/MiniMax-M3.1-Flash \
+      --host 0.0.0.0 \
+      --port 8000 \
+      --tensor-parallel-size 4 \
+      --kv-cache-dtype fp8 \
+      --attention-config '{"indexer_kv_dtype":"fp8"}' \
+      --block-size 128 \
+      --disable-hybrid-kv-cache-manager \
+      --max-model-len 16384 \
+      --max-num-seqs 64 \
+      --gpu-memory-utilization 0.9 \
+      --compilation-config '{"cudagraph_mode":"FULL_AND_PIECEWISE"}' \
+      --trust-remote-code \
+      --reasoning-parser minimax_m3 \
+      --speculative-config '{"method":"dspark","num_speculative_tokens":3,"attention_backend":"TRITON_ATTN","kv_cache_dtype":"fp8","draft_sample_method":"probabilistic","rejection_sample_method":"block"}'
+  port: 8000
+  api_model: MiniMaxAI/MiniMax-M3.1-Flash
+notes: '`VLLM_ALLREDUCE_USE_FLASHINFER_PCIE_IPC=1` enables FlashInfer''s PCIe IPC all-reduce, faster than NCCL on four PCIe-only GPUs. Checkpoint quantization is MXFP8 with NVFP4 MoE weights.'
